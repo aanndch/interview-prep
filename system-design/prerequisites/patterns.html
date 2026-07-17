@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Design — Patterns</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #f0883e, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #21262d;
+    }
+    h3 {
+      font-size: 1.15rem;
+      color: #d2a8ff;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h4 {
+      color: #7ee787;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    p, li { color: #b1bac4; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op  { color: #ffa657; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    th {
+      background: #161b22;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    tr:hover td { background: #1c2128; }
+
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    .toc {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .toc h3 { margin: 0 0 0.6rem 0; color: #e1e4ea; }
+    .toc a { display: block; padding: 2px 0; font-size: 0.9rem; }
+
+    .flow {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 0.8rem 0;
+    }
+
+    .callout {
+      background: #1c2128;
+      border-left: 3px solid #d2a8ff;
+      padding: 0.6rem 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.88rem;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout strong { color: #d2a8ff; }
+    .callout.green { border-left-color: #7ee787; }
+    .callout.green strong { color: #7ee787; }
+
+    .syntax-box {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.9rem;
+    }
+    .syntax-box .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .backlink {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+    }
+    .backlink:hover { color: #58a6ff; }
+
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Design Patterns</h1>
+<p style="color:#8b949e; margin-bottom:0.2rem;">Rate limiting, idempotency, retry strategies, architecture patterns, API design.</p>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <a href="#rate-limit">11. Rate Limiting</a>
+  <a href="#idempotency">12. Idempotency &amp; Retry Patterns</a>
+  <a href="#microservices">13. Microservices vs Monolith</a>
+  <a href="#api-design">14. API Design</a>
+</div>
+
+<!-- ========================================================================
+     11. RATE LIMITING
+     ======================================================================== -->
+<h2 id="rate-limit">11. Rate Limiting</h2>
+
+<h3>What it is and why it matters</h3>
+<p>Rate limiting controls how many requests a user, IP, or API key can make within a time window. Without it, a single abusive user can overwhelm your servers, cause a DDoS-like effect, or rack up huge bills for you.</p>
+
+<p>Rate limiters are placed <strong>before</strong> your application — at the API gateway, load balancer, or a dedicated service. They reject excess requests with HTTP 429 (Too Many Requests) so your backend never sees them.</p>
+
+<h3>The five algorithms (know at least three)</h3>
+
+<table>
+  <tr><th>Algorithm</th><th>How it works</th><th>Memory</th><th>Burst support</th><th>Accuracy</th></tr>
+  <tr><td><strong>Token bucket</strong></td><td>Bucket holds N tokens. Refills at R tokens/sec. Each request takes 1 token. If bucket empty → reject.</td><td>Low (1 counter + 1 timestamp per user)</td><td>Yes (burst up to bucket size)</td><td>Good</td></tr>
+  <tr><td><strong>Leaky bucket</strong></td><td>Requests enter a queue (bucket). Processed at fixed rate. If queue full → reject.</td><td>Low (queue + timer)</td><td>No (smooths traffic)</td><td>Good</td></tr>
+  <tr><td><strong>Fixed window</strong></td><td>Counter resets every N seconds (e.g., 100 requests per minute). Simple.</td><td>Lowest (1 counter per window)</td><td>Yes (but spike at boundary)</td><td>Poor at boundaries</td></tr>
+  <tr><td><strong>Sliding window log</strong></td><td>Store timestamps of all requests. Window slides continuously.</td><td>High (stores all timestamps)</td><td>No</td><td>Best</td></tr>
+  <tr><td><strong>Sliding window counter</strong></td><td>Combine fixed window counter with weighted previous window estimate.</td><td>Low (2 counters)</td><td>Yes</td><td>Good (~2% error)</td></tr>
+</table>
+
+<h3>Fixed window boundary problem</h3>
+<p>100 req/min limit. User sends 100 at :59 and 100 at :01 — 200 in 2 seconds, both windows "under limit." Sliding window prevents this by considering request history continuously.</p>
+
+<h3>Distributed rate limiting</h3>
+<p>When you have multiple servers, rate limit state must be shared. The standard approach: <strong>Redis</strong>.</p>
+
+<div class="flow"><span class="cm">// Simple token bucket in Redis (Lua script for atomicity):</span>
+<span class="kw">local</span> key    = KEYS[1]       <span class="cm">// "rate_limit:user:123"</span>
+<span class="kw">local</span> limit  = <span class="fn">tonumber</span>(ARGV[1]) <span class="cm">// max tokens</span>
+<span class="kw">local</span> refill = <span class="fn">tonumber</span>(ARGV[2]) <span class="cm">// refill rate</span>
+
+<span class="kw">local</span> current = redis.<span class="fn">call</span>(<span class="str">"GET"</span>, key) <span class="kw">or</span> limit
+<span class="kw">if</span> <span class="fn">tonumber</span>(current) &gt; <span class="num">0</span> <span class="kw">then</span>
+    redis.<span class="fn">call</span>(<span class="str">"DECR"</span>, key)
+    <span class="kw">return</span> <span class="num">1</span>   <span class="cm">// allowed</span>
+<span class="kw">else</span>
+    <span class="kw">return</span> <span class="num">0</span>   <span class="cm">// rate limited</span>
+<span class="kw">end</span></div>
+
+<div class="callout"><strong>Interview angle:</strong> Both Mercari and Indeed ask rate limiter questions. Start with: "I'd use a token bucket algorithm — it's simple, memory efficient, and allows natural bursts. For distributed rate limiting, I'd use Redis with Lua scripting for atomic operations." Then discuss trade-offs (Redis as SPOF, using Redis Cluster with consistent hashing).</div>
+
+<!-- ========================================================================
+     12. IDEMPOTENCY & RETRY PATTERNS
+     ======================================================================== -->
+<h2 id="idempotency">12. Idempotency &amp; Retry Patterns</h2>
+
+<h3>The problem</h3>
+<p>Networks fail. Timeouts happen. When a client sends a request and the connection times out, the client doesn't know if the server processed the request or not. If it retries, the operation might execute twice. In a payment system, that means double-charging the customer. In a messaging system, that means sending a duplicate message.</p>
+
+<p><strong>Idempotency</strong> is the property that an operation can be applied multiple times with the same result as applying it once.</p>
+
+<h3>Idempotent by nature vs. by design</h3>
+<table>
+  <tr><th>Operation</th><th>Idempotent?</th><th>Why</th></tr>
+  <tr><td><code>SET balance = 100</code></td><td>Yes (naturally)</td><td>Setting to 100 repeatedly is the same as doing it once</td></tr>
+  <tr><td><code>SET balance = balance + 50</code></td><td>No</td><td>Each execution increases by 50 — applying twice gives +100</td></tr>
+  <tr><td><code>DELETE /users/123</code></td><td>Yes (naturally)</td><td>Deleting a deleted user is a no-op</td></tr>
+  <tr><td><code>POST /payments</code> (create)</td><td>No (needs design)</td><td>Each call creates a new payment — need idempotency key</td></tr>
+  <tr><td><code>PUT /users/123</code> (full update)</td><td>Yes (naturally)</td><td>Sending the same full representation is idempotent</td></tr>
+  <tr><td><code>PATCH /users/123</code> (partial)</td><td>Maybe</td><td>Depends on the patch: <code>{"op": "replace", ...}</code> is; <code>{"op": "increment", ...}</code> isn't</td></tr>
+</table>
+
+<h3>Idempotency keys — the pattern</h3>
+<p>The client generates a unique UUID (idempotency key) and sends it with the request. The server remembers the result keyed by this UUID. If the client retries with the same key, the server returns the stored result without re-executing the operation.</p>
+
+<div class="flow"><span class="cm">// First attempt:</span>
+POST /payments  { amount: 100, idempotency_key: <span class="str">"abc-123"</span> }
+Server: processes payment, stores { key: "abc-123", result: "success", tx: "txn_456" }
+
+<span class="cm">// Retry (client timeout → client resends same request):</span>
+POST /payments  { amount: 100, idempotency_key: <span class="str">"abc-123"</span> }
+Server: finds existing result for "abc-123" → returns it without processing
+  → { status: "already_processed", transaction: "txn_456" }</div>
+
+<h3>Retry strategies</h3>
+<table>
+  <tr><th>Strategy</th><th>How it works</th><th>When to use</th></tr>
+  <tr><td><strong>Immediate retry</strong></td><td>Try once after short delay</td><td>Transient failures (DNS hiccup, connection reset)</td></tr>
+  <tr><td><strong>Exponential backoff</strong></td><td>Wait 1s, 2s, 4s, 8s... between retries</td><td>Standard pattern for most failures</td></tr>
+  <tr><td><strong>Jitter</strong></td><td>Add ±25% randomness to backoff delay</td><td>Prevent thundering herd when many clients retry</td></tr>
+  <tr><td><strong>Circuit breaker</strong></td><td>After N failures, stop retrying. Periodically test if recovered.</td><td>Prevent cascading failures</td></tr>
+</table>
+
+<h3>Common retry scenarios</h3>
+<table>
+  <tr><th>Failure type</th><th>Retry?</th><th>Strategy</th></tr>
+  <tr><td>HTTP 503 (Service Unavailable)</td><td>Yes</td><td>Exponential backoff + jitter, 3-5 attempts</td></tr>
+  <tr><td>HTTP 504 (Gateway Timeout)</td><td>Yes</td><td>Immediate retry once, then backoff</td></tr>
+  <tr><td>HTTP 429 (Rate Limited)</td><td>Yes</td><td>Check Retry-After header, respect it</td></tr>
+  <tr><td>HTTP 4xx (Client Error)</td><td>No</td><td>Retrying won't help (bad request, auth failure)</td></tr>
+  <tr><td>HTTP 5xx (Server Error)</td><td>Yes</td><td>Backoff + jitter</td></tr>
+  <tr><td>Connection timeout</td><td>Yes</td><td>Immediate retry once, then backoff</td></tr>
+</table>
+
+<div class="callout"><strong>Your context:</strong> Your messaging system with RabbitMQ uses at-least-once delivery. When a consumer processes a message and crashes before acking, the message is redelivered. If your message handler is <strong>idempotent</strong> (same message ID results in no duplicate), you get exactly-once processing semantics without exactly-once delivery guarantees. This is the standard production pattern.</div>
+
+<!-- ========================================================================
+     13. MICROSERVICES vs MONOLITH
+     ======================================================================== -->
+<h2 id="microservices">13. Microservices vs Monolith</h2>
+
+<h3>The monolith</h3>
+<p>One codebase. One deployment unit. All features — user management, payments, notifications, search — run in the same process, sharing the same database.</p>
+
+<p><strong>Advantages:</strong> Simpler to develop (no service boundaries to manage). Easier to test end-to-end. No network latency between features. Single deployment. Simple transaction management across features (DB handles it).</p>
+
+<p><strong>Disadvantages:</strong> Can't scale features independently — the entire app must scale together. One slow feature (e.g., image processing) can starve other features of resources. Large codebase becomes hard to reason about. Long CI/CD pipelines. Technology lock-in (whole app uses one stack).</p>
+
+<h3>Microservices</h3>
+<p>Each feature or domain is a separate service with its own codebase, deployment, database, and team. Services communicate over the network (HTTP/gRPC) or via message queues.</p>
+
+<p><strong>Advantages:</strong> Independent scaling per service (scale only the payment service, not notifications). Independent deployment (deploy one service without taking down the whole app). Technology diversity (each service can use the best language/DB for its job). Smaller, more focused codebases. Team autonomy.</p>
+
+<p><strong>Disadvantages:</strong> Complexity explosion — service discovery, API gateways, distributed tracing, circuit breakers, eventual consistency, data duplication. Network latency between services. Testing across service boundaries is hard. Debugging a transaction spanning multiple services is painful.</p>
+
+<h3>The comparison matrix</h3>
+<table>
+  <tr><th>Dimension</th><th>Monolith</th><th>Microservices</th></tr>
+  <tr><td>Deployment</td><td>Single unit — one deploy affects everything</td><td>Independent — deploy one service at a time</td></tr>
+  <tr><td>Scaling</td><td>Must scale the entire app</td><td>Scale individual services by demand</td></tr>
+  <tr><td>Development speed (early)</td><td>Fast — no cross-service orchestration</td><td>Slow — must define boundaries, contracts, infra</td></tr>
+  <tr><td>Development speed (late)</td><td>Slow — large codebase, merge conflicts</td><td>Fast — teams work independently</td></tr>
+  <tr><td>Testing</td><td>Simple E2E — one process</td><td>Contract testing, integration testing needed</td></tr>
+  <tr><td>Database</td><td>Single DB, ACID transactions across features</td><td>Database per service, eventual consistency across services</td></tr>
+  <tr><td>Operational cost</td><td>Low — one app to monitor, deploy, debug</td><td>High — observability stack, service mesh, container orchestration</td></tr>
+  <tr><td>Team structure</td><td>Works for small teams (1-10)</td><td>Designed for multiple teams (10+)</td></tr>
+</table>
+
+<h3>The biggest mistake: premature microservices</h3>
+<p>The most common anti-pattern is starting with microservices because "they're the modern way" or "Netflix does it." The result: you spend all your time building infrastructure (service discovery, distributed tracing, message brokers) instead of building product features.</p>
+
+<p><strong>The industry consensus:</strong> Start with a modular monolith. Use well-defined modules with clear interfaces. If and when a module needs independent scaling or a separate team owns it, extract it into a microservice. This is called the "monolith-first" or "extract microservices" approach.</p>
+
+<h3>Common microservice decomposition patterns</h3>
+<div class="card">
+  <p><strong>By domain (most common):</strong> Split by business domain — User Service, Order Service, Payment Service, Notification Service. Each owns its data and domain logic.</p>
+
+  <p><strong>By subdomain (DDD):</strong> Following Domain-Driven Design bounded contexts. Each bounded context becomes a service.</p>
+
+  <p><strong>By capability:</strong> Split along technical capabilities — Search Service, Analytics Service, Reporting Service.</p>
+
+  <p><strong>Strangler fig pattern:</strong> Gradually replace monolith features with microservices one at a time. The monolith shrinks as services are extracted. Low risk, incremental migration.</p>
+</div>
+
+<div class="callout"><strong>Your context:</strong> Your NestJS apps follow a modular monolith pattern — <code>@Module</code>-decorated feature modules that could become microservices later. This is exactly the right approach. When interviewing at Mercari (which runs Go-based microservices), you can say: "My NestJS apps are modular monoliths with clear module boundaries. I'd extract the messaging module into an independent service when it needs to scale independently."</div>
+
+<!-- ========================================================================
+     14. API DESIGN
+     ======================================================================== -->
+<h2 id="api-design">14. API Design</h2>
+
+<h3>REST conventions</h3>
+<table>
+  <tr><th>HTTP Method</th><th>Operation</th><th>Example</th><th>Idempotent?</th></tr>
+  <tr><td><strong>GET</strong></td><td>Read</td><td><code>GET /users/123</code></td><td>Yes</td></tr>
+  <tr><td><strong>POST</strong></td><td>Create</td><td><code>POST /users</code></td><td>No</td></tr>
+  <tr><td><strong>PUT</strong></td><td>Full replace</td><td><code>PUT /users/123</code></td><td>Yes</td></tr>
+  <tr><td><strong>PATCH</strong></td><td>Partial update</td><td><code>PATCH /users/123</code></td><td>Depends</td></tr>
+  <tr><td><strong>DELETE</strong></td><td>Delete</td><td><code>DELETE /users/123</code></td><td>Yes</td></tr>
+</table>
+
+<h3>Versioning strategies</h3>
+<table>
+  <tr><th>Strategy</th><th>Example</th><th>Pros</th><th>Cons</th></tr>
+  <tr><td><strong>URL path</strong></td><td><code>/v1/users</code></td><td>Explicit, easy to route</td><td>URL pollution</td></tr>
+  <tr><td><strong>Header</strong></td><td><code>Accept: application/vnd.api.v1+json</code></td><td>Clean URLs</td><td>Harder to test in browser</td></tr>
+  <tr><td><strong>Query param</strong></td><td><code>/users?version=1</code></td><td>Simple</td><td>Non-standard, cache-busting</td></tr>
+</table>
+<p><strong>Recommendation:</strong> URL path (<code>/v1/</code>) — most visible, easiest to route and document.</p>
+
+<h3>Pagination</h3>
+<table>
+  <tr><th>Method</th><th>Example</th><th>Best for</th></tr>
+  <tr><td><strong>Offset</strong></td><td><code>/users?offset=20&limit=10</code></td><td>Simple UIs, admin panels</td></tr>
+  <tr><td><strong>Cursor</strong></td><td><code>/users?cursor=abc123&limit=10</code></td><td>Infinite scroll, real-time feeds</td></tr>
+</table>
+<p><strong>Cursor advantage:</strong> Doesn't break when items are inserted/deleted during pagination. Offset can skip or duplicate items.</p>
+
+<h3>Error response format</h3>
+<div class="flow">{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Email format is invalid",
+    "details": [
+      { "field": "email", "issue": "must be a valid email address" }
+    ]
+  }
+}</div>
+<p>Always return: error code (machine-readable), message (human-readable), details (field-level issues). Use proper HTTP status codes (400, 401, 403, 404, 409, 429, 500).</p>
+
+<div class="callout"><strong>Interview angle:</strong> When designing an API, state your pagination strategy upfront: "I'll use cursor-based pagination for the feed — it's stable under concurrent writes." Mention versioning: "I version via URL path for simplicity."</div>
+
+<p style="margin-top:3rem; text-align:center; color:#8b949e; font-size:0.85rem;">
+  <a href="../index.html" class="backlink">← All Prerequisites</a> · <a href="../index.html" class="backlink">Back to System Design</a>
+</p>
+
+</div>
+</body>
+</html>

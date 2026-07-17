@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two Pointers · Revision Cards</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.6;
+      padding: 2rem;
+    }
+    .container { width: 90%; max-width: 1400px; margin: 0 auto; }
+
+    h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #58a6ff, #8250df);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.2rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+    }
+    .hint {
+      color: #484f58;
+      font-size: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .flip-card {
+      perspective: 800px;
+      height: 300px;
+      cursor: pointer;
+    }
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s ease;
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+      padding: 1.2rem 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .front {
+      background: #161b22;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .back {
+      background: #1c2128;
+      transform: rotateY(180deg);
+      justify-content: flex-start;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .tag-easy { background: #1b3a2b; color: #7ee787; }
+    .tag-medium { background: #3a2b1b; color: #d29922; }
+    .tag-hard { background: #3d1f1e; color: #ff7b72; }
+
+    .front .prob-num {
+      font-size: 0.85rem;
+      color: #8b949e;
+      font-weight: 600;
+    }
+    .front .prob-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+    .front .prob-summary {
+      font-size: 0.75rem;
+      color: #8b949e;
+      margin-top: 6px;
+      line-height: 1.3;
+      max-width: 100%;
+    }
+
+    .back-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .back-value {
+      font-size: 0.82rem;
+      color: #e1e4ea;
+    }
+    .back-value.highlight {
+      color: #d2a8ff;
+    }
+    .back-value.green {
+      color: #7ee787;
+    }
+    .back-row {
+      display: flex;
+      gap: 12px;
+    }
+    .back-row > div {
+      flex: 1;
+    }
+    .back hr {
+      border: none;
+      border-top: 1px solid #30363d;
+      margin: 2px 0;
+    }
+
+    .backlink {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+    .backlink:hover { color: #58a6ff; }
+
+    @media (max-width: 540px) {
+      body { padding: 1.2rem; }
+      .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .flip-card { height: 260px; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Two Pointers · Revision Cards</h1>
+<p class="subtitle">10 cards &middot; 6 easy &middot; 3 medium &middot; 1 hard</p>
+<p class="hint">Tap or click to flip</p>
+
+<div class="grid">
+
+<!-- #125 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-easy">EASY</span>
+      <div class="prob-num">#125</div>
+      <div class="prob-name">Valid Palindrome</div>
+      <div class="prob-summary">Check if string is palindrome ignoring non-alphanumeric chars</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Colliding</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Skip non-alnum, compare lowercase</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">Empty string, only non-alnum, single char</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #283 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-easy">EASY</span>
+      <div class="prob-num">#283</div>
+      <div class="prob-name">Move Zeroes</div>
+      <div class="prob-summary">Move all zeros to end while preserving relative order</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Fast &amp; Slow</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Slow marks next write for non-zero</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">All zeros, no zeros, single element</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #344 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-easy">EASY</span>
+      <div class="prob-num">#344</div>
+      <div class="prob-name">Reverse String</div>
+      <div class="prob-summary">Reverse character array in-place with O(1) extra memory</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Colliding</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Swap L and R, move inward</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">Odd/even length, single character</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #977 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-easy">EASY</span>
+      <div class="prob-num">#977</div>
+      <div class="prob-name">Squares of a Sorted Array</div>
+      <div class="prob-summary">Return sorted squares of each number from sorted array</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Colliding (from ends)</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Biggest square at one end; fill result R→L</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(n)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">All positive, all negative, single element</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #167 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-easy">EASY</span>
+      <div class="prob-num">#167</div>
+      <div class="prob-name">Two Sum II</div>
+      <div class="prob-summary">Find two numbers summing to target in sorted 1-indexed array</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Colliding</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Move L/R based on sum vs target</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">Target at ends, duplicate values</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #26 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-easy">EASY</span>
+      <div class="prob-num">#26</div>
+      <div class="prob-name">Remove Duplicates from Sorted Array</div>
+      <div class="prob-summary">Remove duplicates from sorted array in-place; return unique count</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Fast &amp; Slow</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Slow = next write; compare nums[fast] vs nums[slow-1]</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">All unique, all same, empty array</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #11 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-medium">MEDIUM</span>
+      <div class="prob-num">#11</div>
+      <div class="prob-name">Container With Most Water</div>
+      <div class="prob-summary">Find max water area between two vertical lines</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Colliding</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Move the shorter line inward</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">Increasing/decreasing heights, equal heights</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #15 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-medium">MEDIUM</span>
+      <div class="prob-num">#15</div>
+      <div class="prob-name">3Sum</div>
+      <div class="prob-summary">Find all unique triplets in array that sum to zero</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Sort + Colliding</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Fix i, two-pointer the rest; skip duplicates</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n²)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">All zeros, no triplets, duplicate values</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #42 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-hard">HARD</span>
+      <div class="prob-num">#42</div>
+      <div class="prob-name">Trapping Rain Water</div>
+      <div class="prob-summary">Compute water trapped after rain on elevation map</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Colliding + max tracking</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Water = min(L_max,R_max) &minus; height[pos]</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">Flat land, single peak, descending/ascending</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- #16 -->
+<div class="flip-card" onclick="this.classList.toggle('flipped')">
+  <div class="flip-inner">
+    <div class="front">
+      <span class="tag tag-medium">MEDIUM</span>
+      <div class="prob-num">#16</div>
+      <div class="prob-name">3Sum Closest</div>
+      <div class="prob-summary">Find triplet sum closest to given target</div>
+    </div>
+    <div class="back">
+      <div><span class="back-label">Pattern</span><br><span class="back-value highlight">Sort + Colliding</span></div>
+      <hr>
+      <div><span class="back-label">Key Insight</span><br><span class="back-value">Track minimal absolute diff from target</span></div>
+      <hr>
+      <div class="back-row">
+        <div><span class="back-label">Time</span><br><span class="back-value green">O(n²)</span></div>
+        <div><span class="back-label">Space</span><br><span class="back-value green">O(1)</span></div>
+      </div>
+      <hr>
+      <div><span class="back-label">Edge Cases</span><br><span class="back-value">Same values, negative target</span></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<a class="backlink" href="index.html">&larr; Back to Patterns</a>
+</div>
+</body>
+</html>

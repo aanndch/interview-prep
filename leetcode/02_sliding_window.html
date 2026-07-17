@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pattern 2: Sliding Window</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #8250df);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.6rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #21262d;
+    }
+    h3 {
+      font-size: 1.2rem;
+      color: #d2a8ff;
+      margin-top: 1.8rem;
+      margin-bottom: 0.6rem;
+    }
+    h4 { color: #7ee787; margin-top: 1.2rem; margin-bottom: 0.4rem; }
+    p, li { color: #b1bac4; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+    }
+    .card h3 { margin-top: 0; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .tag-easy { background: #1b3a2b; color: #7ee787; }
+    .tag-medium { background: #3a2b1b; color: #d29922; }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op { color: #ffa657; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    th { background: #161b22; color: #58a6ff; font-weight: 600; }
+    tr:hover td { background: #1c2128; }
+
+    .window-visual {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin: 0.8rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+    .window-item {
+      width: 44px;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 6px;
+      font-weight: 600;
+      padding: 2px 0;
+      line-height: 1.2;
+      gap: 1px;
+    }
+    .window-item.in-window {
+      border-color: #58a6ff;
+      background: #1a3655;
+    }
+    .window-item.left-edge {
+      border-color: #ff7b72;
+      background: #3d1f1e;
+    }
+    .window-item.right-edge {
+      border-color: #7ee787;
+      background: #1b3a2b;
+    }
+    .window-item.mid {
+      border-color: #d2a8ff;
+      background: #2a1f3d;
+    }
+    .window-item.active {
+      border-color: #ffa657;
+      background: #3d2f1a;
+    }
+
+    .pointer-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      white-space: nowrap;
+      display: block;
+      text-align: center;
+      width: 100%;
+      line-height: 1.1;
+    }
+    .l-ptr-label { color: #ff7b72; }
+    .r-ptr-label { color: #7ee787; }
+
+    .window-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #ff7b72, #58a6ff, #7ee787);
+      border-radius: 3px;
+      margin: 0.2rem 0 0.6rem;
+    }
+
+    .flow {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 0.8rem 0;
+    }
+
+    .arrow { color: #ffa657; font-weight: bold; }
+
+    .toc {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .toc h3 { margin: 0 0 0.6rem 0; }
+    .toc a { display: block; padding: 2px 0; font-size: 0.92rem; }
+
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    /* Accordion */
+    details.approach, details.solution {
+      margin-top: 0.8rem;
+    }
+    details summary {
+      cursor: pointer;
+      color: #8b949e;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      background: #1c2128;
+      user-select: none;
+      display: inline-block;
+    }
+    details summary:hover {
+      background: #21262d;
+    }
+    details[open] summary {
+      color: #d2a8ff;
+      margin-bottom: 0.4rem;
+    }
+    #toggle-all {
+      margin-bottom: 1rem;
+      padding: 6px 16px;
+      background: #21262d;
+      color: #8b949e;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    #toggle-all:hover {
+      background: #30363d;
+      color: #e1e4ea;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Pattern 2: Sliding Window</h1>
+<p style="color: #8b949e; margin-bottom: 1.2rem;">A comprehensive guide with visuals, code, and intuition.</p>
+
+<button id="toggle-all">▼ Expand All Walkthroughs &amp; Code</button>
+<script>
+(function(){
+  var btn = document.getElementById('toggle-all');
+  var expanded = false;
+  btn.onclick = function(){
+    expanded = !expanded;
+    document.querySelectorAll('.approach,.solution').forEach(function(e){ e.open = expanded; });
+    btn.textContent = expanded
+      ? '▲ Collapse All Walkthroughs & Code'
+      : '▼ Expand All Walkthroughs & Code';
+  };
+})();
+</script>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <a href="#what">What is Sliding Window?</a>
+  <a href="#when">When to Use It</a>
+  <a href="#types">Fixed vs Variable Window</a>
+  <a href="#easy">Easy Problems</a>
+  <a href="#medium">Medium Problems</a>
+  <a href="#cheatsheet">Cheatsheet</a>
+</div>
+
+<!-- ==================== WHAT ==================== -->
+<h2 id="what">What is Sliding Window?</h2>
+
+<p>Sliding Window is a technique that <strong>maintains a contiguous subarray/substring</strong> (the "window") and slides it across the data structure to solve problems in <strong>O(n) time</strong> instead of O(n² or n³).</p>
+
+<p>Instead of checking every possible subarray (O(n²)), we expand/shrink the window as we go:</p>
+
+<pre><span class="cm">// Before (brute force):</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i, n):  <span class="cm">// O(n²) subarrays</span>
+
+<span class="cm">// After (sliding window):</span>
+left = <span class="num">0</span>
+<span class="kw">for</span> right <span class="kw">in</span> <span class="fn">range</span>(n):
+    <span class="cm">// expand window</span>
+    <span class="kw">while</span> invalid_condition:
+        <span class="cm">// shrink from left</span>
+        left += <span class="num">1</span></pre>
+
+<p>The window is defined by two pointers (<code>left</code> and <code>right</code>) that <strong>both move forward only</strong> — unlike Two Pointers where they move toward each other.</p>
+
+<!-- ==================== WHEN ==================== -->
+<h2 id="when">When to Use It</h2>
+
+<table>
+  <tr><th>Signal</th><th>Example Problem</th></tr>
+  <tr><td>Subarray/substring with a <strong>fixed size k</strong></td><td>#643 Maximum Average Subarray I</td></tr>
+  <tr><td>Subarray/substring meeting a <strong>condition</strong> (minimum/maximum length)</td><td>#209 Minimum Size Subarray Sum, #76 Minimum Window Substring</td></tr>
+  <tr><td>Problem involves <strong>contiguous</strong> elements</td><td>#3 Longest Substring Without Repeating Characters</td></tr>
+  <tr><td>Need to find <strong>all occurrences</strong> of a pattern in a string</td><td>#438 Find Anagrams, #567 Permutation in String</td></tr>
+  <tr><td>Array + need <strong>maximum/minimum in every window</strong></td><td>#239 Sliding Window Maximum</td></tr>
+</table>
+
+<h3>Decision Flowchart</h3>
+
+<div class="flow">Is it a subarray/substring problem?
+├── <span style="color:#ff7b72;">No</span> → Try a different pattern
+└── <span style="color:#7ee787;">Yes</span> → Does the window have a fixed size?
+    ├── <span style="color:#7ee787;">Yes</span> → <span style="color:#58a6ff;">Fixed-size sliding window</span>
+    │   ├── Need max/min average/sum?     → (#643)
+    │   └── Need max/min in each window?  → Deque + sliding (#239)
+    └── <span style="color:#ff7b72;">No</span> → <span style="color:#58a6ff;">Variable-size sliding window</span>
+        ├── Need shortest satisfying?      → Expand right, shrink left (#209, #76)
+        ├── Need longest valid?            → Expand right, shrink when invalid (#3)
+        └── Find all anagrams/permutations?→ Fixed-size char frequency (#438, #567)</div>
+
+<!-- ==================== TYPES ==================== -->
+<h2 id="types">Fixed vs Variable Window</h2>
+
+<h3>A) Fixed-Size Window</h3>
+
+<div class="window-visual">
+  <span style="color:#8b949e; margin-right:6px;">Window size = 4:</span>
+  <div class="window-item left-edge">2<span class="pointer-label l-ptr-label">L</span></div>
+  <div class="window-item in-window">5</div>
+  <div class="window-item in-window">1</div>
+  <div class="window-item right-edge">8<span class="pointer-label r-ptr-label">R</span></div>
+  <div class="window-item" style="opacity:0.4;">3</div>
+  <div class="window-item" style="opacity:0.4;">7</div>
+</div>
+<div style="height:4px; background:linear-gradient(90deg,#ff7b72,#58a6ff,#7ee787); border-radius:2px; width:200px; margin:0.2rem 0 0.8rem;"></div>
+
+<p>Both L and R move together by 1 each step. <strong>Window size stays constant.</strong></p>
+
+<pre><span class="kw">def</span> <span class="fn">fixed_window</span>(arr, k):
+    <span class="cm"># build initial window [0, k-1]</span>
+    window = <span class="fn">sum</span>(arr[:k])
+    result = window
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k, <span class="fn">len</span>(arr)):
+        window += arr[i] - arr[i - k]  <span class="cm">// slide right</span>
+        result = <span class="fn">max</span>(result, window)
+    <span class="kw">return</span> result</pre>
+
+<h3>B) Variable-Size Window</h3>
+
+<div class="window-visual">
+  <span style="color:#8b949e; margin-right:6px;">Window grows/shrinks:</span>
+  <div class="window-item left-edge">a<span class="pointer-label l-ptr-label">L</span></div>
+  <div class="window-item in-window">b</div>
+  <div class="window-item in-window">c</div>
+  <div class="window-item right-edge">d<span class="pointer-label r-ptr-label">R</span></div>
+  <div class="window-item" style="opacity:0.4;">e</div>
+  <div class="window-item" style="opacity:0.4;">f</div>
+</div>
+<div style="height:4px; background:linear-gradient(90deg,#ff7b72,#58a6ff,#7ee787); border-radius:2px; width:200px; margin:0.2rem 0 0.8rem;"></div>
+
+<p>R expands the window on each iteration. L shrinks when the condition is violated. <strong>Window size varies.</strong></p>
+
+<pre><span class="kw">def</span> <span class="fn">variable_window</span>(arr):
+    l = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
+        <span class="cm">// expand: add arr[r] to window state</span>
+        <span class="kw">while</span> invalid(l, r):
+            <span class="cm">// shrink: remove arr[l] from window state</span>
+            l += <span class="num">1</span>
+        <span class="cm">// update result with valid window</span></pre>
+
+<p><strong>Template variable-size (substring):</strong></p>
+
+<pre><span class="kw">def</span> <span class="fn">sliding_window</span>(s):
+    l = <span class="num">0</span>
+    counts = {}
+    result = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(s)):
+        counts[s[r]] = counts.<span class="fn">get</span>(s[r], <span class="num">0</span>) + <span class="num">1</span>
+        <span class="kw">while</span> <span class="fn">shrink_condition</span>(counts):
+            counts[s[l]] -= <span class="num">1</span>
+            <span class="kw">if</span> counts[s[l]] == <span class="num">0</span>:
+                <span class="kw">del</span> counts[s[l]]
+            l += <span class="num">1</span>
+        result = <span class="fn">max</span>(result, r - l + <span class="num">1</span>)
+    <span class="kw">return</span> result</pre>
+
+<!-- ==================== EASY ==================== -->
+<h2 id="easy">Easy Problems</h2>
+
+<!-- #643 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#643 Maximum Average Subarray I</strong>
+  </div>
+  <p style="margin-top:0.5rem;">You are given an integer array nums consisting of n elements, and an integer k. Find a contiguous subarray whose length is equal to k that has the maximum average value and return this value. Any answer with a calculation error less than 10<sup>-5</sup> will be accepted.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Fixed-size sliding window. Compute sum of first k, then slide subtracting nums[i-k] and adding nums[i].</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: nums = [1, 12, -5, -6, 50, 3], k = 4</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 1:</span>
+    <div class="window-item left-edge">1<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">12</div>
+    <div class="window-item in-window">-5</div>
+    <div class="window-item right-edge">-6<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">50</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+  </div>
+  <p style="font-size:0.8rem;">sum = 1+12-5-6 = 2, avg = 0.5</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 2:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item left-edge">12<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">-5</div>
+    <div class="window-item in-window">-6</div>
+    <div class="window-item right-edge">50<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+  </div>
+  <p style="font-size:0.8rem;">sum = 2 - 1 + 50 = 51, avg = 12.75</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 3:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">12</div>
+    <div class="window-item left-edge">-5<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">-6</div>
+    <div class="window-item in-window">50</div>
+    <div class="window-item right-edge">3<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.8rem;">sum = 51 - 12 + 3 = 42, avg = 10.5</p>
+
+  <p><strong>Max average:</strong> 12.75</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">findMaxAverage</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>], k: <span class="kw">int</span>) -> <span class="kw">float</span>:
+    window = <span class="fn">sum</span>(nums[:k])
+    best = window
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k, <span class="fn">len</span>(nums)):
+        window += nums[i] - nums[i - k]
+        best = <span class="fn">max</span>(best, window)
+    <span class="kw">return</span> best / k</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #209 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#209 Minimum Size Subarray Sum</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given an array of positive integers nums and a positive integer target, return the minimal length of a subarray whose sum is greater than or equal to target. If there is no such subarray, return 0 instead.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Variable-size window. Expand right, shrink left while sum &ge; target, tracking minimum length.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: target = 7, nums = [2, 3, 1, 2, 4, 3]</p>
+
+  <div class="window-visual" style="font-size:0.7rem;">
+    <span style="color:#8b949e;">R=0:</span>
+    <div class="window-item right-edge">2<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">2</div>
+    <div class="window-item" style="opacity:0.3;">4</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+  </div>
+  <p style="font-size:0.75rem;">sum=2 &lt; 7 → expand</p>
+
+  <div class="window-visual" style="font-size:0.7rem;">
+    <span style="color:#8b949e;">R=3:</span>
+    <div class="window-item left-edge">2<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">3</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item right-edge">2<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">4</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+  </div>
+  <p style="font-size:0.75rem;">sum=2+3+1+2=8 &ge; 7 → <span style="color:#7ee787;">len=4</span>, shrink left: sum=8-2=6 &lt; 7</p>
+
+  <div class="window-visual" style="font-size:0.7rem;">
+    <span style="color:#8b949e;">R=4:</span>
+    <div class="window-item" style="opacity:0.3;">2</div>
+    <div class="window-item left-edge">3<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item in-window">2</div>
+    <div class="window-item right-edge">4<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+  </div>
+  <p style="font-size:0.75rem;">sum=6+4=10 &ge; 7 → <span style="color:#7ee787;">len=4</span>, shrink: remove 3 → sum=7, <span style="color:#7ee787;">len=3</span>, remove 1 → sum=6 &lt; 7</p>
+
+  <div class="window-visual" style="font-size:0.7rem;">
+    <span style="color:#8b949e;">R=5:</span>
+    <div class="window-item" style="opacity:0.3;">2</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+    <div class="window-item left-edge">1<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">2</div>
+    <div class="window-item in-window">4</div>
+    <div class="window-item right-edge">3<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.75rem;">sum=6+3=9 &ge; 7 → shrink: remove 1 → sum=8, len=3; remove 2 → sum=6 &lt; 7 → <span style="color:#7ee787;">min len=2</span> (subarray [4,3])</p>
+
+  <p><strong>Result:</strong> 2</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">minSubArrayLen</span>(target: <span class="kw">int</span>, nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
+    l = <span class="num">0</span>
+    window = <span class="num">0</span>
+    best = <span class="fn">len</span>(nums) + <span class="num">1</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(nums)):
+        window += nums[r]
+        <span class="kw">while</span> window &gt;= target:
+            best = <span class="fn">min</span>(best, r - l + <span class="num">1</span>)
+            window -= nums[l]
+            l += <span class="num">1</span>
+    <span class="kw">return</span> best <span class="kw">if</span> best &lt;= <span class="fn">len</span>(nums) <span class="kw">else</span> <span class="num">0</span></pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- ==================== MEDIUM ==================== -->
+<h2 id="medium">Medium Problems</h2>
+
+<!-- #3 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#3 Longest Substring Without Repeating Characters</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given a string s, find the length of the longest substring without repeating characters.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Variable-size window + hash map of char positions. When a repeat is found, shrink L past the previous occurrence.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: "abcabcbb"</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <div class="window-item left-edge">a<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">b</div>
+    <div class="window-item right-edge">c<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">a</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">c</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+  </div>
+  <p style="font-size:0.75rem;">Window "abc" → length 3, no repeats → expand</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <div class="window-item" style="opacity:0.3;">a</div>
+    <div class="window-item left-edge">b<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">c</div>
+    <div class="window-item right-edge">a<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">c</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+  </div>
+  <p style="font-size:0.75rem;">Window "bca" → length 3, no repeats → expand</p>
+
+  <p><strong>Result:</strong> 3 (any of "abc", "bca", "cab")</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">lengthOfLongestSubstring</span>(s: <span class="kw">str</span>) -> <span class="kw">int</span>:
+    l = <span class="num">0</span>
+    seen = {}
+    best = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(s)):
+        <span class="kw">if</span> s[r] <span class="kw">in</span> seen <span class="kw">and</span> seen[s[r]] &gt;= l:
+            l = seen[s[r]] + <span class="num">1</span>
+        seen[s[r]] = r
+        best = <span class="fn">max</span>(best, r - l + <span class="num">1</span>)
+    <span class="kw">return</span> best</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(min(m, n)) where m = charset size</p>
+  </details>
+</div>
+
+<!-- #438 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#438 Find All Anagrams in a String</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given two strings s and p, return an array of all the start indices of p's anagrams in s. You may return the answer in any order.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Fixed-size window (size = |p|). Build frequency maps for p and the window, compare each slide.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: s = "cbaebabacd", p = "abc"</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 0:</span>
+    <div class="window-item left-edge">c<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">b</div>
+    <div class="window-item right-edge">a<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">e</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">a</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">a</div>
+    <div class="window-item" style="opacity:0.3;">c</div>
+    <div class="window-item" style="opacity:0.3;">d</div>
+  </div>
+  <p style="font-size:0.75rem;">{c:1,b:1,a:1} == {a:1,b:1,c:1} → <span style="color:#7ee787;">match at 0</span></p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 1:</span>
+    <div class="window-item" style="opacity:0.3;">c</div>
+    <div class="window-item left-edge">b<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">a</div>
+    <div class="window-item right-edge">e<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">a</div>
+    <div class="window-item" style="opacity:0.3;">b</div>
+    <div class="window-item" style="opacity:0.3;">a</div>
+    <div class="window-item" style="opacity:0.3;">c</div>
+    <div class="window-item" style="opacity:0.3;">d</div>
+  </div>
+  <p style="font-size:0.75rem;">{b:1,a:1,e:1} ≠ {a:1,b:1,c:1}</p>
+
+  <p><strong>Result:</strong> [0, 6]</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">findAnagrams</span>(s: <span class="kw">str</span>, p: <span class="kw">str</span>) -> <span class="kw">list</span>[<span class="kw">int</span>]:
+    ns, np = <span class="fn">len</span>(s), <span class="fn">len</span>(p)
+    <span class="kw">if</span> np &gt; ns: <span class="kw">return</span> []
+    p_count = [<span class="num">0</span>] * <span class="num">26</span>
+    s_count = [<span class="num">0</span>] * <span class="num">26</span>
+    <span class="kw">for</span> ch <span class="kw">in</span> p:
+        p_count[<span class="fn">ord</span>(ch) - <span class="fn">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>
+    res = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(ns):
+        s_count[<span class="fn">ord</span>(s[i]) - <span class="fn">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>
+        <span class="kw">if</span> i &gt;= np:
+            s_count[<span class="fn">ord</span>(s[i - np]) - <span class="fn">ord</span>(<span class="str">'a'</span>)] -= <span class="num">1</span>
+        <span class="kw">if</span> s_count == p_count:
+            res.<span class="fn">append</span>(i - np + <span class="num">1</span>)
+    <span class="kw">return</span> res</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1) (fixed 26-size arrays)</p>
+  </details>
+</div>
+
+<!-- #567 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#567 Permutation in String</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given two strings s1 and s2, return true if s2 contains a permutation of s1, or false otherwise. In other words, return true if one of s1's permutations is the substring of s2.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Same fixed-size window as #438. Return true as soon as window frequencies match.</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">checkInclusion</span>(s1: <span class="kw">str</span>, s2: <span class="kw">str</span>) -> <span class="kw">bool</span>:
+    n1, n2 = <span class="fn">len</span>(s1), <span class="fn">len</span>(s2)
+    <span class="kw">if</span> n1 &gt; n2: <span class="kw">return</span> <span class="kw">False</span>
+    count1 = [<span class="num">0</span>] * <span class="num">26</span>
+    count2 = [<span class="num">0</span>] * <span class="num">26</span>
+    <span class="kw">for</span> ch <span class="kw">in</span> s1:
+        count1[<span class="fn">ord</span>(ch) - <span class="fn">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n2):
+        count2[<span class="fn">ord</span>(s2[i]) - <span class="fn">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>
+        <span class="kw">if</span> i &gt;= n1:
+            count2[<span class="fn">ord</span>(s2[i - n1]) - <span class="fn">ord</span>(<span class="str">'a'</span>)] -= <span class="num">1</span>
+        <span class="kw">if</span> count1 == count2:
+            <span class="kw">return</span> <span class="kw">True</span>
+    <span class="kw">return</span> <span class="kw">False</span></pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #76 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#76 Minimum Window Substring</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string "". The testcases will be generated such that the answer is unique.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Variable-size window with frequency map. Expand right until all chars are covered, then shrink left to minimize.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: s = "ADOBECODEBANC", t = "ABC"</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Initial window "ADOBEC":</span>
+    <div class="window-item left-edge">A<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">D</div>
+    <div class="window-item in-window">O</div>
+    <div class="window-item in-window">B</div>
+    <div class="window-item in-window">E</div>
+    <div class="window-item right-edge">C<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">O</div>
+    <div class="window-item" style="opacity:0.3;">D</div>
+    <div class="window-item" style="opacity:0.3;">E</div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">A</div>
+    <div class="window-item" style="opacity:0.3;">N</div>
+    <div class="window-item" style="opacity:0.3;">C</div>
+  </div>
+  <p style="font-size:0.75rem;">Has A, B, C → valid. Shrink: remove A → invalid. Length=6</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Later window "BANC":</span>
+    <div class="window-item" style="opacity:0.3;">A</div>
+    <div class="window-item" style="opacity:0.3;">D</div>
+    <div class="window-item" style="opacity:0.3;">O</div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">E</div>
+    <div class="window-item" style="opacity:0.3;">C</div>
+    <div class="window-item" style="opacity:0.3;">O</div>
+    <div class="window-item" style="opacity:0.3;">D</div>
+    <div class="window-item" style="opacity:0.3;">E</div>
+    <div class="window-item left-edge">B<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">A</div>
+    <div class="window-item in-window">N</div>
+    <div class="window-item right-edge">C<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.75rem;">Has B, A, C → valid. Shrink: remove B → still has A, C? No → len=4. <span style="color:#7ee787;">Minimum found!</span></p>
+
+  <p><strong>Result:</strong> "BANC"</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">import</span> <span class="fn">collections</span>
+
+<span class="kw">def</span> <span class="fn">minWindow</span>(s: <span class="kw">str</span>, t: <span class="kw">str</span>) -> <span class="kw">str</span>:
+    need = <span class="fn">collections</span>.Counter(t)
+    have = <span class="fn">collections</span>.defaultdict(<span class="kw">int</span>)
+    l = <span class="num">0</span>
+    formed = <span class="num">0</span>
+    min_len = <span class="fn">float</span>(<span class="str">"inf"</span>)
+    start = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(s)):
+        ch = s[r]
+        have[ch] += <span class="num">1</span>
+        <span class="kw">if</span> ch <span class="kw">in</span> need <span class="kw">and</span> have[ch] == need[ch]:
+            formed += <span class="num">1</span>
+        <span class="kw">while</span> formed == <span class="fn">len</span>(need):
+            <span class="kw">if</span> r - l + <span class="num">1</span> &lt; min_len:
+                min_len = r - l + <span class="num">1</span>
+                start = l
+            have[s[l]] -= <span class="num">1</span>
+            <span class="kw">if</span> s[l] <span class="kw">in</span> need <span class="kw">and</span> have[s[l]] &lt; need[s[l]]:
+                formed -= <span class="num">1</span>
+            l += <span class="num">1</span>
+    <span class="kw">return</span> s[start:start + min_len] <span class="kw">if</span> min_len != <span class="fn">float</span>(<span class="str">"inf"</span>) <span class="kw">else</span> <span class="str">""</span></pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(m) where m = unique chars in t</p>
+  </details>
+</div>
+
+<!-- #239 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#239 Sliding Window Maximum</strong>
+  </div>
+  <p style="margin-top:0.5rem;">You are given an array of integers nums, there is a sliding window of size k which is moving from the very left of the array to the very right. You can only see the k numbers in the window. Each time the sliding window moves right by one position. Return the max sliding window.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Deque (monotonic queue) storing indices. Maintain decreasing order — front of deque is the max for the current window.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: nums = [1, 3, -1, -3, 5, 3, 6, 7], k = 3</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 0-2:</span>
+    <div class="window-item left-edge">1<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window" style="background:#1a3655;border-color:#58a6ff;">3</div>
+    <div class="window-item right-edge">-1<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">-3</div>
+    <div class="window-item" style="opacity:0.3;">5</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+    <div class="window-item" style="opacity:0.3;">6</div>
+    <div class="window-item" style="opacity:0.3;">7</div>
+  </div>
+  <p style="font-size:0.75rem;">Process i=1 (val 3): pop back (1) since 1&lt;3. Deque: [1]. i=2 (val -1): -1&lt;3, keep. Deque: [1,2]. max = nums[1]=<strong>3</strong></p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 1-3:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item left-edge">3<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window" style="background:#1a3655;border-color:#58a6ff;">-1</div>
+    <div class="window-item right-edge">-3<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">5</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+    <div class="window-item" style="opacity:0.3;">6</div>
+    <div class="window-item" style="opacity:0.3;">7</div>
+  </div>
+  <p style="font-size:0.75rem;">i=3 (val -3): -3 &lt; -1, keep. Deque: [1,2,3]. Check front: index 1 &ge; 1 (window start) → valid. max = nums[1]=<strong>3</strong></p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window 2-4:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+    <div class="window-item left-edge">-1<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">-3</div>
+    <div class="window-item right-edge" style="background:#1a3655;border-color:#58a6ff;">5<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">3</div>
+    <div class="window-item" style="opacity:0.3;">6</div>
+    <div class="window-item" style="opacity:0.3;">7</div>
+  </div>
+  <p style="font-size:0.75rem;">i=4 (val 5): pop back (-3,-1) since both &lt; 5. Deque: [1]→[1,4]. Check front: index 1 &lt; 2 (window start) → pop front. Deque: [4]. max = nums[4]=<strong>5</strong></p>
+
+  <p style="font-size:0.85rem;"><strong>Result:</strong> [3, 3, 5, 5, 6, 7]</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">import</span> <span class="fn">collections</span>
+
+<span class="kw">def</span> <span class="fn">maxSlidingWindow</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>], k: <span class="kw">int</span>) -> <span class="kw">list</span>[<span class="kw">int</span>]:
+    dq = <span class="fn">collections</span>.deque()
+    res = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(nums)):
+        <span class="cm"># remove out-of-window indices from front</span>
+        <span class="kw">if</span> dq <span class="kw">and</span> dq[<span class="num">0</span>] &lt; i - k + <span class="num">1</span>:
+            dq.<span class="fn">popleft</span>()
+        <span class="cm"># maintain decreasing order: remove smaller values from back</span>
+        <span class="kw">while</span> dq <span class="kw">and</span> nums[dq[-<span class="num">1</span>]] &lt; nums[i]:
+            dq.<span class="fn">pop</span>()
+        dq.<span class="fn">append</span>(i)
+        <span class="kw">if</span> i &gt;= k - <span class="num">1</span>:
+            res.<span class="fn">append</span>(nums[dq[<span class="num">0</span>]])
+    <span class="kw">return</span> res</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(k) for the deque</p>
+  </details>
+</div>
+
+<!-- #424 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#424 Longest Repeating Character Replacement</strong>
+  </div>
+  <p style="margin-top:0.5rem;">You are given a string s and an integer k. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most k times. Return the length of the longest substring containing the same letter you can get after performing the above operations.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Variable-size window. Track character frequencies. The window is valid when <code>window_len - max_freq &le; k</code>. Expand right; if invalid, shrink left.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: s = "AABABBA", k = 1</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window "AAB":</span>
+    <div class="window-item left-edge">A<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">A</div>
+    <div class="window-item right-edge">B<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">A</div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">A</div>
+  </div>
+  <p style="font-size:0.75rem;">freq={A:2,B:1}, maxFreq=2, len=3, replacements=1 &le; k=1 → valid, expand</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">Window "AABA":</span>
+    <div class="window-item left-edge">A<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">A</div>
+    <div class="window-item in-window">B</div>
+    <div class="window-item right-edge">A<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">A</div>
+  </div>
+  <p style="font-size:0.75rem;">freq={A:3,B:1}, maxFreq=3, len=4, replacements=1 &le; k=1 → valid, expand</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">After adding R=4 "B", window invalid. Shrink L:</span>
+    <div class="window-item" style="opacity:0.3;">A</div>
+    <div class="window-item left-edge">A<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">B</div>
+    <div class="window-item in-window">A</div>
+    <div class="window-item right-edge">B<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">B</div>
+    <div class="window-item" style="opacity:0.3;">A</div>
+  </div>
+  <p style="font-size:0.75rem;">Window = "ABAB" (indices 1-4), freq={A:2,B:2}, maxFreq=2, len=4, replacements=2 &gt; k=1 → shrink L again</p>
+
+  <p><strong>Result:</strong> 4</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">characterReplacement</span>(s: <span class="kw">str</span>, k: <span class="kw">int</span>) -> <span class="kw">int</span>:
+    freq = {}
+    l = <span class="num">0</span>
+    max_freq = <span class="num">0</span>
+    best = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(s)):
+        freq[s[r]] = freq.<span class="fn">get</span>(s[r], <span class="num">0</span>) + <span class="num">1</span>
+        max_freq = <span class="fn">max</span>(max_freq, freq[s[r]])
+        <span class="kw">while</span> (r - l + <span class="num">1</span>) - max_freq &gt; k:
+            freq[s[l]] -= <span class="num">1</span>
+            l += <span class="num">1</span>
+        best = <span class="fn">max</span>(best, r - l + <span class="num">1</span>)
+    <span class="kw">return</span> best</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(m) where m = unique chars</p>
+  </details>
+</div>
+
+<!-- #1004 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#1004 Max Consecutive Ones III</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given a binary array nums and an integer k, return the maximum number of consecutive 1's in the array if you can flip at most k 0's.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Variable-size window. Track zero count in window. Expand right; if zeros &gt; k, shrink left until zeros &le; k.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: nums = [1,1,1,0,0,0,1,1,1,1,0], k = 2</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">R=5, zeros=3 &gt; k=2 → shrink L past first three 1s, then past first 0:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item left-edge">0<span class="pointer-label l-ptr-label">L→</span></div>
+    <div class="window-item in-window">0</div>
+    <div class="window-item in-window">0</div>
+    <div class="window-item right-edge">1<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">0</div>
+  </div>
+  <p style="font-size:0.75rem;">After shrinking: L=3, zeros=2, len=3. Not great.</p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">R=9, best window found:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">0</div>
+    <div class="window-item left-edge">0<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">0</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item right-edge">1<span class="pointer-label r-ptr-label">R</span></div>
+    <div class="window-item" style="opacity:0.3;">0</div>
+  </div>
+  <p style="font-size:0.75rem;">L=4, R=9. zeros=2 &le; k=2, len=6 → <span style="color:#7ee787;">best = 6</span></p>
+
+  <div class="window-visual" style="font-size:0.78rem;">
+    <span style="color:#8b949e;">R=10, add trailing 0 → zeros=3 &gt; k=2, shrink L past index 4:</span>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">1</div>
+    <div class="window-item" style="opacity:0.3;">0</div>
+    <div class="window-item" style="opacity:0.3;">0</div>
+    <div class="window-item left-edge">0<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item in-window">1</div>
+    <div class="window-item right-edge">0<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.75rem;">After shrink: L=5, zeros=2, len=6. max stays 6.</p>
+
+  <p><strong>Result:</strong> 6</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">longestOnes</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>], k: <span class="kw">int</span>) -> <span class="kw">int</span>:
+    l = <span class="num">0</span>
+    zeros = <span class="num">0</span>
+    best = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(nums)):
+        <span class="kw">if</span> nums[r] == <span class="num">0</span>:
+            zeros += <span class="num">1</span>
+        <span class="kw">while</span> zeros &gt; k:
+            <span class="kw">if</span> nums[l] == <span class="num">0</span>:
+                zeros -= <span class="num">1</span>
+            l += <span class="num">1</span>
+        best = <span class="fn">max</span>(best, r - l + <span class="num">1</span>)
+    <span class="kw">return</span> best</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- ==================== CHEATSHEET ==================== -->
+<h2 id="cheatsheet">Cheatsheet</h2>
+
+<table>
+  <tr><th>Problem</th><th>Window Type</th><th>Key Insight</th></tr>
+  <tr><td>#643 Maximum Average Subarray I</td><td>Fixed-size</td><td>Slide by subtracting nums[i-k], adding nums[i]</td></tr>
+  <tr><td>#209 Minimum Size Subarray Sum</td><td>Variable-size</td><td>Expand right, shrink left while valid; track min length</td></tr>
+  <tr><td>#3 Longest Substring Without Repeating</td><td>Variable-size</td><td>Shrink L past previous occurrence on repeat</td></tr>
+  <tr><td>#438 Find All Anagrams</td><td>Fixed-size</td><td>Compare frequency arrays at each slide</td></tr>
+  <tr><td>#567 Permutation in String</td><td>Fixed-size</td><td>Same as #438, return early on match</td></tr>
+  <tr><td>#76 Minimum Window Substring</td><td>Variable-size</td><td>Expand to cover all, shrink to minimize; track formed count</td></tr>
+  <tr><td>#239 Sliding Window Maximum</td><td>Fixed-size + Deque</td><td>Monotonic deque — O(1) max retrieval, O(n) total</td></tr>
+  <tr><td>#424 Longest Repeating Char Replacement</td><td>Variable-size</td><td>Window valid when len - maxFreq &le; k</td></tr>
+  <tr><td>#1004 Max Consecutive Ones III</td><td>Variable-size</td><td>Track zeros count; shrink when zeros &gt; k</td></tr>
+</table>
+
+<p style="margin-top:2rem; color:#8b949e; font-size:0.85rem; text-align:center;">
+  All problems from <a href="https://leetcode.com" target="_blank">LeetCode</a> · Solutions in Python
+</p>
+
+</div>
+</body>
+</html>

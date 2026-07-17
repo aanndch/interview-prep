@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Problem 6: Real-Time Chat & Messaging</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({theme:'dark',themeVariables:{background:'#0f1117',primaryColor:'#161b22',primaryBorderColor:'#30363d',primaryTextColor:'#e1e4ea',lineColor:'#58a6ff',secondaryColor:'#1c2128',tertiaryColor:'#0d1117'},flowchart:{useMaxWidth:true,htmlLabels:true}});</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #8250df);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #21262d;
+    }
+    .part-divider {
+      font-size: 1.1rem;
+      color: #8b949e;
+      margin-top: 3rem;
+      margin-bottom: 1.5rem;
+      padding: 0.6rem 1rem;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #161b22;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .part-divider.part1 { border-color: #58a6ff; color: #58a6ff; }
+    .part-divider.part2 { border-color: #d29922; color: #d29922; }
+    h3 {
+      font-size: 1.15rem;
+      color: #d2a8ff;
+      margin-top: 1.8rem;
+      margin-bottom: 0.8rem;
+    }
+    h4 {
+      color: #7ee787;
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    p { color: #b1bac4; margin-bottom: 0.6rem; }
+    li { color: #b1bac4; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin-bottom: 1.2rem;
+    }
+    .card h3:first-child { margin-top: 0; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .tag-prod { background: #1b3a2b; color: #7ee787; }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 1rem 0;
+    }
+    code { font-family: inherit; }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op  { color: #ffa657; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    th {
+      background: #161b22;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    tr:hover td { background: #1c2128; }
+
+    ul, ol { padding-left: 1.4rem; margin-bottom: 0.8rem; }
+    li { margin-bottom: 0.4rem; }
+
+    .toc {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .toc h3 { margin: 0.8rem 0 0.4rem 0; color: #e1e4ea; }
+    .toc h3:first-child { margin-top: 0; }
+    .toc a { display: block; padding: 2px 0; font-size: 0.9rem; }
+    .toc .toc-part { font-size: 0.75rem; font-weight: 700; margin-right: 6px; }
+    .toc .toc-part.p1 { color: #58a6ff; }
+    .toc .toc-part.p2 { color: #d29922; }
+
+    .flow {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 1rem 0;
+    }
+
+    .callout {
+      background: #1c2128;
+      border-left: 3px solid #d2a8ff;
+      padding: 0.7rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout strong { color: #d2a8ff; }
+    .callout.green { border-left-color: #7ee787; }
+    .callout.green strong { color: #7ee787; }
+    .callout.orange { border-left-color: #d29922; }
+    .callout.orange strong { color: #d29922; }
+
+    .resume-connector {
+      background: linear-gradient(135deg, #1a3655, #1c2128);
+      border: 1px solid #58a6ff;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+    }
+    .resume-connector p { color: #c9d1d9; margin: 0; }
+    .resume-connector strong { color: #58a6ff; }
+
+    .backlink {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+    }
+    .backlink:hover { color: #58a6ff; }
+
+    .depth-link {
+      display: inline-block;
+      font-size: 0.82rem;
+      color: #d29922;
+      padding: 2px 8px;
+      border: 1px solid #3a2b1b;
+      border-radius: 4px;
+      background: #1c2128;
+      margin: 0.2rem 0 0.6rem 0;
+    }
+    .depth-link:hover { border-color: #d29922; }
+
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Real-Time Chat / Messaging System</h1>
+<p class="subtitle">Level 1 — directly matches your resume &middot; 45 min interview format</p>
+
+<div class="resume-connector">
+  <strong> Your experience:</strong> You built a P2P texting system serving 70%+ of clients with 1M+ weekly messages using NestJS, RabbitMQ, and WebSockets. This problem scales that to WhatsApp-level (hundreds of millions of users). Every concept here connects to code you've already written.
+</div>
+
+<div class="card" style="border-left:3px solid #58a6ff;">
+  <h3 style="margin:0 0 0.6rem 0; color:#e1e4ea;">Quick Refresher</h3>
+  <p style="margin:0 0 0.4rem 0; font-size:0.9rem;">
+    <strong>Scope:</strong> WhatsApp-scale — 100M DAU, 5B msg/day, 58K msg/s avg (116K peak), 5TB storage/day.
+    <strong>Architecture:</strong> WebSocket pool behind L7 LB (sticky sessions) → Chat servers → RabbitMQ for async routing + PostgreSQL (partitioned by time) for persistence + Redis for presence/sessions.
+  </p>
+  <p style="margin:0 0 0.4rem 0; font-size:0.9rem;">
+    <strong>Delivery:</strong> At-least-once via RabbitMQ acks + idempotency via <code>client_message_id</code> (unique constraint + LRU dedup cache) = effectively exactly-once. Message ordering via single RabbitMQ queue per conversation (FIFO) + client-side sequence numbers.
+  </p>
+  <p style="margin:0 0 0.4rem 0; font-size:0.9rem;">
+    <strong>Offline:</strong> Message persisted to DB, push notification sent (FCM/APNS). On reconnect, sync from <code>last_read_at</code>. <strong>Groups:</strong> Fan-out on write for ≤256; shared stream for larger.
+  </p>
+  <p style="margin:0; font-size:0.9rem;">
+    <strong>Key trade-offs:</strong> RabbitMQ over Kafka (per-message ack suits chat better than raw throughput), time-based partitioning (easy archiving), read receipts as soft state (lost ack is not a data issue). E2EE via Signal Protocol — server is a dumb relay.
+  </p>
+</div>
+
+<div class="toc">
+  <h3>Part 1 — Interview Core <span style="font-size:0.75rem; color:#8b949e; font-weight:400;">(present these)</span></h3>
+  <a href="#requirements"><span class="toc-part p1">1</span> Requirements Gathering</a>
+  <a href="#estimates"><span class="toc-part p1">2</span> Back-of-Envelope Estimates</a>
+  <a href="#highlevel"><span class="toc-part p1">3</span> High-Level Design</a>
+  <a href="#schema"><span class="toc-part p1">4</span> Database Schema</a>
+  <a href="#api"><span class="toc-part p1">5</span> API Design</a>
+  <a href="#websocket"><span class="toc-part p1">6</span> WebSocket Protocol &amp; Connection Management</a>
+  <a href="#ordering"><span class="toc-part p1">7</span> Message Ordering &amp; Delivery Guarantees</a>
+  <a href="#offline"><span class="toc-part p1">8</span> Offline Messages &amp; Store-and-Forward</a>
+  <a href="#group"><span class="toc-part p1">9</span> Group Chat &amp; Fan-Out</a>
+  <a href="#read-receipts"><span class="toc-part p1">10</span> Read Receipts &amp; Typing Indicators</a>
+  <a href="#e2e"><span class="toc-part p1">11</span> End-to-End Encryption Overview</a>
+  <a href="#scale"><span class="toc-part p1">12</span> Scaling &amp; Trade-Offs</a>
+  <a href="#monitoring"><span class="toc-part p1">13</span> Monitoring &amp; Observability</a>
+  <a href="#security"><span class="toc-part p1">14</span> Security &amp; Rate Limiting</a>
+  <a href="#dr"><span class="toc-part p1">15</span> Disaster Recovery</a>
+  <a href="#cost"><span class="toc-part p1">16</span> Cost Optimization</a>
+  <a href="#interview"><span class="toc-part p1">17</span> Interview Tips &amp; Follow-Up Questions</a>
+
+  <h3>Part 2 — Deep Dives <span style="font-size:0.75rem; color:#8b949e; font-weight:400;">(understand for depth)</span></h3>
+  <a href="#deep-rabbitmq"><span class="toc-part p2">D1</span> Why RabbitMQ, Not Direct Delivery?</a>
+  <a href="#deep-partitioning"><span class="toc-part p2">D2</span> Partitioning the Messages Table</a>
+  <a href="#deep-stateless"><span class="toc-part p2">D3</span> Connection State vs Stateless Design</a>
+  <a href="#deep-idempotency"><span class="toc-part p2">D4</span> At-Least-Once + Idempotency = Exactly-Once</a>
+  <a href="#deep-large-groups"><span class="toc-part p2">D5</span> Handling Large Groups</a>
+  <a href="#deep-kafka"><span class="toc-part p2">D6</span> RabbitMQ vs Kafka for Chat</a>
+  <a href="#deep-search"><span class="toc-part p2">D7</span> Message Search Under E2EE</a>
+</div>
+
+<!-- ======================================================================
+     PART 1: INTERVIEW CORE
+     ====================================================================== -->
+<div class="part-divider part1">Part 1 — Interview Core (45-min Walkthrough)</div>
+
+<!-- 1. REQUIREMENTS -->
+<h2 id="requirements">1. Requirements Gathering</h2>
+<p>Start every system design interview by clarifying what you're building. Don't assume — ask.</p>
+
+<div class="card">
+  <h3>Functional Requirements</h3>
+  <ul>
+    <li><strong>One-on-one chat:</strong> User A sends a message to User B. B receives it in real-time.</li>
+    <li><strong>Group chat:</strong> Messages delivered to all members of a group (up to 256 participants).</li>
+    <li><strong>Online/offline delivery:</strong> If recipient is offline, store message and deliver when they reconnect.</li>
+    <li><strong>Read receipts:</strong> Sender sees when their message was delivered and read.</li>
+    <li><strong>Typing indicators:</strong> Show when the other person is typing.</li>
+    <li><strong>Message history:</strong> Users can scroll back through conversation history.</li>
+    <li><strong>Multi-device:</strong> Same user on phone, desktop, and web — all receive messages.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Non-Functional Requirements</h3>
+  <ul>
+    <li><strong>Low latency:</strong> End-to-end delivery under 200ms for 99th percentile.</li>
+    <li><strong>High availability:</strong> System should never lose a message (at-least-once delivery).</li>
+    <li><strong>Ordering:</strong> Messages within a conversation must appear in sending order.</li>
+    <li><strong>Scalability:</strong> Support 100M+ DAU, billions of messages/day.</li>
+    <li><strong>Durability:</strong> Messages survive server failures. Persist to disk.</li>
+  </ul>
+</div>
+
+<div class="callout green"><strong>Interview tip:</strong> Say: "Before I design, let me confirm the scope. Are we building WhatsApp-scale (100M+ DAU) or a smaller team chat? For this interview, I'll assume WhatsApp-scale with 100M DAU, 10B messages/day. I'll focus on one-on-one and small group chats — we can skip the broadcast/channel use case for now unless you want to discuss it." This shows you're thinking about scope.</div>
+
+<!-- 2. BACK-OF-ENVELOPE -->
+<h2 id="estimates">2. Back-of-Envelope Estimates</h2>
+<p>Do these calculations <strong>out loud</strong>. Don't aim for perfect numbers — aim for reasonable orders of magnitude.</p>
+
+<table>
+  <tr><th>Metric</th><th>Calculation</th><th>Result</th></tr>
+  <tr><td>Daily active users</td><td>100M DAU (WhatsApp-scale)</td><td>100M</td></tr>
+  <tr><td>Messages per day</td><td>50 messages/user/day (moderate usage)</td><td>5B messages/day</td></tr>
+  <tr><td>Messages per second</td><td>5B / 86,400 ≈ 57,870</td><td>~58K msg/s peak</td></tr>
+  <tr><td>Peak throughput (2x average)</td><td>58K × 2</td><td>~116K msg/s</td></tr>
+  <tr><td>Storage per message</td><td>~1KB (text + metadata: sender, timestamp, IDs)</td><td>1KB</td></tr>
+  <tr><td>Daily storage</td><td>5B × 1KB = 5TB</td><td>5 TB/day</td></tr>
+  <tr><td>Yearly storage (text only)</td><td>5TB × 365</td><td>~1.8 PB/year</td></tr>
+  <tr><td>Bandwidth (ingress)</td><td>5B × 1KB / 86,400s ≈ 58 MB/s</td><td>~58 MB/s</td></tr>
+</table>
+
+<div class="callout"><strong>Key takeaway:</strong> "At 58K messages per second peak, a single server won't cut it. We need horizontal scaling for both WebSocket connections and message persistence. Storage at 5TB/day means we'll partition by time and archive old data."</div>
+
+<!-- 3. HIGH-LEVEL DESIGN -->
+<h2 id="highlevel">3. High-Level Design</h2>
+
+<h3>Architecture Overview</h3>
+
+<pre class="mermaid">
+  flowchart TD
+      CA["Client A (WebSocket)"] --> LB["Load Balancer (sticky sessions)"]
+      CB["Client B (WebSocket)"] --> LB
+      LB --> CS["Chat Server"]
+      CS --> Redis[("Redis<br/>presence, sessions")]
+      CS --> RMQ["RabbitMQ<br/>message queue"]
+      CS --> PG[("PostgreSQL<br/>messages, users")]
+</pre>
+
+<h3>Components</h3>
+
+<div class="card">
+  <p><strong>Chat Server (stateless WebSocket handler):</strong> Maintains persistent WebSocket connections with clients. Routes messages to the correct recipient via an internal lookup. <em>Multiple instances behind a load balancer with sticky sessions.</em></p>
+
+  <p><strong>Gateway / Load Balancer:</strong> Terminates WebSocket connections at L4 or L7. Uses IP hash (or a session cookie) for sticky sessions — ensures a reconnecting client reaches the same server that has their state.</p>
+
+  <p><strong>Redis:</strong> Stores online presence (user_id → server_id mapping), session data, and typing indicator state. Fast lookups (&lt; 1ms) are critical for routing.</p>
+
+  <p><strong>RabbitMQ:</strong> Acts as a message buffer. Producers (chat servers) publish messages to a queue. Consumers (the same or other chat servers) consume and deliver to the recipient's WebSocket connection.</p>
+
+  <p><strong>PostgreSQL (partitioned):</strong> The source of truth for all messages and conversation metadata. Queried for message history and offline message retrieval.</p>
+
+  <p><strong>Media Service (separate):</strong> For image/video/file uploads. Not in scope for this design, but mention it exists.</p>
+</div>
+
+<a href="#deep-rabbitmq" class="depth-link">+ Why RabbitMQ instead of direct delivery? → See Deep Dive D1</a>
+
+<!-- 4. DATABASE SCHEMA -->
+<h2 id="schema">4. Database Schema</h2>
+
+<h3>Core Tables</h3>
+
+<pre><span class="cm">-- Users (straightforward)</span>
+<span class="kw">CREATE TABLE</span> users (
+    id          UUID <span class="kw">PRIMARY KEY</span>,
+    username    <span class="kw">VARCHAR</span>(50) <span class="kw">UNIQUE NOT NULL</span>,
+    display_name <span class="kw">VARCHAR</span>(100),
+    password_hash <span class="kw">VARCHAR</span>(255),
+    created_at  <span class="kw">TIMESTAMP</span> <span class="kw">DEFAULT NOW</span>()
+);
+
+<span class="cm">-- Conversations (group or 1-on-1)</span>
+<span class="kw">CREATE TABLE</span> conversations (
+    id          UUID <span class="kw">PRIMARY KEY</span>,
+    type        <span class="kw">SMALLINT</span>  <span class="cm">-- 1 = direct, 2 = group</span>
+    name        <span class="kw">VARCHAR</span>(100),        <span class="cm">-- null for direct messages</span>
+    created_at  <span class="kw">TIMESTAMP</span> <span class="kw">DEFAULT NOW</span>()
+);
+
+<span class="cm">-- Conversation participants</span>
+<span class="kw">CREATE TABLE</span> conversation_participants (
+    conversation_id UUID <span class="kw">REFERENCES</span> conversations(id),
+    user_id         UUID <span class="kw">REFERENCES</span> users(id),
+    joined_at       <span class="kw">TIMESTAMP</span> <span class="kw">DEFAULT NOW</span>(),
+    last_read_at    <span class="kw">TIMESTAMP</span>,          <span class="cm">-- for read receipts</span>
+    <span class="kw">PRIMARY KEY</span> (conversation_id, user_id)
+);
+
+<span class="cm">-- Messages (source of truth)</span>
+<span class="kw">CREATE TABLE</span> messages (
+    id              UUID <span class="kw">PRIMARY KEY</span> <span class="kw">DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+    conversation_id UUID <span class="kw">NOT NULL REFERENCES</span> conversations(id),
+    sender_id       UUID <span class="kw">NOT NULL REFERENCES</span> users(id),
+    content         <span class="kw">TEXT NOT NULL</span>,
+    client_message_id <span class="kw">VARCHAR</span>(64) <span class="kw">NOT NULL</span>,  <span class="cm">-- for idempotency</span>
+    created_at      <span class="kw">TIMESTAMP</span> <span class="kw">NOT NULL</span> <span class="kw">DEFAULT NOW</span>()
+);
+
+<span class="cm">-- Index for fast conversation history queries</span>
+<span class="kw">CREATE INDEX</span> idx_messages_conv_created
+    <span class="kw">ON</span> messages (conversation_id, created_at <span class="kw">DESC</span>);
+
+<span class="cm">-- Idempotency index</span>
+<span class="kw">CREATE UNIQUE INDEX</span> idx_messages_client_id
+    <span class="kw">ON</span> messages (sender_id, client_message_id);</pre>
+
+<h3>Why This Schema Works</h3>
+<table>
+  <tr><th>Design Choice</th><th>Why</th></tr>
+  <tr><td>UUID primary keys</td><td>Client can generate message IDs without talking to the server. Avoids auto-increment contention. Works offline.</td></tr>
+  <tr><td><code>client_message_id</code></td><td>Deduplication. If client sends the same message twice (e.g., network hiccup), the unique constraint prevents duplicates.</td></tr>
+  <tr><td><code>last_read_at</code> on participants</td><td>Single timestamp per user per conversation is enough to compute unread counts and read receipts.</td></tr>
+  <tr><td>Denormalized <code>created_at</code> index</td><td>Scroll-back queries (<code>SELECT ... WHERE conversation_id = X ORDER BY created_at DESC LIMIT 50</code>) are covered by this index.</td></tr>
+</table>
+
+<div class="callout"><strong>Your context:</strong> Your NestJS + TypeORM setup would map these cleanly — <code>@Entity()</code> for each table, <code>@Index()</code> on the composite.</div>
+
+<a href="#deep-partitioning" class="depth-link">+ How to partition the messages table at 5TB/day? → See Deep Dive D2</a>
+
+<!-- 5. API DESIGN -->
+<h2 id="api">5. API Design</h2>
+
+<h3>REST Endpoints (for non-real-time operations)</h3>
+
+<pre><span class="cm">// Conversations</span>
+GET    /conversations              <span class="cm">// List user's conversations</span>
+POST   /conversations              <span class="cm">// Create new conversation</span>
+POST   /conversations/:id/join     <span class="cm">// Join (group only)</span>
+POST   /conversations/:id/leave    <span class="cm">// Leave (group only)</span>
+
+<span class="cm">// Messages (history)</span>
+GET    /conversations/:id/messages?before=&limit=50   <span class="cm">// Paginated history</span>
+
+<span class="cm">// Read receipts</span>
+POST   /conversations/:id/read     <span class="cm">// Mark as read up to this timestamp</span></pre>
+
+<h3>WebSocket Messages (real-time)</h3>
+<p>All real-time communication happens over WebSocket. The protocol uses JSON messages with a <code>type</code> field:</p>
+
+<pre><span class="cm">// Client → Server</span>
+{ <span class="str">"type"</span>: <span class="str">"send_message"</span>, <span class="str">"payload"</span>: {
+    <span class="str">"conversation_id"</span>: <span class="str">"uuid"</span>,
+    <span class="str">"content"</span>: <span class="str">"Hello!"</span>,
+    <span class="str">"client_message_id"</span>: <span class="str">"uuid-v4"</span>   <span class="cm">// Client-generated, for dedup</span>
+}}
+
+{ <span class="str">"type"</span>: <span class="str">"typing_start"</span>, <span class="str">"payload"</span>: { <span class="str">"conversation_id"</span>: <span class="str">"uuid"</span> }}
+{ <span class="str">"type"</span>: <span class="str">"typing_stop"</span>,  <span class="str">"payload"</span>: { <span class="str">"conversation_id"</span>: <span class="str">"uuid"</span> }}
+{ <span class="str">"type"</span>: <span class="str">"mark_read"</span>,     <span class="str">"payload"</span>: { <span class="str">"conversation_id"</span>: <span class="str">"uuid"</span>, <span class="str">"up_to"</span>: <span class="str">"timestamp"</span> }}
+{ <span class="str">"type"</span>: <span class="str">"ack"</span>,            <span class="str">"payload"</span>: { <span class="str">"client_message_id"</span>: <span class="str">"uuid"</span> }}
+
+<span class="cm">// Server → Client</span>
+{ <span class="str">"type"</span>: <span class="str">"new_message"</span>, <span class="str">"payload"</span>: {
+    <span class="str">"message_id"</span>: <span class="str">"uuid"</span>,
+    <span class="str">"conversation_id"</span>: <span class="str">"uuid"</span>,
+    <span class="str">"sender_id"</span>: <span class="str">"uuid"</span>,
+    <span class="str">"content"</span>: <span class="str">"Hello!"</span>,
+    <span class="str">"created_at"</span>: <span class="str">"iso-timestamp"</span>
+}}
+
+{ <span class="str">"type"</span>: <span class="str">"message_ack"</span>, <span class="str">"payload"</span>: { <span class="str">"client_message_id"</span>: <span class="str">"uuid"</span>, <span class="str">"status"</span>: <span class="str">"delivered"</span> | <span class="str">"read"</span> }}
+{ <span class="str">"type"</span>: <span class="str">"typing"</span>,       <span class="str">"payload"</span>: { <span class="str">"conversation_id"</span>: <span class="str">"uuid"</span>, <span class="str">"user_id"</span>: <span class="str">"uuid"</span>, <span class="str">"is_typing"</span>: <span class="kw">bool</span> }}</pre>
+
+<div class="callout"><strong>Your context:</strong> In your NestJS apps, you'd use <code>@WebSocketGateway()</code> with typed DTOs via <code>@SubscribeMessage()</code> decorators. The REST endpoints map to <code>@Controller()</code> classes with <code>@Post()</code>, <code>@Get()</code>, etc. The <code>client_message_id</code> pattern is already how you handle idempotency in your RabbitMQ pipeline.</div>
+
+<!-- 6. WEBSOCKET PROTOCOL -->
+<h2 id="websocket">6. WebSocket Protocol &amp; Connection Management</h2>
+
+<h3>Connection Lifecycle</h3>
+
+<div class="flow"><span class="cm">// 1. Client authenticates via REST (gets a JWT)</span>
+POST /auth/login  →  { token: "jwt..." }
+
+<span class="cm">// 2. Client opens WebSocket with JWT in query params</span>
+ws://chat.example.com/ws?token=jwt...
+
+<span class="cm">// 3. Server validates JWT, registers connection</span>
+redis.set(<span class="str">"presence:user:{user_id}"</span>, <span class="str">"server:{server_id}"</span>, TTL=60s)
+redis.sadd(<span class="str">"user_sessions:{user_id}"</span>, <span class="str">"session:{socket_id}"</span>)
+
+<span class="cm">// 4. Heartbeat — every 30s to detect disconnection</span>
+Client → { type: "ping" }
+Server → { type: "pong" }
+
+<span class="cm">// 5. On disconnect: remove from presence, queue offline messages</span>
+redis.del(<span class="str">"presence:user:{user_id}"</span>)
+<span class="cm">// Messages queued in RabbitMQ for this user will be stored on delivery failure</span></div>
+
+<h3>Sticky Sessions — Why They Matter</h3>
+<p>WebSocket connections are stateful. Once a client connects to chat server A, it must keep talking to A — you can't route to a different server mid-session. Load balancers handle this via:</p>
+<ul>
+  <li><strong>IP hash:</strong> Same IP always hits the same server. Simple but breaks if users share an IP (NAT).</li>
+  <li><strong>Cookie-based:</strong> LB sets a cookie on the first HTTP upgrade response; subsequent requests include it.</li>
+</ul>
+
+<div class="callout orange"><strong>Your context:</strong> Your NestJS WebSocket gateways use <code>@WebSocketGateway()</code> with a Redis adapter for horizontal scaling. The Redis adapter uses pub/sub to broadcast messages across servers — so even if client A is on server 1 and client B is on server 2, they can communicate. In this design, RabbitMQ handles that cross-server routing instead.</div>
+
+<a href="#deep-stateless" class="depth-link">+ How to handle server restarts with stateful WebSockets? → See Deep Dive D3</a>
+
+<!-- 7. MESSAGE ORDERING & DELIVERY -->
+<h2 id="ordering">7. Message Ordering &amp; Delivery Guarantees</h2>
+
+<h3>The Ordering Problem</h3>
+<p>Messages within a conversation must appear in the order the sender intended. In a distributed system with multiple chat servers, this is surprisingly hard:</p>
+<ul>
+  <li>User A sends message M1 from phone, then M2 from desktop — M2 might arrive at the server first.</li>
+  <li>Two users in a group chat send messages simultaneously — whose appears first?</li>
+</ul>
+
+<h3>Solution: Client-Side Sequence Numbers + Server-Side Ordering</h3>
+
+<div class="flow"><span class="cm">// Client tracks a sequence number per conversation</span>
+{ type: <span class="str">"send_message"</span>, payload: {
+    conversation_id: <span class="str">"conv-123"</span>,
+    content: <span class="str">"Hello"</span>,
+    client_message_id: <span class="str">"uuid"</span>,
+    sequence_number: <span class="num">42</span>    <span class="cm">// monotonic per conversation</span>
+}}
+
+<span class="cm">// Server side: use the sequence number for display order</span>
+<span class="cm">// But use server-created_at for chronological order</span>
+
+<span class="cm">// For group chat: one RabbitMQ queue per conversation</span>
+<span class="cm">// All messages for conv-123 go to the same queue consumer</span>
+<span class="cm">// Single consumer preserves FIFO order</span></div>
+
+<p><strong>Key insight:</strong> There are two different "orders". The <strong>display order</strong> (what the user sees) uses the <code>created_at</code> timestamp. The <strong>delivery order</strong> (which message gets processed first) is handled by routing all messages in a conversation through a single RabbitMQ queue with a single consumer — this preserves FIFO within that queue.</p>
+
+<h3>Delivery Guarantees</h3>
+
+<table>
+  <tr><th>Guarantee</th><th>How We Achieve It</th></tr>
+  <tr><td><strong>At-least-once</strong></td><td>RabbitMQ publisher confirms + consumer acknowledgments. If consumer crashes before sending ack, message is redelivered.</td></tr>
+  <tr><td><strong>No duplicates</strong></td><td><code>client_message_id</code> unique constraint in PostgreSQL + in-memory dedup set (LRU cache of recent IDs). If same ID received twice, second is silently dropped.</td></tr>
+  <tr><td><strong>In-order delivery</strong></td><td>Single queue per conversation. One consumer processes messages sequentially. Out-of-order from multi-device is resolved by client-side sequence numbers.</td></tr>
+  <tr><td><strong>Delivery receipts</strong></td><td>When server delivers to recipient's WebSocket, it publishes a <code>message_ack</code> event back to the sender's queue.</td></tr>
+</table>
+
+<a href="#deep-idempotency" class="depth-link">+ How at-least-once + idempotency gives exactly-once (with code) → See Deep Dive D4</a>
+
+<!-- 8. OFFLINE MESSAGES -->
+<h2 id="offline">8. Offline Messages &amp; Store-and-Forward</h2>
+
+<h3>How It Works</h3>
+
+<div class="flow"><span class="cm">// 1. Sender sends message</span>
+Client A → Chat Server → RabbitMQ → Consumer
+
+<span class="cm">// 2. Consumer checks presence</span>
+recipient = <span class="fn">redis.get</span>(<span class="str">"presence:user:{user_id}"</span>)
+<span class="kw">if</span> recipient == <span class="kw">null</span>:
+    <span class="cm">// Recipient offline — message stays in DB</span>
+    <span class="cm">// Notification push (APNS/FCM) is triggered</span>
+    <span class="fn">triggerPushNotification</span>(user_id, message_preview)
+<span class="kw">else</span>:
+    <span class="cm">// Route to the chat server holding their WebSocket</span>
+    server_id = <span class="fn">parseServerId</span>(recipient)
+    <span class="fn">publishToServer</span>(server_id, message)</div>
+
+<h3>Offline Message Retrieval</h3>
+<p>When a user comes online:</p>
+<ol>
+  <li>They authenticate and open a WebSocket.</li>
+  <li>The server checks <code>last_read_at</code> for each conversation.</li>
+  <li>It queries <code>SELECT * FROM messages WHERE conversation_id = X AND created_at > last_read_at ORDER BY created_at ASC LIMIT 50</code>.</li>
+  <li>Pending messages are streamed over the WebSocket.</li>
+  <li>The client inserts them into the local store and renders.</li>
+</ol>
+
+<div class="callout green"><strong>Interview tip:</strong> "For the offline case, I'd push a notification via FCM/APNS with a message preview and a <code>conversation_id</code> deep link. When the user opens the app, we sync from <code>last_read_at</code>. For large backlogs (user was offline for days), we'd batch the sync in pages of 50 to avoid overwhelming the client."</div>
+
+<!-- 9. GROUP CHAT -->
+<h2 id="group">9. Group Chat &amp; Fan-Out</h2>
+
+<h3>Two Approaches</h3>
+
+<table>
+  <tr><th></th><th>Fan-out on write (Push)</th><th>Fan-out on read (Pull)</th></tr>
+  <tr><td>How it works</td><td>When a message is sent, write one copy per recipient (or per device)</td><td>Write the message once; each recipient reads from the central stream</td></tr>
+  <tr><td>Storage</td><td>N copies per message (N = participants)</td><td>1 copy per message</td></tr>
+  <tr><td>Read latency</td><td>Instant — message is already in recipient's inbox</td><td>Recipient queries for new messages</td></tr>
+  <tr><td>Write overhead</td><td>High — group of 256 = 256 writes</td><td>Low — 1 write</td></tr>
+  <tr><td>Best for</td><td>Small groups (&le;256), like WhatsApp</td><td>Large channels / broadcasts, like Telegram</td></tr>
+</table>
+
+<h3>WhatsApp-Style (Fan-out on Write)</h3>
+<p>For small groups, write the message once to the <code>messages</code> table (central stream) and notify all online members via their presence info. Each client tracks their own <code>last_read_at</code> to compute unread counts.</p>
+
+<div class="flow"><span class="cm">// Group message flow:</span>
+1. Client sends message to Chat Server
+2. Server inserts into messages table (1 row)
+3. Server queries conversation_participants for all members
+4. For each online member:
+     server_id = redis.get(<span class="str">"presence:{user_id}"</span>)
+     publishToServer(server_id, newMessageEvent)
+5. For each offline member:
+     triggerPushNotification(user_id)
+6. RabbitMQ ack after delivery to all online recipients</div>
+
+<a href="#deep-large-groups" class="depth-link">+ How Telegram handles groups with 10K+ members → See Deep Dive D5</a>
+
+<!-- 10. READ RECEIPTS & TYPING -->
+<h2 id="read-receipts">10. Read Receipts &amp; Typing Indicators</h2>
+
+<h3>Read Receipts</h3>
+<p>Three states: <strong>Sent</strong> → <strong>Delivered</strong> → <strong>Read</strong>.</p>
+
+<div class="flow"><span class="cm">// Sent → Delivered: server acks when message persists to DB</span>
+Server → Client A: { type: <span class="str">"message_ack"</span>, client_message_id: <span class="str">"..."</span>, status: <span class="str">"delivered"</span> }
+
+<span class="cm">// Delivered → Read: client sends mark_read event</span>
+Client B → Server: { type: <span class="str">"mark_read"</span>, conversation_id: <span class="str">"conv-123"</span>, up_to: <span class="str">"2024-06-15T10:30:00Z"</span> }
+
+<span class="cm">// Server updates last_read_at and notifies sender</span>
+UPDATE conversation_participants SET last_read_at = <span class="str">"..."</span>
+  WHERE conversation_id = <span class="str">"conv-123"</span> AND user_id = <span class="str">"user-B"</span>;
+
+Server → Client A: { type: <span class="str">"message_ack"</span>, client_message_id: <span class="str">"..."</span>, status: <span class="str">"read"</span> }</div>
+
+<div class="callout"><strong>Performance note:</strong> Read receipts are <em>soft state</em>. We don't need strong consistency here. If a read receipt is lost, the sender sees "delivered" instead of "read" — not a data integrity issue. This is a good place to use optimistic updates and eventually consistent delivery.</div>
+
+<h3>Typing Indicators</h3>
+<p>Typing indicators are <strong>ephemeral</strong> — they're not stored in the database. They're delivered directly via WebSocket with a short-lived state in Redis:</p>
+
+<pre><span class="cm">// Client sends typing_start (debounced — max once per 3 seconds)</span>
+{ type: <span class="str">"typing_start"</span>, payload: { conversation_id: <span class="str">"conv-123"</span> }}
+
+<span class="cm">// Server sets a short TTL in Redis</span>
+redis.set(<span class="str">"typing:{conversation_id}:{user_id}"</span>, <span class="str">"true"</span>, <span class="str">"EX"</span>, <span class="num">5</span>)
+
+<span class="cm">// Server broadcasts to all OTHER conversation participants</span>
+Server → OtherClients: { type: <span class="str">"typing"</span>, payload: { conversation_id, user_id, is_typing: <span class="kw">true</span> }}
+
+<span class="cm">// Client sends typing_stop (on send, or after 3s of inactivity)</span>
+{ type: <span class="str">"typing_stop"</span>, payload: { conversation_id: <span class="str">"conv-123"</span> }}
+
+<span class="cm">// If TTL expires without a stop, the indicator disappears automatically</span>
+<span class="cm">// This handles the case where the client disconnects while typing</span></pre>
+
+<!-- 11. E2EE -->
+<h2 id="e2e">11. End-to-End Encryption Overview</h2>
+<p>This is a common follow-up question. You don't need to design the full crypto, but you should know the <strong>Signal Protocol</strong> concepts:</p>
+
+<div class="card">
+  <h3>How It Works (High Level)</h3>
+  <ul>
+    <li><strong>Public key registration:</strong> Each device generates a key pair (public + private). The public key is registered with the server. Private key never leaves the device.</li>
+    <li><strong>Pre-keys:</strong> Devices upload a batch of "pre-keys" (signed + one-time) to the server. When Alice wants to send Bob a message, she fetches one of Bob's pre-keys to establish a session.</li>
+    <li><strong>Ratchet:</strong> Each message generates a new key using a Diffie-Hellman ratchet. Even if a key is compromised, previous and future messages are protected (forward secrecy).</li>
+    <li><strong>The server is a dumb relay:</strong> It stores and forwards encrypted blobs. It cannot read the content.</li>
+  </ul>
+</div>
+
+<div class="callout green"><strong>Interview answer:</strong> "For E2EE, I'd use the Signal Protocol — it's the gold standard used by WhatsApp and Signal. The server never sees plaintext. Each message is encrypted with a per-message key from a Diffie-Hellman ratchet. The server's role is just to store and forward encrypted payloads. Key management is the hard part — I'd integrate with an existing library like libsignal rather than implementing the crypto myself."</div>
+
+<!-- 12. SCALING -->
+<h2 id="scale">12. Scaling &amp; Trade-Offs</h2>
+
+<h3>Single Server → Distributed</h3>
+
+<table>
+  <tr><th>Scale</th><th>Architecture</th><th>Limitation</th></tr>
+  <tr><td>1K concurrent users</td><td>Single NestJS server + PostgreSQL + in-memory state</td><td>Single point of failure, RAM limits</td></tr>
+  <tr><td>100K concurrent</td><td>Multiple chat servers + Redis (presence) + RabbitMQ (message queue)</td><td>RabbitMQ throughput, DB write bottleneck</td></tr>
+  <tr><td>10M concurrent</td><td>Add message partitioning, read replicas, CDN for media</td><td>Cross-region latency, consistency challenges</td></tr>
+  <tr><td>100M+ DAU (WhatsApp)</td><td>Custom Erlang stack, per-conversation sharding, in-house message store</td><td>Operational complexity, infrastructure cost</td></tr>
+</table>
+
+<h3>Key Bottlenecks &amp; Solutions</h3>
+
+<div class="card">
+  <p><strong>WebSocket connections per server:</strong> A single machine can handle ~1M concurrent connections (with epoll/kqueue and enough RAM). At 100M DAU with 30% concurrency = 30M connections, we need ~30-50 chat servers.</p>
+
+  <p><strong>Database writes:</strong> 116K writes/sec at peak. A single PostgreSQL instance handles ~5-10K writes/sec. Solution: partition messages by conversation_id hash across multiple DB instances.</p>
+
+  <p><strong>RabbitMQ throughput:</strong> A well-tuned RabbitMQ cluster handles ~50K msg/s. At 116K peak, we'd need multiple queues or use Kafka for higher throughput.</p>
+
+  <p><strong>Same-conversation ordering:</strong> All messages in one conversation must go through the same queue consumer. This means a single consumer thread per busy conversation. If a conversation has very high throughput, it becomes a bottleneck. Mitigation: batch writes, use server-side timestamps for ordering.</p>
+</div>
+
+<a href="#deep-kafka" class="depth-link">+ RabbitMQ vs Kafka — which is better for chat at scale? → See Deep Dive D6</a>
+
+<h3>Multi-Region Deployment</h3>
+<p>For a global service (WhatsApp serves 180+ countries):</p>
+<ul>
+  <li><strong>Regional clusters:</strong> Deploy chat servers in each region (US, EU, APAC). Users connect to the nearest region.</li>
+  <li><strong>Cross-region messages:</strong> If user A in US sends to user B in EU, the message is queued in the US cluster, replicated to EU via a cross-region RabbitMQ bridge, and delivered by the EU cluster.</li>
+  <li><strong>Database:</strong> Each region has its own DB. User data is partitioned by home region. Cross-region reads use async replication.</li>
+  <li><strong>Consistency:</strong> Messages are local to the sender's region. The recipient reads from their region's replica (eventually consistent cross-region).</li>
+</ul>
+
+<!-- 13. MONITORING -->
+<h2 id="monitoring">13. Monitoring &amp; Observability</h2>
+
+<p>At WhatsApp-scale, you need real-time visibility into every layer of the system. LINE's engineering team explicitly requires "proficiency with observability tools such as Prometheus, Grafana, Elasticsearch."</p>
+
+<h3>Key Metrics</h3>
+<table>
+  <tr><th>Metric</th><th>Target</th><th>Alert Threshold</th></tr>
+  <tr><td>WebSocket connections</td><td>~30M concurrent</td><td>&gt; 35M (capacity warning)</td></tr>
+  <tr><td>Message delivery latency (p50)</td><td>&lt; 50ms</td><td>&gt; 100ms for5 min</td></tr>
+  <tr><td>Message delivery latency (p99)</td><td>&lt; 200ms</td><td>&gt; 500ms for5 min</td></tr>
+  <tr><td>Delivery success rate</td><td>&gt; 99.9%</td><td>&lt; 99.9% for5 min</td></tr>
+  <tr><td>Message throughput</td><td>58K avg, 116K peak</td><td>&gt; 150K (capacity limit)</td></tr>
+  <tr><td>DB write latency</td><td>&lt; 10ms</td><td>&gt; 50ms for5 min</td></tr>
+  <tr><td>Redis hit rate</td><td>&gt; 99%</td><td>&lt; 95% for5 min</td></tr>
+</table>
+
+<h3>SRE Practices (LINE-Style)</h3>
+<ul>
+  <li><strong>SLIs:</strong> Message delivery latency, delivery success rate, connection stability, WebSocket reconnect time</li>
+  <li><strong>SLOs:</strong> 99.99% availability (52 min/year downtime), &lt;200ms p99 delivery latency</li>
+  <li><strong>Error budgets:</strong> If we exceed 52 min downtime, freeze non-critical feature launches</li>
+  <li><strong>Incident response:</strong> PagerDuty alerts → on-call rotation → post-mortem within48 hours</li>
+</ul>
+
+<h3>Dashboard Essentials</h3>
+<ul>
+  <li><strong>Real-time:</strong> WebSocket connections, message rate (in/out), delivery latency distribution</li>
+  <li><strong>Per-conversation:</strong> Message volume, fan-out depth, group size distribution</li>
+  <li><strong>Infrastructure:</strong> Cassandra write latency, Redis memory, RabbitMQ queue depth</li>
+  <li><strong>Client:</strong> Reconnect rate, offline message backlog, multi-device sync status</li>
+</ul>
+
+<div class="callout green"><strong>Interview answer:</strong> "I'd instrument the message path with structured logging and metrics. Every message logs: conversation_id, latency_ms, delivery_status (delivered/queued/failed), cache_hit. Use Prometheus for metrics, Grafana for dashboards, and PagerDuty for alerting. The most critical SLI is delivery success rate — if it drops below99.9%, we need to investigate immediately."</div>
+
+<!-- 14. SECURITY -->
+<h2 id="security">14. Security &amp; Rate Limiting</h2>
+
+<h3>Rate Limiting Strategy</h3>
+<div class="flow"><span class="cm">// Token Bucket (Redis implementation)</span>
+<span class="cm">// Per user:30 msg/min, burst10 msg/s</span>
+
+<span class="kw">function</span> <span class="fn">isAllowed</span>(userId, action) {
+    key = <span class="str">`ratelimit:${userId}:${action}`</span>
+    tokens = redis.<span class="fn">get</span>(key)
+    
+    <span class="kw">if</span> (tokens === <span class="kw">null</span>) {
+        redis.<span class="fn">set</span>(key, <span class="num">29</span>, <span class="str">"EX"</span>, <span class="num">60</span>)  <span class="cm">// consume1, expire in60s</span>
+        <span class="kw">return</span> <span class="num">true</span>
+    }
+    
+    <span class="kw">if</span> (tokens > <span class="num">0</span>) {
+        redis.<span class="fn">decr</span>(key)
+        <span class="kw">return</span> <span class="num">true</span>
+    }
+    
+    <span class="kw">return</span> <span class="num">false</span>  <span class="cm">// rate limited → return429</span>
+}
+
+<span class="cm">// Limits:</span>
+<span class="cm">// - Message sending:30 msg/min per user</span>
+<span class="cm">// - Group creation:5 groups/hour</span>
+<span class="cm">// - File upload:100 MB/hour per user</span>
+<span class="cm">// - WebSocket connections:3 concurrent per user</span></div>
+
+<h3>WebSocket Abuse Protection</h3>
+<ul>
+  <li><strong>Max message size:</strong> 64KB (text), 100MB (media via presigned URL — never through WebSocket)</li>
+  <li><strong>Connection timeout:</strong> 30s idle → disconnect. Heartbeat every30s keeps connection alive.</li>
+  <li><strong>Reconnection backoff:</strong> Exponential: 1s, 2s, 4s, 8s, max30s. Prevents thundering herd on restart.</li>
+  <li><strong>IP-based limiting:</strong> Max100 new connections/minute per IP. Prevents bot farms.</li>
+</ul>
+
+<h3>Spam &amp; Abuse Prevention</h3>
+<ul>
+  <li><strong>URL scanning:</strong> Check links against Google Safe Browsing API on send. Block known phishing domains.</li>
+  <li><strong>Message frequency analysis:</strong> ML-based spam detection. Flag accounts sending identical messages to many recipients.</li>
+  <li><strong>Report mechanism:</strong> Users can block/report contacts. Reported accounts flagged for review.</li>
+  <li><strong>Account verification:</strong> Phone number verification required. Limits anonymous abuse.</li>
+</ul>
+
+<h3>Content Moderation Under E2EE</h3>
+<ul>
+  <li><strong>Server cannot read content:</strong> E2EE means moderation relies on metadata and user reports.</li>
+  <li><strong>Metadata analysis:</strong> Message frequency, connection patterns, group join/leave behavior.</li>
+  <li><strong>User reports:</strong> Trigger manual review. Reported messages decrypted locally on device for review (with user consent).</li>
+  <li><strong>Legal compliance:</strong> Content reported by users can be decrypted for review. Unreported content remains private.</li>
+</ul>
+
+<div class="callout green"><strong>Interview answer:</strong> "Rate limiting uses a token bucket in Redis —30 msg/min per user, with burst allowance of10 msg/s. For WebSocket abuse, I'd enforce30s idle timeout with heartbeat, and exponential backoff on reconnect. Content moderation under E2EE is challenging — the server can't read messages, so we rely on user reports and metadata analysis for abuse detection."</div>
+
+<!-- 15. DR -->
+<h2 id="dr">15. Disaster Recovery</h2>
+
+<h3>RTO/RPO Targets</h3>
+<table>
+  <tr><th>Component</th><th>RPO (Data Loss)</th><th>RTO (Recovery Time)</th></tr>
+  <tr><td>Message Store (Cassandra)</td><td>0 (sync replication)</td><td>5 minutes (failover to replica)</td></tr>
+  <tr><td>Presence (Redis)</td><td>5 minutes (async)</td><td>1 minute (rebuild from connections)</td></tr>
+  <tr><td>WebSocket State</td><td>0 (reconnect)</td><td>30 seconds (client retry)</td></tr>
+  <tr><td>RabbitMQ</td><td>0 (quorum queues)</td><td>1 minute (auto-failover)</td></tr>
+</table>
+
+<h3>Multi-Region Failover</h3>
+<ul>
+  <li><strong>Active-active:</strong> US, EU, APAC regions. Each has full chat server stack + local Cassandra.</li>
+  <li><strong>Routing:</strong> GeoDNS directs users to nearest region. Failover on health check failure.</li>
+  <li><strong>Cross-region:</strong> Async replication for user metadata. Messages local to sender's region.</li>
+  <li><strong>Consistency:</strong> Eventual consistency for cross-region reads (5-second delay acceptable).</li>
+</ul>
+
+<h3>Failover Scenarios</h3>
+<div class="flow"><span class="cm">// Scenario 1: Single chat server failure</span>
+1. LB detects health check failure (3s)
+2. Clients disconnect, detect failure
+3. Clients reconnect with exponential backoff (1s, 2s, 4s, max30s)
+4. New server looks up presence in Redis
+5. Pending messages delivered from RabbitMQ (un-acked messages redelivered)
+<span class="cm">// Total recovery: ~30 seconds</span>
+
+<span class="cm">// Scenario 2: Full region failure</span>
+1. GeoDNS failover to nearest healthy region (30s TTL)
+2. Users reconnect, authenticate with new region
+3. Message history: cross-region Cassandra replication
+4. Presence: rebuilt from client connections
+<span class="cm">// Total recovery: ~2-5 minutes</span></div>
+
+<h3>Backup Strategy</h3>
+<ul>
+  <li><strong>Cassandra:</strong> Incremental backups every6 hours to S3. Point-in-time recovery enabled.</li>
+  <li><strong>Redis:</strong> RDB snapshots every5 minutes + AOF for durability. Snapshots to S3.</li>
+  <li><strong>RabbitMQ:</strong> Quorum queues with disk-based persistence. Messages survive broker restart.</li>
+  <li><strong>Retention:</strong> Hot (0-7 days) in Cassandra, Warm (7-90 days) in S3 Standard, Cold (90+ days) in Glacier.</li>
+</ul>
+
+<div class="callout green"><strong>Interview answer:</strong> "For disaster recovery, I'd use active-active multi-region with GeoDNS. RPO is0 for messages (sync Cassandra replication) and5 minutes for presence. RTO is30 seconds for single server failure (client reconnect) and2-5 minutes for full region failover. The key insight is that WebSocket state is ephemeral — clients naturally reconnect, so the real recovery is just reconnecting them to a healthy server."</div>
+
+<!-- 16. COST -->
+<h2 id="cost">16. Cost Optimization</h2>
+
+<h3>Instance Sizing (100M DAU)</h3>
+<table>
+  <tr><th>Component</th><th>Specs</th><th>Capacity</th></tr>
+  <tr><td>Chat Server</td><td>8 vCPU, 32GB RAM</td><td>~100K connections per instance</td></tr>
+  <tr><td>Cassandra</td><td>16 vCPU, 64GB RAM</td><td>~50K writes/s per node</td></tr>
+  <tr><td>Redis Cluster</td><td>64GB (3 nodes)</td><td>~100M keys (presence + sessions)</td></tr>
+  <tr><td>RabbitMQ</td><td>4 vCPU, 16GB RAM</td><td>~50K msg/s per node</td></tr>
+</table>
+
+<h3>Monthly Cost Estimates</h3>
+<table>
+  <tr><th>Category</th><th>Components</th><th>Est. Cost/Month</th></tr>
+  <tr><td>Compute</td><td>300 chat servers + DB cluster</td><td>~$50K</td></tr>
+  <tr><td>Storage</td><td>5TB/day × 30 days</td><td>~$51K</td></tr>
+  <tr><td>Bandwidth</td><td>Ingress + Egress + Cross-region</td><td>~$45K</td></tr>
+  <tr><td><strong>Total</strong></td><td></td><td><strong>~$146K/month</strong></td></tr>
+</table>
+
+<h3>Cost Optimization Strategies</h3>
+<ul>
+  <li><strong>Connection pooling:</strong> Share WebSocket connections across conversations (reduce connection count by30%)</li>
+  <li><strong>Message batching:</strong> Batch small messages to reduce DB write amplification</li>
+  <li><strong>Presence TTL:</strong> 30s TTL reduces Redis memory vs storing all100M users</li>
+  <li><strong>Media CDN:</strong> Cache media at edge, reduce origin egress by80%</li>
+  <li><strong>Compression:</strong> gzip WebSocket frames for text messages (reduces bandwidth by60%)</li>
+</ul>
+
+<div class="callout green"><strong>Interview answer:</strong> "The biggest cost driver is compute —300 chat servers to handle30M concurrent connections. Storage at5TB/day adds ~$51K/month. The key optimization is presence TTL — with30s TTL, we only store ~1M active users in Redis instead of100M, saving ~90% on Redis costs. For bandwidth, compressing WebSocket frames reduces egress by60%."</div>
+
+<!-- 17. INTERVIEW TIPS -->
+<h2 id="interview">17. Interview Tips &amp; Follow-Up Questions</h2>
+
+<div class="resume-connector">
+  <strong> Leverage your experience:</strong> Every time you discuss a component, connect it to your P2P system. "At my current company, we handle 1M+ messages per week with NestJS + RabbitMQ + WebSockets. For WhatsApp-scale, the core pattern is the same — the main changes are adding horizontal scaling, partitioning, and offline store."
+</div>
+
+<h3>Common Follow-Up Questions</h3>
+
+<table>
+  <tr><th>Question</th><th>How to Answer</th></tr>
+  <tr><td>How do you handle duplicate messages?</td><td>"client_message_id with a unique constraint in PostgreSQL plus an LRU dedup cache in Redis. Since we use at-least-once delivery, duplicates are inevitable — idempotency is the solution, not prevention."</td></tr>
+  <tr><td>What if a user sends a message while offline?</td><td>"The client stores it locally with a status 'sending'. On reconnect, it sends to the server. The server deduplicates via client_message_id. The client updates the status to 'sent' on receiving the ack."</td></tr>
+  <tr><td>How do you ensure messages appear in order?</td><td>"Two levels: (1) Server side — all messages for a conversation go through the same RabbitMQ queue with one consumer, preserving FIFO. (2) Client side — each message has a monotonically increasing sequence_number per conversation. The client displays by sequence_number, so even if messages arrive out of order on the WebSocket, they render correctly."</td></tr>
+  <tr><td>How does multi-device sync work?</td><td>"Each device maintains its own WebSocket connection. When a message is sent, it goes to RabbitMQ and fans out to all devices of the recipient. Offline devices sync from last_read_at on reconnect. The client_message_id scheme works across devices — each device generates its own IDs."</td></tr>
+  <tr><td>How would you support message editing/deletion?</td><td>"For editing, I'd add an <code>edited_at</code> column to the messages table and send a <code>message_edit</code> event over WebSocket. For deletion ('delete for everyone'), I'd set a <code>deleted_at</code> column — clients hide messages with <code>deleted_at IS NOT NULL</code> rather than actually deleting rows."</td></tr>
+  <tr><td>How do you handle media messages (images, voice)?</td><td>"Media is uploaded to a separate service (S3 + CDN) via a presigned URL. The message only contains the URL and a thumbnail. The client renders the attachment from the URL. This keeps our message pipeline fast — we're only passing metadata."</td></tr>
+</table>
+
+<h3>Interview Script — Opening</h3>
+<p>Here's how to open the problem in an interview:</p>
+
+<div class="flow"><span class="cm">// Open with scope clarification</span>
+"I'll design a real-time messaging system like WhatsApp. Let me confirm the requirements:
+
+<span style="color:#7ee787;">Functional:</span> 1-on-1 and group chat, online/offline delivery, read receipts, typing indicators, message history, multi-device.
+
+<span style="color:#7ee787;">Non-functional:</span> &lt;200ms delivery p99, at-least-once delivery, in-order messages, 100M DAU, 5B messages/day.
+
+<span style="color:#7ee787;">Out of scope:</span> Voice/video calls, status/broadcast, end-to-end encryption details (happy to discuss at a high level).
+
+<span style="color:#7ee787;">Back-of-envelope:</span> 58K msg/s average, 116K peak. Storage ~5TB/day. We need horizontally scalable chat servers and a partitioned database."
+
+<span class="cm">// Then move to high-level design</span>
+"Here's the architecture: clients connect via WebSocket to a chat server pool behind an L7 load balancer with sticky sessions. Redis stores presence and session data. RabbitMQ buffers and routes messages. PostgreSQL is the source of truth for messages and metadata."</div>
+
+<!-- ======================================================================
+     PART 2: DEEP DIVES
+     ====================================================================== -->
+<div class="part-divider part2">Part 2 — Deep Dives &amp; Advanced Topics</div>
+
+<p style="margin-bottom:1.5rem;">These sections provide the reasoning behind Part 1 decisions. Read them to understand <em>why</em> each choice was made — this depth is what separates good answers from great ones.</p>
+
+<!-- D1 -->
+<h2 id="deep-rabbitmq">D1. Why RabbitMQ, Not Direct Delivery?</h2>
+
+<p>You might think: "If both clients are connected to chat servers, why not just look up the recipient's WebSocket and deliver directly?" That works for <em>online</em> delivery, but breaks down for:</p>
+<ul>
+  <li><strong>Offline delivery:</strong> Recipient is disconnected — message must be queued.</li>
+  <li><strong>Multi-device:</strong> Recipient on phone + desktop — one message must reach both.</li>
+  <li><strong>Server crash:</strong> If the delivering server crashes mid-delivery, the message is lost. RabbitMQ persists it and redelivers to another server.</li>
+  <li><strong>At-least-once guarantees:</strong> RabbitMQ's message acknowledgments give us automatic retry on failure.</li>
+</ul>
+<p><strong>Flow:</strong> Chat server A receives message → publishes to RabbitMQ → chat server B (or the same server) consumes → delivers to recipient's WebSocket → sends ack back to RabbitMQ.</p>
+
+<!-- D2 -->
+<h2 id="deep-partitioning">D2. Partitioning the Messages Table</h2>
+<p>Messages is the fastest-growing table (5TB/year). Strategies:</p>
+<ul>
+  <li><strong>By time (monthly):</strong> <code>messages_2024_01, messages_2024_02</code>. Easy to archive old partitions. Queries with time ranges go to the right partition.</li>
+  <li><strong>By conversation_id hash:</strong> Spreads writes evenly. But scroll-back queries might fan out across shards.</li>
+  <li><strong>Hybrid:</strong> Partition by month, then shard each partition by hash on conversation_id. Complex but scales horizontally.</li>
+</ul>
+<p><strong>Recommended for interview:</strong> "I'd start with time-based partitioning for the messages table — partition by month. Old partitions (older than 6 months) move to cold storage (S3 + Glacier). Active messages live in the hot partition, which I might shard further if write throughput exceeds a single node."</p>
+
+<!-- D3 -->
+<h2 id="deep-stateless">D3. Connection State vs Stateless Design</h2>
+<p>A common interview question: "WebSockets are stateful — how do you handle server restarts?"</p>
+<p><strong>Answer:</strong> Chat servers are designed to be <em>mostly stateless regarding message data</em>. The only state is the open WebSocket connection. All message data lives in RabbitMQ and PostgreSQL. If a server crashes:</p>
+<ol>
+  <li>The load balancer detects the health check failure and stops routing to that server.</li>
+  <li>Clients detect disconnection and reconnect (with exponential backoff).</li>
+  <li>The new server looks up presence in Redis, subscribes to the user's message queue, and delivers pending messages from history.</li>
+  <li>Messages that were in-flight on the crashed server remain un-acked in RabbitMQ and get redelivered to another consumer.</li>
+</ol>
+<p><strong>Result:</strong> The system tolerates server failures without losing messages. Users see a brief reconnection (1-2 seconds).</p>
+
+<!-- D4 -->
+<h2 id="deep-idempotency">D4. At-Least-Once + Idempotency = Exactly-Once</h2>
+<p>True exactly-once delivery is very expensive (distributed transactions, two-phase commit). The practical approach is:</p>
+<p><strong>At-least-once delivery + idempotent consumers = effectively exactly-once.</strong></p>
+<p>Here's how it works for message storage:</p>
+<pre><span class="cm">// Consumer receives message from RabbitMQ</span>
+<span class="kw">async function</span> <span class="fn">handleMessage</span>(msg) {
+    <span class="kw">try</span> {
+        <span class="cm">// Check dedup: has this client_message_id been processed?</span>
+        <span class="kw">const</span> exists = <span class="kw">await</span> dedupCheck(msg.client_message_id);
+        <span class="kw">if</span> (exists) {
+            <span class="fn">channel.ack</span>(msg);  <span class="cm">// Already processed, just ack</span>
+            <span class="kw">return</span>;
+        }
+
+        <span class="cm">// Insert into PostgreSQL (unique constraint catches duplicates)</span>
+        <span class="kw">await</span> <span class="fn">db.insert</span>(<span class="str">'messages'</span>, {
+            id: msg.message_id,
+            conversation_id: msg.conversation_id,
+            content: msg.content,
+            client_message_id: msg.client_message_id
+        });
+
+        <span class="cm">// Mark dedup</span>
+        <span class="kw">await</span> <span class="fn">markProcessed</span>(msg.client_message_id);
+
+        <span class="cm">// Deliver to recipient's WebSocket</span>
+        <span class="kw">if</span> (recipientOnline) {
+            <span class="kw">await</span> <span class="fn">wsSend</span>(recipientSocket, msg);
+        }
+
+        <span class="fn">channel.ack</span>(msg);  <span class="cm">// Only ack AFTER successful processing</span>
+    } <span class="kw">catch</span> (err) {
+        <span class="fn">channel.nack</span>(msg);  <span class="cm">// Reject — RabbitMQ redelivers</span>
+    }
+}</pre>
+<p>If the consumer crashes between the DB insert and the ack, the message is redelivered. The dedup check catches it. The unique constraint on <code>(sender_id, client_message_id)</code> is the safety net.</p>
+<p><strong>Your context:</strong> Your RabbitMQ-based messaging already uses this pattern. The important addition for the interview is the <em>dedup cache</em> (in-memory LRU or Redis) — without it, every duplicate message hits PostgreSQL, which is slower.</p>
+
+<!-- D5 -->
+<h2 id="deep-large-groups">D5. Handling Large Groups (Telegram Case)</h2>
+<p>For groups > 256, fan-out on write becomes expensive. Telegram uses a hybrid approach:</p>
+<ul>
+  <li>For groups ≤ 200: full fan-out on write.</li>
+  <li>For groups > 200: write once to a shared mailbox. Clients poll periodically.</li>
+</ul>
+<p><strong>Interview answer:</strong> "I'd start with fan-out on write for groups up to 256 — it keeps reads simple (no polling lag) and write overhead is manageable at our scale. If we needed to support mega-groups with 10K+ members, I'd switch to a shared stream model where clients poll for new messages."</p>
+
+<!-- D6 -->
+<h2 id="deep-kafka">D6. RabbitMQ vs Kafka for Chat</h2>
+<p><strong>RabbitMQ advantages for chat:</strong></p>
+<ul>
+  <li>Per-message acknowledgments — exactly what we need for at-least-once delivery</li>
+  <li>Dead-letter queues — failed messages go to a DLQ for inspection</li>
+  <li>Topic exchanges — route messages to the right consumer</li>
+  <li>Mature and simple — you already use it</li>
+</ul>
+<p><strong>Kafka advantages:</strong></p>
+<ul>
+  <li>Higher throughput — millions of msg/s</li>
+  <li>Message replay — consumers can re-read from any offset</li>
+  <li>Built-in partitioning — messages with the same key go to the same partition (FIFO guaranteed)</li>
+  <li>Log compaction — could keep only the latest state per key</li>
+</ul>
+<p><strong>Recommendation:</strong> "At our scale (58K msg/s average, 116K peak), RabbitMQ with multiple queues per shard would work. If we grew 10x, I'd consider Kafka for its higher throughput and built-in partitioning. But RabbitMQ's per-message ack semantics are a better fit for our delivery guarantees."</p>
+
+<!-- D7 -->
+<h2 id="deep-search">D7. Message Search Under E2EE</h2>
+
+<p>A common follow-up: "How do users search their message history?" Under E2EE, this is architecturally constrained — the server holds only ciphertext, making server-side full-text search <em>structurally impossible</em>.</p>
+
+<h3>The E2EE Search Constraint</h3>
+<table>
+  <tr><th>Approach</th><th>E2EE Compatible?</th><th>Trade-offs</th></tr>
+  <tr><td>Server-side Elasticsearch</td><td>No — requires plaintext</td><td>Full-text search, cross-device, but breaks E2EE</td></tr>
+  <tr><td>Client-side SQLite FTS5</td><td>Yes — search on device</td><td>Preserves E2EE, but search only on that device</td></tr>
+  <tr><td>Hybrid (metadata only)</td><td>Partial</td><td>Search by sender/date, not content</td></tr>
+</table>
+
+<h3>Client-Side Search (WhatsApp/Signal Approach)</h3>
+<div class="flow"><span class="cm">// Client maintains local SQLite FTS5 index</span>
+<span class="cm">// Built incrementally as messages arrive and are decrypted</span>
+
+<span class="cm">// On message receive:</span>
+1. Decrypt message (E2EE happens on device)
+2. Insert into local SQLite messages table
+3. Update FTS5 index: <span class="kw">INSERT INTO</span> messages_fts <span class="kw">VALUES</span> (content)
+4. Media: index via on-device OCR (images) or metadata (filenames)
+
+<span class="cm">// On search query:</span>
+1. Query local FTS5: <span class="kw">SELECT</span> * <span class="kw">FROM</span> messages_fts <span class="kw">WHERE</span> content <span class="kw">MATCH</span> 'search term'
+2. Return matching messages with highlights
+3. No network call — instant results</div>
+
+<h3>Limitations</h3>
+<ul>
+  <li><strong>No cross-device search:</strong> Phone's index has no knowledge of desktop messages (unless synced)</li>
+  <li><strong>No server-side search:</strong> Cannot search across all users (needed for compliance, support)</li>
+  <li><strong>Storage cost:</strong> FTS5 index doubles local storage per device</li>
+  <li><strong>Backup complexity:</strong> User must backup local DB to restore search after reinstall</li>
+</ul>
+
+<h3>The Architectural Fork</h3>
+<div class="callout orange"><strong>Interview insight:</strong> "If asked to 'add search to WhatsApp,' the correct answer starts with: 'This requires choosing between client-side only search with no cross-device support, or removing server-side E2EE for messages that need to be searchable.' That architectural fork is the answer. A standalone Elasticsearch cluster is not."</div>
+
+<h3>When Search is a Product Requirement</h3>
+<p>If the interviewer insists on server-side search, you must acknowledge the E2EE trade-off:</p>
+<ul>
+  <li><strong>Option A:</strong> Disable E2EE for searchable messages (like Telegram's optional E2EE)</li>
+  <li><strong>Option B:</strong> Search only metadata (sender, date, group) — not content</li>
+  <li><strong>Option C:</strong> On-device indexing with periodic encrypted backup to server (user holds decryption key)</li>
+</ul>
+
+<p style="margin-top:3rem; text-align:center; color:#8b949e; font-size:0.85rem;">
+  <a href="../index.html" class="backlink">← Back to System Design Hub</a>
+</p>
+
+</div>
+
+</body>
+</html>

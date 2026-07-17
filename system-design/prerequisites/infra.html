@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Design — Infrastructure</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #f0883e, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #21262d;
+    }
+    h3 {
+      font-size: 1.15rem;
+      color: #d2a8ff;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h4 {
+      color: #7ee787;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    p, li { color: #b1bac4; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op  { color: #ffa657; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    th {
+      background: #161b22;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    tr:hover td { background: #1c2128; }
+
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    .toc {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .toc h3 { margin: 0 0 0.6rem 0; color: #e1e4ea; }
+    .toc a { display: block; padding: 2px 0; font-size: 0.9rem; }
+
+    .flow {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 0.8rem 0;
+    }
+
+    .callout {
+      background: #1c2128;
+      border-left: 3px solid #d2a8ff;
+      padding: 0.6rem 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.88rem;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout strong { color: #d2a8ff; }
+    .callout.green { border-left-color: #7ee787; }
+    .callout.green strong { color: #7ee787; }
+
+    .syntax-box {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.9rem;
+    }
+    .syntax-box .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .backlink {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+    }
+    .backlink:hover { color: #58a6ff; }
+
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Infrastructure &amp; Operations</h1>
+<p style="color:#8b949e; margin-bottom:0.2rem;">CDNs, database scaling, event-driven architecture, observability, security, capacity planning.</p>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <a href="#cdn">15. CDNs &amp; Edge Caching</a>
+  <a href="#db-scaling">16. Database Scaling</a>
+  <a href="#event-driven">17. Event-Driven Architecture</a>
+  <a href="#observability">18. Observability</a>
+  <a href="#security">19. Security</a>
+  <a href="#capacity">20. Capacity Planning</a>
+</div>
+
+<!-- ========================================================================
+     15. CDNs & EDGE CACHING
+     ======================================================================== -->
+<h2 id="cdn">15. CDNs &amp; Edge Caching</h2>
+
+<h3>What a CDN does</h3>
+<p>A Content Delivery Network caches content at edge locations worldwide. Instead of every request traveling to your origin server in one region, the nearest edge node serves cached content. This reduces latency (10-50ms vs 100-300ms) and offloads your servers.</p>
+
+<h3>Push vs Pull CDNs</h3>
+<table>
+  <tr><th>Type</th><th>How it works</th><th>Best for</th></tr>
+  <tr><td><strong>Push</strong></td><td>You upload content to edge nodes explicitly</td><td>Static assets, infrequent updates</td></tr>
+  <tr><td><strong>Pull</strong></td><td>First request fetches from origin, subsequent requests served from cache (TTL-based)</td><td>Dynamic content, frequent updates</td></tr>
+</table>
+
+<h3>Cache invalidation strategies</h3>
+<ul>
+  <li><strong>TTL-based:</strong> Set <code>Cache-Control: max-age=3600</code>. Simple, but stale content served until expiry.</li>
+  <li><strong>Versioned URLs:</strong> <code>app.v2.js</code>. Immutable — never stale, but requires deployment changes.</li>
+  <li><strong>Purge API:</strong> Manually invalidate via CDN API. Fast (60s), but requires tooling.</li>
+</ul>
+
+<h3>What to cache at edge</h3>
+<table>
+  <tr><th>Cache</th><th>Don't cache</th></tr>
+  <tr><td>Static assets (JS, CSS, images)</td><td>API responses with user-specific data</td></tr>
+  <tr><td>Public API responses (GET /products)</td><td>Authenticated endpoints (use CDN + auth)</td></tr>
+  <tr><td>HTML pages (for anonymous users)</td><td>Real-time data (stock prices, chat messages)</td></tr>
+</table>
+
+<div class="callout"><strong>Interview angle:</strong> "I'd use a pull CDN like CloudFront for static assets with versioned filenames for cache busting. For public API responses, I'd set short TTLs (60s) with stale-while-revalidate. User-specific data bypasses the CDN."</div>
+
+<!-- ========================================================================
+     16. DATABASE SCALING
+     ======================================================================== -->
+<h2 id="db-scaling">16. Database Scaling</h2>
+
+<h3>Read scaling: Replicas</h3>
+<p>Add read replicas to distribute read traffic. The primary handles writes; replicas handle reads. Most apps are read-heavy (100:1 read:write ratio), so replicas eliminate the bottleneck.</p>
+
+<div class="flow">Client → READ  → [Replica 1]
+                [Replica 2]
+                [Replica 3]
+Client → WRITE → [Primary]  → replicates to all</div>
+
+<p><strong>Consistency trade-off:</strong> Async replication = eventual consistency (read after write may miss data). Solution: read-after-write consistency by routing the first read after a write to the primary.</p>
+
+<h3>Write scaling: Sharding</h3>
+<p>When a single primary can't handle write volume, split data across multiple primaries (shards). Each shard holds a subset of data.</p>
+
+<table>
+  <tr><th>Strategy</th><th>How it works</th><th>Best for</th><th>Trade-off</th></tr>
+  <tr><td><strong>Hash-based</strong></td><td><code>hash(user_id) % N</code></td><td>Even distribution</td><td>Adding shards requires rehashing</td></tr>
+  <tr><td><strong>Range-based</strong></td><td>A-M → shard 1, N-Z → shard 2</td><td>Range queries</td><td>Hot spots on popular ranges</td></tr>
+  <tr><td><strong>Directory</strong></td><td>Lookup table maps key → shard</td><td>Flexibility</td><td>Lookup table = SPOF</td></tr>
+</table>
+
+<h3>Connection pooling</h3>
+<p>Opening a DB connection takes 20-100ms. With 1000 concurrent requests, you'd need 1000 connections (expensive). A connection pool maintains N pre-opened connections. Requests borrow a connection, use it, return it. Most ORMs (TypeORM, Prisma) handle this automatically.</p>
+
+<p><strong>Rule of thumb:</strong> Pool size = (number of CPU cores × 2) + disk spindles. For most apps: 10-20 connections.</p>
+
+<div class="callout"><strong>Interview angle:</strong> "I'd start with read replicas for read scaling — most apps are read-heavy. If writes become the bottleneck, I'd shard by user_id using consistent hashing to minimize reshuffling. I'd use connection pooling to avoid connection exhaustion."</div>
+
+<!-- ========================================================================
+     17. EVENT-DRIVEN ARCHITECTURE
+     ======================================================================== -->
+<h2 id="event-driven">17. Event-Driven Architecture</h2>
+
+<h3>Core concepts</h3>
+<table>
+  <tr><th>Concept</th><th>What it is</th><th>Example</th></tr>
+  <tr><td><strong>Event</strong></td><td>An immutable record of something that happened</td><td><code>UserCreated</code>, <code>OrderPlaced</code></td></tr>
+  <tr><td><strong>Event producer</strong></td><td>Emits events when state changes</td><td>Order service emits <code>OrderPlaced</code></td></tr>
+  <tr><td><strong>Event consumer</strong></td><td>Reacts to events independently</td><td>Email service sends confirmation on <code>OrderPlaced</code></td></tr>
+  <tr><td><strong>Event bus/broker</strong></td><td>Routes events from producers to consumers</td><td>Kafka, RabbitMQ, SNS/SQS</td></tr>
+</table>
+
+<h3>Event sourcing</h3>
+<p>Instead of storing current state, store all state-changing events. Current state = replay all events from the beginning.</p>
+
+<div class="flow"><span class="cm">// Traditional: store current state</span>
+orders table: { id: 1, status: "shipped", total: 100 }
+
+<span class="cm">// Event sourcing: store all events</span>
+events table:
+  { type: "OrderCreated",  data: { id: 1, total: 100 } }
+  { type: "PaymentReceived", data: { id: 1, amount: 100 } }
+  { type: "OrderShipped",   data: { id: 1, carrier: "UPS" } }</div>
+
+<p><strong>Benefits:</strong> Full audit trail, time-travel debugging, easy undo, multiple projections from same events.</p>
+<p><strong>Costs:</strong> Complexity, event versioning, larger storage, eventual consistency.</p>
+
+<h3>CQRS (Command Query Responsibility Segregation)</h3>
+<p>Separate the write model (commands) from the read model (queries). Write model optimizes for consistency; read model optimizes for query speed.</p>
+
+<div class="flow">Commands (writes) → [Write DB] → events → [Read DB] → Queries (reads)</div>
+
+<p><strong>When to use:</strong> When read and write patterns are very different (e.g., write-heavy ingestion, complex read queries).</p>
+
+<div class="callout"><strong>Interview angle:</strong> "For the order service, I'd use event sourcing for the write side — it gives us a complete audit trail. For reads, I'd project events into a denormalized read model optimized for the UI. CQRS keeps both sides independent."</div>
+
+<!-- ========================================================================
+     18. OBSERVABILITY
+     ======================================================================== -->
+<h2 id="observability">18. Observability</h2>
+
+<h3>The three pillars</h3>
+<table>
+  <tr><th>Pillar</th><th>What it tells you</th><th>Tools</th><th>Format</th></tr>
+  <tr><td><strong>Metrics</strong></td><td>Aggregated numbers over time (latency, error rate, throughput)</td><td>Prometheus, Datadog, CloudWatch</td><td>Numeric time series</td></tr>
+  <tr><td><strong>Logs</strong></td><td>Discrete events with context (what happened, when, why)</td><td>ELK, Loki, CloudWatch Logs</td><td>Structured JSON lines</td></tr>
+  <tr><td><strong>Traces</strong></td><td>End-to-end request path across services (where time is spent)</td><td>Jaeger, Zipkin, X-Ray</td><td>Span tree per request</td></tr>
+</table>
+
+<h3>RED method (for services)</h3>
+<ul>
+  <li><strong>Rate:</strong> Requests per second</li>
+  <li><strong>Errors:</strong> Errors per second (or error rate %)</li>
+  <li><strong>Duration:</strong> Latency distribution (p50, p95, p99)</li>
+</ul>
+
+<h3>USE method (for resources)</h3>
+<ul>
+  <li><strong>Utilization:</strong> % of resource in use (CPU, memory, disk)</li>
+  <li><strong>Saturation:</strong> Queue depth (requests waiting)</li>
+  <li><strong>Errors:</strong> Error count on the resource</li>
+</ul>
+
+<h3>Structured logging best practices</h3>
+<div class="flow">{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "level": "error",
+  "service": "order-service",
+  "trace_id": "abc-123",
+  "user_id": "u-456",
+  "message": "Payment failed",
+  "error": "stripe_timeout",
+  "duration_ms": 5000
+}</div>
+<p>Always include: timestamp, level, service name, trace_id (for correlation), and context fields. Never log secrets or PII.</p>
+
+<h3>Alerting principles</h3>
+<ul>
+  <li><strong>Alert on symptoms</strong> (error rate, latency) not causes (CPU, memory)</li>
+  <li><strong>Actionable alerts only</strong> — every alert should require human action</li>
+  <li><strong>Multi-window alerting</strong> — fire only if condition persists (5 min warning, 15 min critical)</li>
+</ul>
+
+<div class="callout"><strong>Japan context:</strong> LINE explicitly requires monitoring/observability tools (Prometheus, Grafana, Elasticsearch). In interviews, describe your observability stack: "I'd use Prometheus for metrics, Grafana for dashboards, Loki for logs, and Jaeger for distributed tracing. I'd alert on RED metrics per service."</div>
+
+<!-- ========================================================================
+     19. SECURITY
+     ======================================================================== -->
+<h2 id="security">19. Security</h2>
+
+<h3>Authentication vs Authorization</h3>
+<table>
+  <tr><th>Concept</th><th>Question it answers</th><th>Implementation</th></tr>
+  <tr><td><strong>Authentication</strong></td><td>"Who are you?"</td><td>JWT, session cookies, API keys, OAuth</td></tr>
+  <tr><td><strong>Authorization</strong></td><td>"What can you do?"</td><td>RBAC, ABAC, policy engines</td></tr>
+</table>
+
+<h3>JWT (JSON Web Token)</h3>
+<div class="flow">Header.Payload.Signature
+
+Header:  { "alg": "RS256", "typ": "JWT" }
+Payload: { "sub": "user-123", "exp": 1700000000, "role": "admin" }
+Signature: RS256(header + payload, private_key)</div>
+<p><strong>Stateless:</strong> Server verifies signature without DB lookup. Token carries all claims.</p>
+<p><strong>Revocation problem:</strong> Can't invalidate until expiry. Solutions: short expiry (15 min) + refresh tokens, or token blacklist in Redis.</p>
+
+<h3>OAuth 2.0 flow (simplified)</h3>
+<div class="flow">1. User clicks "Login with Google"
+2. → Redirect to Google OAuth endpoint
+3. → User consents
+4. → Google redirects back with authorization code
+5. → Your server exchanges code for access token
+6. → Use token to fetch user profile</div>
+
+<h3>Security checklist</h3>
+<ul>
+  <li><strong>HTTPS everywhere</strong> — encrypt in transit (TLS 1.2+)</li>
+  <li><strong>Encrypt at rest</strong> — AES-256 for sensitive data (PII, financial)</li>
+  <li><strong>Input validation</strong> — sanitize all user input (SQL injection, XSS)</li>
+  <li><strong>Rate limiting</strong> — prevent brute force and DDoS</li>
+  <li><strong>CORS</strong> — restrict which domains can call your API</li>
+  <li><strong>Secrets management</strong> — never commit secrets; use vault/KMS</li>
+</ul>
+
+<div class="callout"><strong>Interview angle:</strong> "I'd use short-lived JWTs (15 min) with refresh tokens. Sensitive data encrypted at rest with AES-256. All inter-service communication over mTLS. API keys rotated quarterly."</div>
+
+<!-- ========================================================================
+     20. CAPACITY PLANNING
+     ======================================================================== -->
+<h2 id="capacity">20. Capacity Planning</h2>
+
+<h3>QPS estimation formula</h3>
+<div class="flow">Daily active users (DAU) × requests per user per day
+÷ 86,400 (seconds/day)
+= average QPS
+
+Peak QPS = average QPS × peak multiplier (typically 2-4x)</div>
+
+<p><strong>Example:</strong> 10M DAU × 10 requests/day = 100M requests/day ÷ 86,400 = ~1,160 avg QPS. Peak = ~4,600 QPS.</p>
+
+<h3>Storage estimation</h3>
+<div class="flow">Object size × daily volume × retention days
+= total storage
+
+Example: 1 KB/message × 100M messages/day × 365 days = 36.5 TB/year</div>
+
+<h3>Bandwidth estimation</h3>
+<div class="flow">QPS × average response size = bandwidth
+
+Example: 4,600 QPS × 5 KB = 23 MB/s = 184 Mbps</div>
+
+<h3>Capacity planning rules of thumb</h3>
+<table>
+  <tr><th>Metric</th><th>Rule of thumb</th></tr>
+  <tr><td>Database connections</td><td>(CPU cores × 2) + disk spindles per DB instance</td></tr>
+  <tr><td>Redis memory</td><td>2× the hot data size (for eviction headroom)</td></tr>
+  <tr><td>Kafka partitions</td><td>Max throughput per partition ≈ 10 MB/s; scale partitions for throughput</td></tr>
+  <tr><td>Thread pools</td><td>CPU-bound: cores + 1. I/O-bound: cores × (1 + wait_time/compute_time)</td></tr>
+</table>
+
+<h3>The "back-of-envelope" approach</h3>
+<p>In interviews, you don't need exact numbers. Use powers of 10:</p>
+<ul>
+  <li>1M users → ~10 QPS average, ~40 QPS peak</li>
+  <li>100M users → ~1K QPS average, ~4K QPS peak</li>
+  <li>1B users → ~10K QPS average, ~40K QPS peak</li>
+</ul>
+
+<div class="callout"><strong>Interview angle:</strong> Start every design with capacity estimation: "Let me estimate the scale. With 10M DAU and 10 requests/day, that's ~1K avg QPS, ~4K peak. Storage: ~1 KB per message, 100M messages/day = 100 GB/day. This tells me I need horizontal scaling for writes but a single PostgreSQL with replicas handles reads."</div>
+
+<p style="margin-top:3rem; text-align:center; color:#8b949e; font-size:0.85rem;">
+  <a href="../index.html" class="backlink">← All Prerequisites</a> · <a href="../index.html" class="backlink">Back to System Design</a>
+</p>
+
+</div>
+</body>
+</html>

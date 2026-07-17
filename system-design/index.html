@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Design — Japan Interview Prep</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #f0883e, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 10px;
+      margin-bottom: 1.8rem;
+    }
+    .badge-exp { background: #1a3655; color: #58a6ff; }
+    .section-title {
+      font-size: 1rem;
+      color: #8b949e;
+      margin-top: 2rem;
+      margin-bottom: 0.2rem;
+      padding-bottom: 0.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .level-tag {
+      font-size: 0.55rem;
+      font-weight: 700;
+      padding: 1px 8px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+    .stage-s1 { background: #1b3a2b; color: #7ee787; }
+    .stage-s2 { background: #1a3655; color: #58a6ff; }
+    .stage-s3 { background: #3a2b1b; color: #d29922; }
+    .stage-s4 { background: #21262d; color: #e1e4ea; }
+    .stage-s5 { background: #2d1b3a; color: #d2a8ff; }
+    .stage-desc {
+      font-size: 0.78rem;
+      color: #484f58;
+      margin-bottom: 0.8rem;
+      margin-top: 0.1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.1rem 1rem;
+      transition: border-color 0.2s, transform 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      border-color: #58a6ff;
+      transform: translateY(-2px);
+    }
+    .card-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #8b949e;
+      margin-bottom: 3px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+    .card-desc {
+      font-size: 0.78rem;
+      color: #8b949e;
+      margin-top: 4px;
+      line-height: 1.4;
+      flex: 1;
+    }
+    .card .badge-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .card .status {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 10px;
+    }
+    .status-high { background: #1b3a2b; color: #7ee787; }
+    .status-med  { background: #3a2b1b; color: #d29922; }
+    .status-low  { background: #21262d; color: #8b949e; }
+    .status-co   { background: #1c2128; color: #58a6ff; border: 1px solid #30363d; }
+    .footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: #484f58;
+      font-size: 0.82rem;
+    }
+    .footer a { color: #484f58; text-decoration: none; }
+    .footer a:hover { color: #58a6ff; }
+    @media (max-width: 540px) {
+      body { padding: 1.2rem; }
+      h1 { font-size: 1.8rem; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>System Design</h1>
+  <p class="subtitle">12 problems in learning sequence &middot; study stage-by-stage</p>
+  <span class="badge badge-exp">5+ yrs Full-Stack · TypeScript, NestJS, React, Angular, AWS</span>
+
+  <!-- ============ PREREQUISITES ============ -->
+  <div class="section-title">
+    <span class="level-tag" style="background:#1a3655;color:#58a6ff;">FND</span>
+    Prerequisites — study these first
+  </div>
+
+  <div class="grid">
+    <a class="card" href="prerequisites/fundamentals.html">
+      <div class="card-num">6 CONCEPTS</div>
+      <div class="card-title">Fundamentals</div>
+      <div class="card-desc">Consistent hashing, CAP theorem, load balancers, caching, indexing, SQL vs NoSQL.</div>
+    </a>
+
+    <a class="card" href="prerequisites/scaling.html">
+      <div class="card-num">4 CONCEPTS</div>
+      <div class="card-title">Scaling &amp; Distribution</div>
+      <div class="card-desc">Replication, sharding, message queues, WebSockets, REST vs GraphQL.</div>
+    </a>
+
+    <a class="card" href="prerequisites/patterns.html">
+      <div class="card-num">4 CONCEPTS</div>
+      <div class="card-title">Design Patterns</div>
+      <div class="card-desc">Rate limiting, idempotency, retry strategies, microservices vs monolith, API design.</div>
+    </a>
+
+    <a class="card" href="prerequisites/infra.html">
+      <div class="card-num">6 CONCEPTS</div>
+      <div class="card-title">Infrastructure &amp; Ops</div>
+      <div class="card-desc">CDNs, database scaling, event-driven architecture, observability, security, capacity planning.</div>
+    </a>
+  </div>
+
+  <!-- ============ STAGE 1 ============ -->
+  <div class="section-title">
+    <span class="level-tag stage-s1">S1</span>
+    Foundations — no dependencies
+  </div>
+  <p class="stage-desc">Simplest designs that introduce core patterns (read-heavy caching, key generation, rate limit algorithms) used by every later problem. Do these first.</p>
+  <div class="grid">
+
+    <a class="card" href="design_problems/01_url_shortener.html">
+      <div class="card-num">PROBLEM 01</div>
+      <div class="card-title">URL Shortener</div>
+      <div class="card-desc">Hashing, key generation, redirect (301 vs 302), read-heavy caching, analytics tracking.</div>
+    </a>
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 02</div>
+      <div class="card-title">Rate Limiter</div>
+      <div class="card-desc">Token bucket, sliding window, distributed rate limiting with Redis clusters.</div>
+      <div class="badge-row"><span class="status status-co">Mercari</span><span class="status status-co">Indeed</span></div>
+    </a>
+
+  </div>
+
+  <!-- ============ STAGE 2 ============ -->
+  <div class="section-title">
+    <span class="level-tag stage-s2">S2</span>
+    Core Infrastructure Patterns
+  </div>
+  <p class="stage-desc">Distributed systems fundamentals — consistent hashing, replication, quorum, fan-out. These concepts reappear in every large-scale design.</p>
+  <div class="grid">
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 03</div>
+      <div class="card-title">Distributed Key-Value Store</div>
+      <div class="card-desc">Consistent hashing, replication, quorum reads/writes, gossip protocol, hinted handoff. Connects to your Redis work.</div>
+      <div class="badge-row"><span class="status status-med">Core pattern</span></div>
+    </a>
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 04</div>
+      <div class="card-title">News Feed (Twitter / Instagram)</div>
+      <div class="card-desc">Fan-out (push vs pull vs hybrid), timeline generation, caching hot feeds. Builds on K-V store &amp; rate limiter.</div>
+      <div class="badge-row"><span class="status status-med">Core pattern</span></div>
+    </a>
+
+  </div>
+
+  <!-- ============ STAGE 3 ============ -->
+  <div class="section-title">
+    <span class="level-tag stage-s3">S3</span>
+    Real-Time &amp; Communication
+  </div>
+  <p class="stage-desc">Builds on MQ, WebSocket, and caching concepts. Most directly relevant to your experience — these are your strongest interview topics.</p>
+  <div class="grid">
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 05</div>
+      <div class="card-title">Notification System</div>
+      <div class="card-desc">Multi-channel (push, email, SMS, in-app), template engine, delivery retry, rate limiting, batching.</div>
+      <div class="badge-row"><span class="status status-high">Strong match</span><span class="status status-co">Mercari</span></div>
+    </a>
+
+    <a class="card" href="design_problems/06_realtime_chat.html">
+      <div class="card-num">PROBLEM 06</div>
+      <div class="card-title">Real-Time Chat / Messaging</div>
+      <div class="card-desc">WebSocket management, message ordering, delivery guarantees, offline messages, group chat, read receipts.</div>
+      <div class="badge-row"><span class="status status-high">Strong match</span></div>
+    </a>
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 07</div>
+      <div class="card-title">Real-Time Analytics Dashboard</div>
+      <div class="card-desc">Data pipeline (producer → stream processor → OLAP store → API), time-series DB, WebSocket push.</div>
+      <div class="badge-row"><span class="status status-high">Strong match</span></div>
+    </a>
+
+  </div>
+
+  <!-- ============ STAGE 4 ============ -->
+  <div class="section-title">
+    <span class="level-tag stage-s4">S4</span>
+    Transactional &amp; Data Systems
+  </div>
+  <p class="stage-desc">Stateful, data-centric designs. SQL vs NoSQL trade-offs, idempotency, timezone handling — nuanced problems that test your breadth.</p>
+  <div class="grid">
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 08</div>
+      <div class="card-title">E-Commerce Platform</div>
+      <div class="card-desc">Product catalog, inventory, shopping cart, checkout flow, payment processing, order management, idempotency.</div>
+      <div class="badge-row"><span class="status status-med">Resume match</span><span class="status status-co">Mercari</span></div>
+    </a>
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 09</div>
+      <div class="card-title">Calendar / Scheduling System</div>
+      <div class="card-desc">Recurring events (RRULE), conflict detection, timezone handling, shared calendars, availability queries.</div>
+      <div class="badge-row"><span class="status status-med">Resume match</span></div>
+    </a>
+
+  </div>
+
+  <!-- ============ STAGE 5 ============ -->
+  <div class="section-title">
+    <span class="level-tag stage-s5">S5</span>
+    Specialized &amp; Company-Specific
+  </div>
+  <p class="stage-desc">Niche but high-signal if you're interviewing at the target company. These introduce new domains (search relevance, video encoding, CDN).</p>
+  <div class="grid">
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 10</div>
+      <div class="card-title">Job Recommendation System</div>
+      <div class="card-desc">Candidate-job matching, inverted index, relevance scoring, real-time updates when new jobs appear.</div>
+      <div class="badge-row"><span class="status status-co">Indeed</span></div>
+    </a>
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 11</div>
+      <div class="card-title">Marketplace Search &amp; Filtering</div>
+      <div class="card-desc">Elasticsearch, faceted search, autocomplete, relevance ranking, inventory-aware results.</div>
+      <div class="badge-row"><span class="status status-co">Mercari</span></div>
+    </a>
+
+    <a class="card" href="#">
+      <div class="card-num">PROBLEM 12</div>
+      <div class="card-title">YouTube / Video Streaming</div>
+      <div class="card-desc">CDN, video transcoding, adaptive bitrate (HLS/DASH), metadata &amp; search.</div>
+      <div class="badge-row"><span class="status status-low">Fill gap</span></div>
+    </a>
+
+  </div>
+
+  <div class="footer">
+    <a href="system_design.txt">View full study plan →</a>
+  </div>
+
+</div>
+</body>
+</html>

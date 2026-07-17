@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pattern 1: Two Pointers</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #8250df);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.6rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #21262d;
+    }
+    h3 {
+      font-size: 1.2rem;
+      color: #d2a8ff;
+      margin-top: 1.8rem;
+      margin-bottom: 0.6rem;
+    }
+    h4 {
+      color: #7ee787;
+      margin-top: 1.2rem;
+      margin-bottom: 0.4rem;
+    }
+    p, li {
+      color: #b1bac4;
+    }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Cards */
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+    }
+    .card h3 { margin-top: 0; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .tag-easy { background: #1b3a2b; color: #7ee787; }
+    .tag-medium { background: #3a2b1b; color: #d29922; }
+
+    /* Code blocks */
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op { color: #ffa657; }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    th {
+      background: #161b22;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    tr:hover td { background: #1c2128; }
+
+    /* Visual array blocks */
+    .array-visual {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin: 0.8rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+    .array-item {
+      width: 44px;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 6px;
+      font-weight: 600;
+      padding: 2px 0;
+      line-height: 1.2;
+      gap: 1px;
+    }
+    .array-item.l-pointer {
+      border-color: #58a6ff;
+      background: #1a3655;
+    }
+    .array-item.r-pointer {
+      border-color: #ff7b72;
+      background: #3d1f1e;
+    }
+    .array-item.both {
+      border-color: #d2a8ff;
+      background: #2a1f3d;
+    }
+    .array-item.active {
+      border-color: #7ee787;
+      background: #1b3a2b;
+    }
+    .array-item.water {
+      background: #1a4a6b;
+      border-color: #58a6ff;
+    }
+
+    /* Pointer labels */
+    .pointer-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      white-space: nowrap;
+      display: block;
+      text-align: center;
+      width: 100%;
+      line-height: 1.1;
+    }
+    .l-ptr-label { color: #58a6ff; }
+    .r-ptr-label { color: #ff7b72; }
+    .s-ptr-label { color: #d2a8ff; }
+    .f-ptr-label { color: #7ee787; }
+
+    /* Container visual for water */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      margin: 1rem 0;
+      height: 160px;
+      padding: 0 4px;
+    }
+    .bar {
+      width: 36px;
+      background: #58a6ff;
+      border-radius: 3px 3px 0 0;
+      position: relative;
+      min-height: 4px;
+    }
+    .bar-label {
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      color: #8b949e;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .bar.water {
+      background: #1a4a6b;
+      border: 1px solid #58a6ff;
+    }
+    .bar.empty {
+      background: transparent;
+      border: 1px dashed #30363d;
+    }
+
+    /* Checklist */
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    /* Flow diagram */
+    .flow {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 0.8rem 0;
+    }
+
+    /* Arrow symbol */
+    .arrow { color: #ffa657; font-weight: bold; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.8rem; }
+      .array-item { width: 38px; min-height: 46px; font-size: 0.78rem; }
+      .bar { width: 26px; }
+    }
+
+    .toc {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .toc h3 { margin: 0 0 0.6rem 0; }
+    .toc a { display: block; padding: 2px 0; font-size: 0.92rem; }
+
+    /* Accordion */
+    details.approach, details.solution {
+      margin-top: 0.8rem;
+    }
+    details summary {
+      cursor: pointer;
+      color: #8b949e;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      background: #1c2128;
+      user-select: none;
+      display: inline-block;
+    }
+    details summary:hover {
+      background: #21262d;
+    }
+    details[open] summary {
+      color: #d2a8ff;
+      margin-bottom: 0.4rem;
+    }
+    #toggle-all {
+      margin-bottom: 1rem;
+      padding: 6px 16px;
+      background: #21262d;
+      color: #8b949e;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    #toggle-all:hover {
+      background: #30363d;
+      color: #e1e4ea;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Pattern 1: Two Pointers</h1>
+<p style="color: #8b949e; margin-bottom: 1.2rem;">A comprehensive guide with visuals, code, and intuition.</p>
+
+<button id="toggle-all">▼ Expand All Walkthroughs &amp; Code</button>
+<script>
+(function(){
+  var btn = document.getElementById('toggle-all');
+  var expanded = false;
+  btn.onclick = function(){
+    expanded = !expanded;
+    document.querySelectorAll('.approach,.solution').forEach(function(e){ e.open = expanded; });
+    btn.textContent = expanded
+      ? '▲ Collapse All Walkthroughs & Code'
+      : '▼ Expand All Walkthroughs & Code';
+  };
+})();
+</script>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <a href="#what">What is Two Pointers?</a>
+  <a href="#when">When to Use It</a>
+  <a href="#patterns">Sub-Patterns &amp; Templates</a>
+  <a href="#easy">Easy Problems</a>
+  <a href="#medium">Medium Problems</a>
+  <a href="#cheatsheet">Cheatsheet</a>
+</div>
+
+<!-- ==================== WHAT ==================== -->
+<h2 id="what">What is Two Pointers?</h2>
+
+<p>Two Pointers is a technique where <strong>two indices traverse a data structure</strong> (array or string) — moving toward each other, away, or at different speeds — to solve problems in <strong>O(n) time and O(1) space</strong>.</p>
+
+<p>Instead of nested loops (O(n²)), we coordinate two pointers to make a single pass:</p>
+
+<pre><span class="cm">// Before (brute force):</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n):   <span class="cm">// O(n²)</span>
+
+<span class="cm">// After (two pointers):</span>
+<span class="kw">while</span> left &lt; right:
+    <span class="fn">move</span> left <span class="kw">or</span> right     <span class="cm">// O(n)</span></pre>
+
+<!-- ==================== WHEN ==================== -->
+<h2 id="when">When to Use It</h2>
+
+<table>
+  <tr><th>Signal</th><th>Example Problem</th></tr>
+  <tr><td>Sorted array is given or can be sorted</td><td>#167 Two Sum II, #15 3Sum</td></tr>
+  <tr><td>Compare elements from both ends</td><td>#125 Valid Palindrome</td></tr>
+  <tr><td>In-place modification from both sides</td><td>#283 Move Zeroes, #344 Reverse String</td></tr>
+  <tr><td>Subarray/substring with a condition</td><td>#11 Container With Most Water</td></tr>
+</table>
+
+<h3>Decision Flowchart</h3>
+
+<div class="flow">Is the array sorted?
+├── <span style="color:#7ee787;">Yes</span> → Can I use colliding pointers?
+│   ├── Need a pair with a target?        → <span style="color:#58a6ff;">Colliding</span> (#167, #15)
+│   ├── Need to compute area?             → <span style="color:#58a6ff;">Colliding, move shorter</span> (#11)
+│   └── Need to compute squares?          → <span style="color:#58a6ff;">Colliding from ends</span> (#977)
+└── <span style="color:#ff7b72;">No</span> → Can I sort it?
+    ├── <span style="color:#7ee787;">Yes</span> → Sort + two pointers (#15, #16)
+    └── <span style="color:#ff7b72;">No</span>  → Use fast &amp; slow or hash map
+
+Need in-place modification?
+└── <span style="color:#7ee787;">Yes</span> → Fast &amp; slow pointers (#283)</div>
+
+<!-- ==================== PATTERNS ==================== -->
+<h2 id="patterns">Sub-Patterns &amp; Templates</h2>
+
+<h3>A) Colliding (Opposite Direction)</h3>
+
+<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.8rem 0;">
+  <div class="array-item l-pointer">1<span class="pointer-label l-ptr-label">L</span></div>
+  <div class="array-item">2</div>
+  <div class="array-item">3</div>
+  <div class="array-item">4</div>
+  <div class="array-item">5</div>
+  <div class="array-item">6</div>
+  <div class="array-item">7</div>
+  <div class="array-item r-pointer">8<span class="pointer-label r-ptr-label">R</span></div>
+</div>
+
+<div class="array-visual" style="font-size:0.85rem; color:#8b949e;">
+  <span class="arrow">&rarr;</span> L moves right &nbsp;&nbsp; <span class="arrow">&larr;</span> R moves left
+</div>
+
+<p><strong>Logic:</strong> L at 0, R at n-1. Move one pointer per iteration based on a condition.</p>
+
+<p><strong>Problems:</strong> Valid Palindrome, 3Sum, Container With Most Water, Trapping Rain Water</p>
+
+<pre><span class="kw">def</span> <span class="fn">two_pointer</span>(arr):
+    l, r = <span class="num">0</span>, <span class="fn">len</span>(arr) - <span class="num">1</span>
+    <span class="kw">while</span> l &lt; r:
+        <span class="cm"># work with arr[l] and arr[r]</span>
+        <span class="kw">if</span> condition:
+            l += <span class="num">1</span>
+        <span class="kw">else</span>:
+            r -= <span class="num">1</span>
+    <span class="kw">return</span> result</pre>
+
+<h3>B) Fast &amp; Slow (Same Direction)</h3>
+
+<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.8rem 0;">
+  <div class="array-item">0</div>
+  <div class="array-item active">1<span class="pointer-label f-ptr-label">Fast</span></div>
+  <div class="array-item">0</div>
+  <div class="array-item">3</div>
+  <div class="array-item r-pointer">12<span class="pointer-label s-ptr-label">Slow</span></div>
+</div>
+
+<p><strong>Logic:</strong> Slow tracks where to write next; Fast scans ahead.</p>
+<p><strong>Problems:</strong> Move Zeroes, Remove Duplicates</p>
+
+<pre><span class="kw">def</span> <span class="fn">fast_slow</span>(arr):
+    slow = <span class="num">0</span>
+    <span class="kw">for</span> fast <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
+        <span class="kw">if</span> arr[fast] != target:
+            arr[slow], arr[fast] = arr[fast], arr[slow]
+            slow += <span class="num">1</span></pre>
+
+<h3>C) Pointers from Different Arrays</h3>
+<p>One pointer per array, used in merge-type problems like <strong>Squares of a Sorted Array</strong> or Merge Sorted Array.</p>
+
+<!-- ==================== EASY ==================== -->
+<h2 id="easy">Easy Problems</h2>
+
+<!-- #125 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#125 Valid Palindrome</strong>
+  </div>
+  <p style="margin-top:0.5rem;">A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Colliding pointers — skip non-alphanumeric, compare lowercase.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0; font-family:'JetBrains Mono',monospace; font-size:0.78rem;">
+    <div class="array-item l-pointer">a<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="array-item">,</div>
+    <div class="array-item"> </div>
+    <div class="array-item">m</div>
+    <div class="array-item">a</div>
+    <div class="array-item">n</div>
+    <div class="array-item">,</div>
+    <div class="array-item"> </div>
+    <div class="array-item">a</div>
+    <div class="array-item"> </div>
+    <div class="array-item">p</div>
+    <div class="array-item">l</div>
+    <div class="array-item">a</div>
+    <div class="array-item">n</div>
+    <div class="array-item">,</div>
+    <div class="array-item"> </div>
+    <div class="array-item">a</div>
+    <div class="array-item"> </div>
+    <div class="array-item">c</div>
+    <div class="array-item">a</div>
+    <div class="array-item">n</div>
+    <div class="array-item">a</div>
+    <div class="array-item">l</div>
+    <div class="array-item">:</div>
+    <div class="array-item"> </div>
+    <div class="array-item r-pointer">P<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.85rem; color:#8b949e;">L and R skip non-alphanumeric characters, then compare. All matches &rarr; palindrome.</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">isPalindrome</span>(s: <span class="kw">str</span>) -> <span class="kw">bool</span>:
+    l, r = <span class="num">0</span>, <span class="fn">len</span>(s) - <span class="num">1</span>
+    <span class="kw">while</span> l &lt; r:
+        <span class="kw">while</span> l &lt; r <span class="kw">and</span> <span class="kw">not</span> s[l].<span class="fn">isalnum</span>():
+            l += <span class="num">1</span>
+        <span class="kw">while</span> l &lt; r <span class="kw">and</span> <span class="kw">not</span> s[r].<span class="fn">isalnum</span>():
+            r -= <span class="num">1</span>
+        <span class="kw">if</span> s[l].<span class="fn">lower</span>() != s[r].<span class="fn">lower</span>():
+            <span class="kw">return</span> <span class="kw">False</span>
+        l += <span class="num">1</span>; r -= <span class="num">1</span>
+    <span class="kw">return</span> <span class="kw">True</span></pre>
+
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #283 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#283 Move Zeroes</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given an integer array nums, move all 0's to the end of it while maintaining the relative order of the non-zero elements. Note that you must do this in-place without making a copy of the array.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Fast &amp; slow — slow points to where the next non-zero goes.</p>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: [0, 1, 0, 3, 12]</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item active">0<span class="pointer-label s-ptr-label">S</span></div>
+    <div class="array-item">1<span class="pointer-label f-ptr-label">F</span></div>
+    <div class="array-item">0</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">12</div>
+  </div>
+  <p style="font-size:0.8rem;">Step 1: nums[1] != 0 → <span style="color:#7ee787;">swap</span> with slow (0). S=1, F=2</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item active">1</div>
+    <div class="array-item active">0<span class="pointer-label s-ptr-label">S</span></div>
+    <div class="array-item">0</div>
+    <div class="array-item">3<span class="pointer-label f-ptr-label">F</span></div>
+    <div class="array-item" style="opacity:0.3;">12</div>
+  </div>
+  <p style="font-size:0.8rem;">Step 2: nums[3] != 0 → <span style="color:#7ee787;">swap</span> with slow. S=2, F=4</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item active">1</div>
+    <div class="array-item active">3</div>
+    <div class="array-item active">0</div>
+    <div class="array-item active">12</div>
+    <div class="array-item">0</div>
+  </div>
+  <p style="font-size:0.8rem;">Step 3: nums[4] != 0 → <span style="color:#7ee787;">swap</span> with slow. S=3 → done.</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">moveZeroes</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">None</span>:
+    slow = <span class="num">0</span>
+    fast = <span class="num">0</span>
+    <span class="kw">while</span> fast < <span class="fn">len</span>(nums):
+        <span class="kw">if</span> nums[fast] != <span class="num">0</span>:
+            nums[slow], nums[fast] = nums[fast], nums[slow]
+            slow += <span class="num">1</span>
+        fast += <span class="num">1</span></pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #344 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#344 Reverse String</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Write a function that reverses a string. The input string is given as an array of characters s. You must do this by modifying the input array in-place with O(1) extra memory.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Colliding pointers — swap L and R.</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item l-pointer" style="border-color:#58a6ff;">h<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="array-item">e</div>
+    <div class="array-item">l</div>
+    <div class="array-item">l</div>
+    <div class="array-item r-pointer" style="border-color:#ff7b72;">o<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <div class="array-visual" style="gap:0;"><span class="arrow">&darr;</span> swap</div>
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.2rem 0 0.8rem;">
+    <div class="array-item active">o</div>
+    <div class="array-item">e</div>
+    <div class="array-item">l</div>
+    <div class="array-item active">l</div>
+    <div class="array-item active">h</div>
+  </div>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">reverseString</span>(s: <span class="kw">list</span>[<span class="kw">str</span>]) -> <span class="kw">None</span>:
+    l, r = <span class="num">0</span>, <span class="fn">len</span>(s) - <span class="num">1</span>
+    <span class="kw">while</span> l &lt; r:
+        s[l], s[r] = s[r], s[l]
+        l += <span class="num">1</span>; r -= <span class="num">1</span></pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #977 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#977 Squares of a Sorted Array</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given an integer array nums sorted in non-decreasing order, return an array of the squares of each number sorted in non-decreasing order.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Colliding from ends — biggest square is at one of the two ends. Fill result from right to left.</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item l-pointer">-7<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="array-item">-3</div>
+    <div class="array-item">2</div>
+    <div class="array-item">3</div>
+    <div class="array-item r-pointer">11<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+
+  <table style="width:auto; font-size:0.85rem; margin:0.8rem 0;">
+    <tr><th>Step</th><th>abs(L)</th><th>abs(R)</th><th>Take</th><th>Square</th><th>Fill at</th></tr>
+    <tr><td>1</td><td>7</td><td>11</td><td>R</td><td>121</td><td>result[4]</td></tr>
+    <tr><td>2</td><td>7</td><td>3</td><td>L</td><td>49</td><td>result[3]</td></tr>
+    <tr><td>3</td><td>3</td><td>3</td><td>L</td><td>9</td><td>result[2]</td></tr>
+    <tr><td>4</td><td>2</td><td>3</td><td>R</td><td>9</td><td>result[1]</td></tr>
+    <tr><td>5</td><td>2</td><td>—</td><td>L</td><td>4</td><td>result[0]</td></tr>
+  </table>
+
+  <p><strong>Result:</strong> [4, 9, 9, 49, 121]</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">sortedSquares</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">list</span>[<span class="kw">int</span>]:
+    n = <span class="fn">len</span>(nums)
+    res = [<span class="num">0</span>] * n
+    l, r = <span class="num">0</span>, n - <span class="num">1</span>
+    i = n - <span class="num">1</span>
+    <span class="kw">while</span> i &gt;= <span class="num">0</span>:
+        <span class="kw">if</span> <span class="fn">abs</span>(nums[l]) &gt; <span class="fn">abs</span>(nums[r]):
+            res[i] = nums[l] * nums[l]; l += <span class="num">1</span>
+        <span class="kw">else</span>:
+            res[i] = nums[r] * nums[r]; r -= <span class="num">1</span>
+        i -= <span class="num">1</span>
+    <span class="kw">return</span> res</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(n) for output</p>
+  </details>
+</div>
+
+<!-- #167 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#167 Two Sum II - Input Array Is Sorted</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number. Let these two numbers be numbers[index1] and numbers[index2] where 1 &lt;= index1 &lt; index2 &lt;= numbers.length. Return the indices of the two numbers, index1 and index2, added by one as an integer array [index1, index2] of length 2. The tests are generated such that there is exactly one solution. You may not use the same element twice. Your solution must use only constant extra space.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Colliding pointers. If sum &lt; target, move L right. If sum &gt; target, move R left.</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item l-pointer">2<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="array-item">7</div>
+    <div class="array-item">11</div>
+    <div class="array-item r-pointer">15<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.85rem; color:#8b949e;">target=9: 2+15=17 &gt; 9 → R--; 2+11=13 &gt; 9 → R--; 2+7=9 → <span style="color:#7ee787;">found [1,2]</span></p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">twoSum</span>(numbers: <span class="kw">list</span>[<span class="kw">int</span>], target: <span class="kw">int</span>) -> <span class="kw">list</span>[<span class="kw">int</span>]:
+    l, r = <span class="num">0</span>, <span class="fn">len</span>(numbers) - <span class="num">1</span>
+    <span class="kw">while</span> l &lt; r:
+        s = numbers[l] + numbers[r]
+        <span class="kw">if</span> s == target:
+            <span class="kw">return</span> [l + <span class="num">1</span>, r + <span class="num">1</span>]
+        <span class="kw">elif</span> s &lt; target:
+            l += <span class="num">1</span>
+        <span class="kw">else</span>:
+            r -= <span class="num">1</span></pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #26 -->
+<div class="card">
+  <div>
+    <span class="tag tag-easy">EASY</span>
+    <strong>#26 Remove Duplicates from Sorted Array</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given an integer array nums sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same. Then return the number of unique elements in nums.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Fast &amp; slow. <code>slow</code> marks the next write position; <code>fast</code> scans for new values. Compare <code>nums[fast]</code> against <code>nums[slow-1]</code> (the last unique value written).</p>
+
+  <div style="background:#1c2128; border-left:3px solid #d2a8ff; padding:0.6rem 1rem; margin:0.8rem 0; font-size:0.88rem; border-radius:0 6px 6px 0;">
+    <strong style="color:#d2a8ff;">Invariant:</strong> <code>nums[0..slow-1]</code> = deduplicated prefix. <code>nums[slow..fast-1]</code> = scanned duplicates. <code>nums[fast..]</code> = unexplored. <code>slow</code> counts unique elements, which is the return value.
+  </div>
+
+  <h4>Visual Walkthrough</h4>
+  <p style="font-size:0.85rem; color:#8b949e;">Input: [0, 0, 1, 1, 1, 2, 2, 3, 3, 4] &nbsp;&nbsp; S and F start at index 1</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item active">0</div>
+    <div class="array-item both">0<span class="pointer-label s-ptr-label">S</span><span class="pointer-label f-ptr-label">F</span></div>
+    <div class="array-item" style="opacity:0.3;">1</div>
+    <div class="array-item" style="opacity:0.3;">1</div>
+    <div class="array-item" style="opacity:0.3;">1</div>
+    <div class="array-item" style="opacity:0.3;">2</div>
+    <div class="array-item" style="opacity:0.3;">2</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">4</div>
+  </div>
+  <p style="font-size:0.8rem;">S=F=1. <code>nums[1]=0</code> equals <code>nums[0]=0</code> (last unique) → skip. F moves to 2.</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item">0</div>
+    <div class="array-item active">1<span class="pointer-label s-ptr-label">S</span></div>
+    <div class="array-item">1<span class="pointer-label f-ptr-label">F</span></div>
+    <div class="array-item" style="opacity:0.3;">1</div>
+    <div class="array-item" style="opacity:0.3;">1</div>
+    <div class="array-item" style="opacity:0.3;">2</div>
+    <div class="array-item" style="opacity:0.3;">2</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">4</div>
+  </div>
+  <p style="font-size:0.8rem;">F=2 found 1 ≠ nums[0]=0 → <span style="color:#7ee787;">write 1 at nums[1]</span>. S=2. F scans 1's at 3,4 (equal to nums[1]=1 → skip).</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item">0</div>
+    <div class="array-item">1</div>
+    <div class="array-item active">2<span class="pointer-label s-ptr-label">S</span></div>
+    <div class="array-item">1</div>
+    <div class="array-item">1</div>
+    <div class="array-item">2<span class="pointer-label f-ptr-label">F</span></div>
+    <div class="array-item" style="opacity:0.3;">2</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">4</div>
+  </div>
+  <p style="font-size:0.8rem;">F=5 found 2 ≠ nums[1]=1 → <span style="color:#7ee787;">write 2 at nums[2]</span>. S=3. F=6 skips (2 equals nums[2]=2).</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item">0</div>
+    <div class="array-item">1</div>
+    <div class="array-item">2</div>
+    <div class="array-item active">3<span class="pointer-label s-ptr-label">S</span></div>
+    <div class="array-item">1</div>
+    <div class="array-item">2</div>
+    <div class="array-item">2</div>
+    <div class="array-item">3<span class="pointer-label f-ptr-label">F</span></div>
+    <div class="array-item" style="opacity:0.3;">3</div>
+    <div class="array-item" style="opacity:0.3;">4</div>
+  </div>
+  <p style="font-size:0.8rem;">F=7 found 3 ≠ nums[2]=2 → <span style="color:#7ee787;">write 3 at nums[3]</span>. S=4. F=8 skips (3 equals nums[3]=3).</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
+    <div class="array-item">0</div>
+    <div class="array-item">1</div>
+    <div class="array-item">2</div>
+    <div class="array-item">3</div>
+    <div class="array-item active">4<span class="pointer-label s-ptr-label">S</span></div>
+    <div class="array-item">2</div>
+    <div class="array-item">2</div>
+    <div class="array-item">3</div>
+    <div class="array-item">3</div>
+    <div class="array-item">4<span class="pointer-label f-ptr-label">F</span></div>
+  </div>
+  <p style="font-size:0.8rem;">F=9 found 4 ≠ nums[3]=3 → <span style="color:#7ee787;">write 4 at nums[4]</span>. S=5. Loop ends. Return <strong>5</strong>.</p>
+
+  <p style="font-size:0.85rem; color:#8b949e;">Prefix: <strong>[0, 1, 2, 3, 4]</strong> &nbsp;·&nbsp; nums beyond index 4 is garbage (ignored).</p>
+
+  <h4>Full Trace</h4>
+  <table style="width:auto; font-size:0.85rem;">
+    <tr><th>Iter</th><th>fast</th><th>nums[fast]</th><th>slow</th><th>nums[slow-1]</th><th>Match?</th><th>Action</th></tr>
+    <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>Yes</td><td>skip</td></tr>
+    <tr><td>2</td><td>2</td><td style="color:#7ee787;">1</td><td>1</td><td>0</td><td>No</td><td>write at slow</td></tr>
+    <tr><td>3</td><td>3</td><td>1</td><td>2</td><td>1</td><td>Yes</td><td>skip</td></tr>
+    <tr><td>4</td><td>4</td><td>1</td><td>2</td><td>1</td><td>Yes</td><td>skip</td></tr>
+    <tr><td>5</td><td>5</td><td style="color:#7ee787;">2</td><td>2</td><td>1</td><td>No</td><td>write at slow</td></tr>
+    <tr><td>6</td><td>6</td><td>2</td><td>3</td><td>2</td><td>Yes</td><td>skip</td></tr>
+    <tr><td>7</td><td>7</td><td style="color:#7ee787;">3</td><td>3</td><td>2</td><td>No</td><td>write at slow</td></tr>
+    <tr><td>8</td><td>8</td><td>3</td><td>4</td><td>3</td><td>Yes</td><td>skip</td></tr>
+    <tr><td>9</td><td>9</td><td style="color:#7ee787;">4</td><td>4</td><td>3</td><td>No</td><td>write at slow</td></tr>
+  </table>
+  <p style="font-size:0.85rem; color:#8b949e;">Total writes = 4. Final slow = 5 = <strong>unique count</strong>. Only 4 of 9 iterations mutate the array.</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">removeDuplicates</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
+    slow = <span class="num">1</span>
+    fast = <span class="num">1</span>
+    <span class="kw">while</span> fast < <span class="fn">len</span>(nums):
+        <span class="kw">if</span> nums[fast] != nums[slow - <span class="num">1</span>]:
+            nums[slow] = nums[fast]
+            slow += <span class="num">1</span>
+        fast += <span class="num">1</span>
+    <span class="kw">return</span> slow</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- ==================== MEDIUM ==================== -->
+<h2 id="medium">Medium Problems</h2>
+
+<!-- #11 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#11 Container With Most Water</strong>
+  </div>
+  <p style="margin-top:0.5rem;">You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the i<sup>th</sup> line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store. Notice that you may not slant the container.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Colliding pointers. Area = min(height[L], height[R]) × (R−L). Move the <em>shorter</em> line inward.</p>
+
+  <div class="bar-chart" style="height:180px;">
+    <div class="bar" style="height:8px; background:#f0883e;"><div class="bar-label">0</div></div>
+    <div class="bar" style="height:128px; background:#ff7b72;"><div class="bar-label">1 (8)</div></div>
+    <div class="bar" style="height:96px; background:#f0883e;"><div class="bar-label">2 (6)</div></div>
+    <div class="bar" style="height:32px; background:#f0883e;"><div class="bar-label">3 (2)</div></div>
+    <div class="bar" style="height:80px; background:#f0883e;"><div class="bar-label">4 (5)</div></div>
+    <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">5 (4)</div></div>
+    <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">6 (8)</div></div>
+    <div class="bar" style="height:48px; background:#f0883e;"><div class="bar-label">7 (3)</div></div>
+    <div class="bar" style="height:112px; background:#58a6ff;"><div class="bar-label">8 (7)</div></div>
+  </div>
+  <p style="font-size:0.85rem; color:#8b949e;"><span style="display:inline-block;width:12px;height:12px;background:#ff7b72;vertical-align:middle;margin-right:4px;"></span> L (height 8) &nbsp; <span style="display:inline-block;width:12px;height:12px;background:#58a6ff;vertical-align:middle;margin-right:4px;"></span> R (height 7) &nbsp; &rarr; width=7, min=7, area=<strong>49</strong></p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">maxArea</span>(height: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
+    l, r = <span class="num">0</span>, <span class="fn">len</span>(height) - <span class="num">1</span>
+    best = <span class="num">0</span>
+    <span class="kw">while</span> l &lt; r:
+        h = <span class="fn">min</span>(height[l], height[r])
+        w = r - l
+        best = <span class="fn">max</span>(best, h * w)
+        <span class="kw">if</span> height[l] &lt; height[r]:
+            l += <span class="num">1</span>
+        <span class="kw">else</span>:
+            r -= <span class="num">1</span>
+    <span class="kw">return</span> best</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #15 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#15 3Sum</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0. Notice that the solution set must not contain duplicate triplets.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Sort + for each i, two-pointer (l=i+1, r=n-1) to find pairs summing to -nums[i]. Skip duplicates.</p>
+
+  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.8rem 0;">
+    <div class="array-item both">-4<span class="pointer-label" style="color:#d2a8ff;">i</span></div>
+    <div class="array-item l-pointer">-1<span class="pointer-label l-ptr-label">L</span></div>
+    <div class="array-item">-1</div>
+    <div class="array-item">0</div>
+    <div class="array-item">1</div>
+    <div class="array-item r-pointer">2<span class="pointer-label r-ptr-label">R</span></div>
+  </div>
+  <p style="font-size:0.85rem; color:#8b949e;">
+    i=-4: need pair sum = 4 &rarr; L=-1, R=2 &rarr; sum=1 ··· never reaches 4, L passes R &rarr; no triplet<br>
+    i=-1: need pair sum = 1 &rarr; L=-1, R=2 &rarr; <span style="color:#7ee787;">found [-1, -1, 2]</span>; then L=0, R=1 &rarr; <span style="color:#7ee787;">found [-1, 0, 1]</span>
+  </p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">threeSum</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">list</span>[<span class="kw">list</span>[<span class="kw">int</span>]]:
+    nums.<span class="fn">sort</span>()
+    res = []
+    n = <span class="fn">len</span>(nums)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n - <span class="num">2</span>):
+        <span class="kw">if</span> i &gt; <span class="num">0</span> <span class="kw">and</span> nums[i] == nums[i-<span class="num">1</span>]:
+            <span class="kw">continue</span>
+        l, r = i + <span class="num">1</span>, n - <span class="num">1</span>
+        target = -nums[i]
+        <span class="kw">while</span> l &lt; r:
+            s = nums[l] + nums[r]
+            <span class="kw">if</span> s == target:
+                res.<span class="fn">append</span>([nums[i], nums[l], nums[r]])
+                <span class="kw">while</span> l &lt; r <span class="kw">and</span> nums[l] == nums[l+<span class="num">1</span>]: l += <span class="num">1</span>
+                <span class="kw">while</span> l &lt; r <span class="kw">and</span> nums[r] == nums[r-<span class="num">1</span>]: r -= <span class="num">1</span>
+                l += <span class="num">1</span>; r -= <span class="num">1</span>
+            <span class="kw">elif</span> s &lt; target: l += <span class="num">1</span>
+            <span class="kw">else</span>: r -= <span class="num">1</span>
+    <span class="kw">return</span> res</pre>
+  <p><strong>Time:</strong> O(n²) &nbsp;|&nbsp; <strong>Space:</strong> O(1) (excluding output)</p>
+  </details>
+</div>
+
+<!-- #42 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#42 Trapping Rain Water</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Colliding + track left_max and right_max. Water at position = min(L_max, R_max) − height[pos]. Move the pointer with the smaller max inward.</p>
+
+  <div style="display:flex; gap:4px; margin:0.8rem 0;">
+    <div class="bar-chart" style="height:180px;">
+      <div class="bar" style="height:4px; background:#f0883e;"><div class="bar-label">0</div></div>
+      <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">1</div></div>
+      <div class="bar" style="height:4px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">2</div></div>
+      <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">3</div></div>
+      <div class="bar" style="height:64px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">4</div></div>
+      <div class="bar" style="height:4px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">5</div></div>
+      <div class="bar" style="height:64px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">6</div></div>
+      <div class="bar" style="height:192px; background:#f0883e;"><div class="bar-label">7</div></div>
+      <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">8</div></div>
+      <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">9</div></div>
+      <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">10</div></div>
+      <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">11</div></div>
+    </div>
+  </div>
+  <p style="font-size:0.85rem; color:#8b949e;">
+    <span style="display:inline-block;width:12px;height:12px;background:#f0883e;vertical-align:middle;margin-right:4px;"></span> Land &nbsp;
+    <span style="display:inline-block;width:12px;height:12px;background:#1a4a6b;border:1px solid #58a6ff;vertical-align:middle;margin-right:4px;"></span> Trapped water (6 units)
+  </p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">trap</span>(height: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
+    <span class="kw">if</span> <span class="kw">not</span> height: <span class="kw">return</span> <span class="num">0</span>
+    l, r = <span class="num">0</span>, <span class="fn">len</span>(height) - <span class="num">1</span>
+    l_max, r_max = height[l], height[r]
+    water = <span class="num">0</span>
+    <span class="kw">while</span> l &lt; r:
+        <span class="kw">if</span> l_max &lt; r_max:
+            l += <span class="num">1</span>
+            l_max = <span class="fn">max</span>(l_max, height[l])
+            water += l_max - height[l]
+        <span class="kw">else</span>:
+            r -= <span class="num">1</span>
+            r_max = <span class="fn">max</span>(r_max, height[r])
+            water += r_max - height[r]
+    <span class="kw">return</span> water</pre>
+  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- #16 -->
+<div class="card">
+  <div>
+    <span class="tag tag-medium">MEDIUM</span>
+    <strong>#16 3Sum Closest</strong>
+  </div>
+  <p style="margin-top:0.5rem;">Given an integer array nums of length n and an integer target, find three integers in nums such that the sum is closest to target. Return the sum of the three integers. You may assume that each input would have exactly one solution.</p>
+  <details class="approach" open>
+    <summary>Approach &amp; Walkthrough</summary>
+  <p><strong>Approach:</strong> Sort + two pointers. Same as 3Sum but track closest absolute difference.</p>
+
+  </details>
+  <details class="solution">
+    <summary>Solution Code</summary>
+  <pre><span class="kw">def</span> <span class="fn">threeSumClosest</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>], target: <span class="kw">int</span>) -> <span class="kw">int</span>:
+    nums.<span class="fn">sort</span>()
+    n = <span class="fn">len</span>(nums)
+    closest = nums[<span class="num">0</span>] + nums[<span class="num">1</span>] + nums[<span class="num">2</span>]
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n - <span class="num">2</span>):
+        l, r = i + <span class="num">1</span>, n - <span class="num">1</span>
+        <span class="kw">while</span> l &lt; r:
+            s = nums[i] + nums[l] + nums[r]
+            <span class="kw">if</span> s == target: <span class="kw">return</span> s
+            <span class="kw">if</span> <span class="fn">abs</span>(s - target) &lt; <span class="fn">abs</span>(closest - target):
+                closest = s
+            <span class="kw">if</span> s &lt; target: l += <span class="num">1</span>
+            <span class="kw">else</span>: r -= <span class="num">1</span>
+    <span class="kw">return</span> closest</pre>
+  <p><strong>Time:</strong> O(n²) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
+  </details>
+</div>
+
+<!-- ==================== CHEATSHEET ==================== -->
+<h2 id="cheatsheet">Cheatsheet</h2>
+
+<table>
+  <tr><th>Problem</th><th>Sub-Pattern</th><th>Key Insight</th></tr>
+  <tr><td>#125 Valid Palindrome</td><td>Colliding</td><td>Skip non-alnum, compare lowercase</td></tr>
+  <tr><td>#283 Move Zeroes</td><td>Fast &amp; Slow</td><td>Slow marks where to write next non-zero</td></tr>
+  <tr><td>#344 Reverse String</td><td>Colliding</td><td>Swap L and R</td></tr>
+  <tr><td>#977 Squares of Sorted Array</td><td>Colliding (from ends)</td><td>Biggest square is at one of the ends</td></tr>
+  <tr><td>#167 Two Sum II</td><td>Colliding</td><td>Move L or R based on sum vs target</td></tr>
+  <tr><td>#26 Remove Duplicates</td><td>Fast &amp; Slow</td><td>Slow tracks position for next unique element</td></tr>
+  <tr><td>#11 Container With Most Water</td><td>Colliding</td><td>Move the shorter line inward</td></tr>
+  <tr><td>#15 3Sum</td><td>Sort + Colliding</td><td>Fix one, two-pointer the rest; skip duplicates</td></tr>
+  <tr><td>#42 Trapping Rain Water</td><td>Colliding + max tracking</td><td>Water = min(L_max, R_max) − height[pos]</td></tr>
+  <tr><td>#16 3Sum Closest</td><td>Sort + Colliding</td><td>Track minimum absolute diff from target</td></tr>
+</table>
+
+<p style="margin-top:2rem; color:#8b949e; font-size:0.85rem; text-align:center;">
+  All problems from <a href="https://leetcode.com" target="_blank">LeetCode</a> · Solutions in Python
+</p>
+
+</div>
+</body>
+</html>

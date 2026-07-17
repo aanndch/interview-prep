@@ -1,0 +1,171 @@
+SYSTEM DESIGN — JAPAN INTERVIEW PREP
+=====================================
+Based on: Full-Stack Engineer (5+ yrs) — messaging systems, real-time analytics,
+calendars, e-commerce, PWA. Target: mid-large & startup (English-friendly) in Tokyo.
+
+TARGET COMPANIES (no Japanese required, not black)
+--------------------------------------------------
+- Indeed (Tokyo) — English-first, strong engineering culture
+- Google Japan — English, large-scale distributed systems
+- Mercari — English-friendly, microservices, Go/TypeScript
+- PayPay — English-friendly, fintech-scale
+- LINE / Yahoo (Z Holdings) — some English teams
+- Amazon Japan — English
+- SmartHR, Freee, Wantedly, other startups — English-friendly
+
+PREREQUISITES (refresh in 2-3 days)
+------------------------------------
+  - Consistent hashing
+  - CAP theorem & PACELC
+  - Load balancers (L4 vs L7, algorithms)
+  - Caching strategies (CDN, Redis, write-through/write-around/write-back)
+  - Database indexing (B-tree, composite, covering)
+  - SQL vs NoSQL trade-offs
+  - Replication (leader-follower, multi-leader) & partitioning (horizontal sharding)
+  - Message queues (RabbitMQ, Kafka, pub/sub patterns)  ← you already know this
+  - WebSockets vs polling vs SSE                    ← you already know this
+  - REST vs GraphQL                                 ← you already know this
+  - Rate limiting (token bucket, sliding window)
+  - Idempotency & retry patterns
+  - Microservices vs monolith trade-offs
+
+CORE PROBLEMS (by relevance to YOUR experience)
+------------------------------------------------
+
+LEVEL 1: DIRECTLY MATCH YOUR RESUME (highest priority)
+
+  1.  Design a Real-Time Chat / Messaging System
+      → You built P2P texting serving 70%+ clients with 1M+ weekly messages
+        (NestJS, RabbitMQ, WebSockets). High relevance.
+      Focus: WebSocket management, message ordering, delivery guarantees
+      (at-least-once, exactly-once), offline messages, read receipts, typing
+      indicators, group chat, end-to-end encryption overview.
+
+  2.  Design a Real-Time Analytics Dashboard
+      → You delivered real-time analytics dashboards for 10+ clients
+        (React, TypeScript, NestJS). High relevance.
+      Focus: Data pipeline (producer → stream processor → OLAP store → API),
+      time-series DB (ClickHouse, TimescaleDB), rollups/materialized views,
+      WebSocket push to frontend, caching strategies for dashboards.
+
+  3.  Design a Calendar / Scheduling System
+      → You built Google/Outlook-like calendar system (Angular, TypeScript).
+        High relevance.
+      Focus: Recurring event storage (RRULE), conflict detection, timezone
+      handling, shared calendars, availability queries, sync protocols.
+
+LEVEL 2: STRONGLY RELEVANT TO YOUR STACK
+
+  4.  Design a Notification System
+      → You used Firebase push notifications achieving 30% return-user lift.
+      Focus: Multi-channel (push, email, SMS, in-app), template engine,
+      delivery retry, rate limiting, user preferences, batching, real-time vs
+      batched delivery. RabbitMQ experience transfers directly.
+
+  5.  Design an E-Commerce Platform
+      → You built e-commerce apps with Magento/GraphQL for 10+ client stores.
+      Focus: Product catalog, inventory management, shopping cart, checkout
+      flow, payment processing, order management, idempotency.
+
+  6.  Design a URL Shortener (tinyurl / bit.ly)
+      → Classic; covers hashing, key generation, DB scaling, redirect (301 vs
+        302), analytics. Tests your ability to design simple, high-throughput
+        systems.
+
+   7.  Design a Rate Limiter
+       → Mercari & Indeed both ask this. Covers token bucket, sliding window,
+         distributed rate limiting (Redis clusters), per-user/per-API-key.
+
+   8.  Design a News Feed / Social Feed (Twitter / Instagram)
+       → Tests your understanding of fan-out (push vs pull vs hybrid),
+         timeline generation, caching hot feeds. Good for general system design
+         fluency.
+
+   9.  Design a Job Recommendation System
+       → Indeed asks this. Connects to your analytics dashboard experience.
+         Focus: candidate-job matching, indexing, relevance scoring, filtering,
+         real-time updates when new jobs/postings appear.
+
+LEVEL 3: CLASSIC PROBLEMS (fill gaps)
+
+   10. Design YouTube / Video Streaming Platform
+       → CDN knowledge, video transcoding, adaptive bitrate streaming
+         (HLS/DASH), metadata & search.
+
+   11. Design a Distributed Key-Value Store / Cache
+       → Covers consistent hashing, replication, quorum reads/writes, gossip
+         protocol, hinted handoff. Directly relevant to your Redis/PubSub work.
+
+   12. Design a Marketplace Search & Filtering System
+       → Mercari asks this. Covers product search, faceted filtering,
+         full-text search (Elasticsearch), autocomplete, relevance ranking,
+         inventory-aware results.
+
+SYSTEM DESIGN INTERVIEW FORMAT (typical for Japan mid-large)
+-------------------------------------------------------------
+  45-60 min | Whiteboard / Miro / Google Docs
+  Structure:
+    1. Clarify requirements (functional + non-functional)  — 5 min
+    2. High-level design (components, data flow)            — 10 min
+    3. Deep dive (schema, API, bottleneck analysis)         — 20 min
+    4. Scale & trade-offs                                   — 10 min
+
+  Japan-specific tips:
+    - Mercari & PayPay often ask about microservices & event-driven
+    - Indeed asks practical, back-of-envelope calculations
+    - Startups focus on pragmatic MVP → scaled design
+    - English is fine; explain your reasoning clearly (think out loud)
+
+STUDY PLAN (3-4 weeks)
+=======================
+
+  WEEK 1: Fundamentals refresh + Level 1 (your strengths)
+    Day 1-2: CAP, consistent hashing, caching, load balancers, indexing, SQL vs NoSQL
+    Day 3:   Design messaging system (your P2P experience → scale to WhatsApp level)
+    Day 4:   Design real-time analytics dashboard
+    Day 5:   Design calendar/scheduling system
+    Day 6:   Review + mock problem (pick one of above)
+    Day 7:   Rest / backlog
+
+  WEEK 2: Level 2 (related to your stack)
+    Day 8-9:   Design notification system
+    Day 10:    Design e-commerce platform
+    Day 11:    Design URL shortener + rate limiter
+    Day 12:    Design news feed + job recommendation system
+    Day 13-14: Review + 1 mock interview
+
+  WEEK 3: Level 3 (filling gaps)
+    Day 15:    Design YouTube / video platform
+    Day 16:    Design distributed key-value store
+    Day 17:    Design marketplace search & filtering
+    Day 18:    Back-of-envelope calculations practice + company-specific prep
+    Day 19:    Review all 12 problems — compare your approaches
+    Day 20-21: 2 mock interviews + feedback
+
+  WEEK 4: Polish & company-specific
+    Day 22-23: Focus on companies you applied to (check their blog/tech talk)
+    Day 24:    Back-of-envelope calculations practice
+    Day 25-26: Timed mocks (45 min each)
+    Day 27:    Review weak spots
+    Day 28:    Light review — trust your prep
+
+RESOURCES
+---------
+  Books:
+    - "Designing Data-Intensive Applications" (Kleppmann) — Chapter 1-6 (fundamentals)
+    - "System Design Interview" (Alex Xu) Vol 1 & 2 — problem patterns
+
+  YouTube:
+    - System Design Interview (Gaurav Sen / codeKarle)
+    - Jordan has no life (for Japan-specific context)
+    - Indeed Engineering Blog — for Indeed Tokyo specific patterns
+
+  Practice:
+    - Pramp / interviewing.io for mock interviews
+    - Excalidraw / Miro for diagramming practice
+
+  Japan-specific recommended reading:
+    - Mercari Engineering Blog (microservices, Go, event-driven)
+    - Indeed Tokyo Engineering Blog
+    - PayPay Engineering Blog
+    - LINE Engineering Blog

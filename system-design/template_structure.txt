@@ -1,0 +1,344 @@
+SYSTEM DESIGN DETAIL PAGE — HTML TEMPLATE STRUCTURE
+===================================================
+Reference: design_problems/06_realtime_chat.html (chat), design_problems/01_url_shortener.html (url shortener)
+Use this template when creating a new problem detail page.
+
+FILE: design_{problem_name}.html
+
+======================================================================
+1. HTML SHELL & HEAD
+======================================================================
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Problem X: {Problem Name}</title>
+
+  -- Mermaid CDN (architecture diagrams) --
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({theme:'dark',themeVariables:{background:'#0f1117',primaryColor:'#161b22',primaryBorderColor:'#30363d',primaryTextColor:'#e1e4ea',lineColor:'#58a6ff',secondaryColor:'#1c2128',tertiaryColor:'#0d1117'},flowchart:{useMaxWidth:true,htmlLabels:true}});</script>
+
+  -- CSS: copy verbatim from existing page (design_problems/06_realtime_chat.html lines 9-218) --
+  -- Key CSS classes to use in body: --
+  -- .container     (max-width:960px wrapper)
+  -- .card          (dark card with border + padding)
+  -- .callout       (left-border accent box; .green / .orange variants)
+  -- .flow          (monospace code block with pre-wrap)
+  -- .resume-connector (blue-bordered box linking to your experience)
+  -- .toc           (table of contents card)
+  -- .toc-part.p1/p2 (gold/blue section numbers in TOC)
+  -- .tag / .tag-prod (optional badge)
+  -- .depth-link    (gold "+" link to deep dive sections)
+  -- .backlink      (bottom "← Back" link)
+  -- .diagram-box   (deprecated — use Mermaid instead)
+  -- pre / code syntax highlighting classes: .kw .fn .str .cm .num
+
+</head>
+<body>
+<div class="container">
+
+======================================================================
+2. HEADER
+======================================================================
+
+<h1>{Problem Name}</h1>
+<p class="subtitle">Level {N} — {short descriptor} &middot; 45 min interview format</p>
+
+<div class="resume-connector">
+  <strong> Your experience:</strong> {1-2 sentences connecting the problem to your resume}
+</div>
+
+======================================================================
+3. QUICK REFRESHER CARD (optional, adds at-a-glance summary)
+======================================================================
+
+<div class="card" style="border-left:3px solid #58a6ff;">
+  <h3 style="margin:0 0 0.6rem 0; color:#e1e4ea;">Quick Refresher</h3>
+  <p style="margin:0 0 0.4rem 0; font-size:0.9rem;">
+    <strong>Scope:</strong> {key scale numbers}
+    <strong>Architecture:</strong> {1-sentence arch overview}
+  </p>
+  <p style="margin:0 0 0.4rem 0; font-size:0.9rem;">
+    <strong>{Key topic 1}:</strong> {detail}
+  </p>
+  <p style="margin:0 0 0.4rem 0; font-size:0.9rem;">
+    <strong>{Key topic 2}:</strong> {detail}
+  </p>
+  <p style="margin:0; font-size:0.9rem;">
+    <strong>Key trade-offs:</strong> {bullet list of trade-offs}
+  </p>
+</div>
+
+======================================================================
+4. TABLE OF CONTENTS
+======================================================================
+
+<div class="toc">
+  <h3>Part 1 — Interview Core <span style="font-size:0.75rem; color:#8b949e; font-weight:400;">(present these)</span></h3>
+  <a href="#requirements"><span class="toc-part p1">1</span> Requirements Gathering</a>
+  <a href="#estimates"><span class="toc-part p1">2</span> Back-of-Envelope Estimates</a>
+  <a href="#highlevel"><span class="toc-part p1">3</span> High-Level Design</a>
+  <a href="#schema"><span class="toc-part p1">4</span> Database Schema</a>
+  <a href="#api"><span class="toc-part p1">5</span> API Design</a>
+  <a href="#..."><span class="toc-part p1">6</span> {Problem-specific sections}</a>
+  ...
+  <a href="#monitoring"><span class="toc-part p1">{N-3}</span> Monitoring &amp; Observability</a>
+  <a href="#security"><span class="toc-part p1">{N-2}</span> Security &amp; Rate Limiting</a>
+  <a href="#dr"><span class="toc-part p1">{N-1}</span> Disaster Recovery</a>
+  <a href="#cost"><span class="toc-part p1">{N}</span> Cost Optimization</a>
+  <a href="#interview"><span class="toc-part p1">{N+1}</span> Interview Tips &amp; Follow-Up Questions</a>
+
+  <h3>Part 2 — Deep Dives <span style="font-size:0.75rem; color:#8b949e; font-weight:400;">(understand for depth)</span></h3>
+  <a href="#deep-..."><span class="toc-part p2">D1</span> {Deep dive title}</a>
+  <a href="#deep-..."><span class="toc-part p2">D2</span> {Deep dive title}</a>
+  <a href="#deep-..."><span class="toc-part p2">D3</span> {Deep dive title}</a>
+  <a href="#deep-..."><span class="toc-part p2">D4</span> {Deep dive title}</a>
+  <a href="#deep-..."><span class="toc-part p2">D5</span> {Deep dive title}</a>
+  <a href="#deep-..."><span class="toc-part p2">D6</span> {Deep dive title}</a>
+  <a href="#deep-..."><span class="toc-part p2">D7</span> {Advanced trade-off topic}</a>
+</div>
+
+======================================================================
+5. PART 1: INTERVIEW CORE sections
+======================================================================
+
+<div class="part-divider part1">Part 1 — Interview Core (45-min Walkthrough)</div>
+
+--- Section 1: Requirements ---
+<h2 id="requirements">1. Requirements Gathering</h2>
+<p>{opening description}</p>
+<div class="card">
+  <h3>Functional Requirements</h3>
+  <ul><li>...</li></ul>
+</div>
+<div class="card">
+  <h3>Non-Functional Requirements</h3>
+  <ul><li>...</li></ul>
+</div>
+<div class="callout green"><strong>Interview tip:</strong> {script for asking scope questions}</div>
+
+--- Section 2: Back-of-Envelope ---
+<h2 id="estimates">2. Back-of-Envelope Estimates</h2>
+<p>Do these calculations <strong>out loud</strong>. {key insight}.</p>
+<table>
+  <tr><th>Metric</th><th>Calculation</th><th>Result</th></tr>
+  <tr><td>...</td><td>...</td><td>...</td></tr>
+</table>
+<div class="callout"><strong>Key takeaway:</strong> "{closing insight}"</div>
+
+--- Section 3: High-Level Design ---
+<h2 id="highlevel">3. High-Level Design</h2>
+<h3>Architecture Overview</h3>
+
+<pre class="mermaid">
+  flowchart LR  (or TD)
+      Component1 --> Component2
+      Component2 --> Component3[...]
+      Component3 --> Redis[("Redis<br/>{detail}")]
+      Component3 --> PG[("PostgreSQL<br/>{detail}")]
+</pre>
+
+<h3>Components</h3>
+<div class="card">
+  <p><strong>{Component}:</strong> {description}</p>
+  <p><strong>{Component}:</strong> {description}</p>
+  ...
+</div>
+<a href="#deep-..." class="depth-link">+ {link text} → See Deep Dive D{N}</a>
+
+--- Section 4: Database Schema ---
+<h2 id="schema">4. Database Schema</h2>
+<h3>Core Tables</h3>
+<pre>
+  <span class="kw">CREATE TABLE</span> table_name ( ... )
+  <span class="kw">CREATE INDEX</span> ... ON ...
+</pre>
+<h3>Why This Schema Works</h3>
+<table>
+  <tr><th>Design Choice</th><th>Why</th></tr>
+  <tr><td>{choice}</td><td>{rationale}</td></tr>
+</table>
+<div class="callout"><strong>Your context:</strong> {NestJS/TypeORM mapping note}</div>
+
+--- Section 5: API Design ---
+<h2 id="api">5. API Design</h2>
+<h3>REST Endpoints</h3>
+<pre>
+  <span class="cm">//{comment}</span>
+  POST /endpoint
+  Request:  { "field": "value" }
+  Response: { "field": "value" }
+
+  GET /{id}
+  Response: ...
+</pre>
+
+--- Sections 6-N: Problem-specific deep topics ---
+Each section gets an <h2> with an id, one or more <h3> sub-sections,
+and optionally <table>, <div class="flow">, <div class="card">, <div class="callout">,
+and <a href="#deep-..." class="depth-link"> links.
+
+--- Last section: Interview Tips ---
+<h2 id="interview">{N}. Interview Tips &amp; Follow-Up Questions</h2>
+<div class="resume-connector">
+  <strong> Leverage your experience:</strong> {link back to resume}
+</div>
+<h3>Common Follow-Up Questions</h3>
+<table>
+  <tr><th>Question</th><th>How to Answer</th></tr>
+  <tr><td>{Q}</td><td>"{A}"</td></tr>
+</table>
+<h3>Interview Script — Opening</h3>
+<p>Here's how to open the problem in an interview:</p>
+<div class="flow">
+  <span class="cm">// Open with scope clarification</span>
+  "I'll design a {problem}. Let me confirm the requirements:..."
+</div>
+
+======================================================================
+6. PART 2: DEEP DIVES
+======================================================================
+
+<div class="part-divider part2">Part 2 — Deep Dives &amp; Advanced Topics</div>
+<p style="margin-bottom:1.5rem;">These sections provide the reasoning behind Part 1 decisions. ...</p>
+
+<h2 id="deep-...">D{N}. {Title}</h2>
+<p>{explanation}</p>
+<ul><li>...</li></ul>
+<pre>...</pre>
+
+--- Each deep dive gets an <h2> with id="deep-{slug}" ---
+
+======================================================================
+7. FOOTER / BACK LINK
+======================================================================
+
+<p style="margin-top:3rem; text-align:center; color:#8b949e; font-size:0.85rem;">
+  <a href="index.html" class="backlink">← Back to System Design Hub</a>
+</p>
+
+</div>
+</body>
+</html>
+
+======================================================================
+STANDARD SECTIONS (topics to cover in Part 1, adjust per problem)
+======================================================================
+
+--- Core Sections (always include): ---
+1. Requirements Gathering       (functional + non-functional)
+2. Back-of-Envelope Estimates   (throughput, storage, bandwidth)
+3. High-Level Design            (architecture diagram + components)
+4. Database Schema              (core tables + indexes + reasoning)
+5. API Design                   (REST + real-time if applicable)
+
+--- Problem-specific Sections (6-{N-1}): ---
+   Examples per problem:
+   - URL Shortener: 301 vs 302, Key Generation, Caching, Analytics, Custom Aliases
+   - Chat: WebSocket Protocol, Message Ordering, Offline, Group Chat, Read Receipts, E2EE
+   - Rate Limiter: Algorithms, Distributed Counting, Redis optimizations
+   - News Feed: Fan-out (push/pull/hybrid), Timeline generation
+   - Notification: Multi-channel delivery, Template engine, Retry logic
+   - Key-Value Store: Consistent hashing, Replication, Quorum, Gossip
+   - E-Commerce: Inventory, Cart, Checkout, Idempotency, Payment
+
+--- Required Sections for 5-Year Experience (Japan) ---
+   (These gaps were found in URL Shortener and Chat docs — always include)
+
+   N-3. Monitoring & Observability
+        - Key metrics table (latency p50/p99, error rates, throughput)
+        - Alerting thresholds (warning/critical)
+        - Dashboard essentials (real-time, infrastructure, application)
+        - SRE practices: SLIs, SLOs, error budgets
+        - Tools: Prometheus, Grafana, PagerDuty, Elasticsearch
+        - LINE explicitly requires: "proficiency with observability tools"
+
+   N-2. Security & Rate Limiting
+        - Rate limiting strategy (Token Bucket or Sliding Window)
+        - Implementation: Redis INCR + EXPIRE or sorted sets
+        - Abuse protection (WebSocket abuse, DDoS, spam)
+        - Content moderation considerations
+        - API key management / rotation
+
+   N-1. Disaster Recovery
+        - RTO/RPO targets (table format)
+        - Multi-region setup (active-active or active-passive)
+        - Failover scenarios (step-by-step flow)
+        - Backup strategy (retention periods, cold storage)
+
+   N. Cost Optimization (optional but recommended for senior)
+        - Instance sizing table
+        - Monthly cost estimates (compute, storage, bandwidth)
+        - Cost optimization strategies (3-5 bullets)
+
+{N+1}. Interview Tips & Follow-Up Questions
+
+======================================================================
+DEEP DIVE TOPICS (6-7 per problem, labeled D1-D7)
+======================================================================
+
+Pick 6-7 concepts that need deeper explanation. Good candidates:
+D1: Core algorithm/mechanism details (e.g., base62 encoding, consistent hashing)
+D2: Distributed ID generation / scaling mechanism
+D3: Caching strategy details
+D4: Analytics pipeline / async processing
+D5: Partitioning / sharding strategies
+D6: Edge case handling / special features
+D7: Advanced trade-offs (e.g., message search under E2EE, compliance implications)
+
+======================================================================
+CONVENTIONS & STYLE
+======================================================================
+
+- Page <title>: "Problem {N}: {Problem Name}"
+- File name: design_{snake_case_name}.html
+- subtitle class: "Level {N} — {descriptor} · 45 min interview format"
+- All IDs use lowercase-kebab-case
+- Callout types: default (purple), .green (interview tips), .orange (contextual warnings)
+- Use <span class="kw">, <span class="fn">, <span class="str">, <span class="cm">, <span class="num"> for code highlighting
+- Resume-connector at top + inside interview section
+- Always include a "Quick Refresher" card between resume-connector and TOC
+- Mermaid diagrams: use <pre class="mermaid"> with flowchart LR or TD
+- Each section should have at least one <div class="callout"> or <div class="card">
+  that inserts "Interview tip:" or "Your context:" as a resume/practical connection
+- Always link from Part 1 sections to relevant Deep Dives with class="depth-link"
+
+======================================================================
+JAPAN-SPECIFIC INTERVIEW CONSIDERATIONS
+======================================================================
+
+For 5-year experience targeting Japan (both foreign and domestic companies):
+
+--- Evaluation Axes (5-axis rubric) ---
+1. Requirements Gathering (Problem Framing)
+2. Architecture Design
+3. Scalability & Reliability
+4. Trade-off Analysis (most weighted at senior level)
+5. Communication (dialogue, not monologue)
+
+--- Key Differences from US-style Interviews ---
+- "Why you made that decision" > "What you did"
+- Keigo (honorific language) matters for Japanese companies
+- Reverse questions are mandatory (3 minimum)
+- Practical, experience-based questions > pure algorithmic puzzles
+- Punctuality, humility, prepared questions all matter
+
+--- Common Follow-up Questions in Japan ---
+- "How do you detect failures?" (monitoring)
+- "What happens when X goes down?" (disaster recovery)
+- "How do you handle consistency?" (trade-offs)
+- "Tell me about a time..." (STAR framework, war stories)
+
+--- Required Sections for Japan ---
+- Monitoring & Observability (LINE explicitly requires this)
+- Security & Rate Limiting (abuse prevention)
+- Disaster Recovery (RTO/RPO, multi-region)
+- Cost Optimization (cloud cost awareness)
+
+--- Company-Specific Notes ---
+- Mercari: English-first, SDI with real business problems (90 min)
+- LINE/LY Corp: System design + coding,4-6 weeks process
+- Rakuten: Lower pressure, more cultural alignment focus
+- MUFG: Security and reliability emphasis for banking

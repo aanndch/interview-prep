@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Design — Fundamentals</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #f0883e, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid #21262d;
+    }
+    h3 {
+      font-size: 1.15rem;
+      color: #d2a8ff;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h4 {
+      color: #7ee787;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    p, li { color: #b1bac4; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op  { color: #ffa657; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    th {
+      background: #161b22;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    tr:hover td { background: #1c2128; }
+
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    .toc {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .toc h3 { margin: 0 0 0.6rem 0; color: #e1e4ea; }
+    .toc a { display: block; padding: 2px 0; font-size: 0.9rem; }
+
+    .flow {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 0.8rem 0;
+    }
+
+    .callout {
+      background: #1c2128;
+      border-left: 3px solid #d2a8ff;
+      padding: 0.6rem 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.88rem;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout strong { color: #d2a8ff; }
+    .callout.green { border-left-color: #7ee787; }
+    .callout.green strong { color: #7ee787; }
+
+    .syntax-box {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.9rem;
+    }
+    .syntax-box .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .backlink {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+    }
+    .backlink:hover { color: #58a6ff; }
+
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Fundamentals</h1>
+<p style="color:#8b949e; margin-bottom:0.2rem;">Core building blocks for every system design. Hashing, consistency, load balancing, caching, indexing, data modeling.</p>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <a href="#hashing">1. Consistent Hashing</a>
+  <a href="#cap">2. CAP Theorem &amp; PACELC</a>
+  <a href="#lb">3. Load Balancers</a>
+  <a href="#caching">4. Caching Strategies</a>
+  <a href="#indexing">5. Database Indexing</a>
+  <a href="#sql-nosql">6. SQL vs NoSQL</a>
+</div>
+
+<!-- ========================================================================
+     1. CONSISTENT HASHING
+     ======================================================================== -->
+<h2 id="hashing">1. Consistent Hashing</h2>
+
+<h3>The problem it solves</h3>
+<p>Imagine you have 10 cache servers and you want to distribute keys across them. The naive approach is <code>hash(key) % 10</code>. This works fine until you add or remove a server. When you go from 10 to 11 servers, the modulo changes from <code>% 10</code> to <code>% 11</code>, and <strong>almost every key</strong> maps to a different server. You'd have to remigrate nearly all your data — a complete cache miss storm.</p>
+
+<p>Consistent hashing solves this: when a node is added or removed, only <strong>K/N</strong> keys need to be remapped (where K = total keys, N = number of nodes). For 10 servers, that's only ~10% of keys affected instead of ~90%.</p>
+
+<h3>How it works step by step</h3>
+
+<p><strong>Step 1: The ring.</strong> Imagine a circle with numbers from 0 to 2³²−1 (the range of a 32-bit hash). This is the "hash ring."</p>
+
+<p><strong>Step 2: Place nodes on the ring.</strong> Take each server's IP address or name, hash it, and place it at that position on the ring. <code>hash("server-A")</code> lands at some position, <code>hash("server-B")</code> at another, etc.</p>
+
+<p><strong>Step 3: Place keys on the ring.</strong> Take each key (e.g., <code>"user:123"</code>), hash it, and find its position on the ring.</p>
+
+<p><strong>Step 4: Assign keys to nodes.</strong> For each key, move <strong>clockwise</strong> from the key's position. The first node you encounter owns that key. If you wrap around the entire ring, the first node owns it.</p>
+
+<div class="flow">                    hash("server-A")  ← Node A
+                       /
+         key1 → hash("key1") → go clockwise → A
+         key2 → hash("key2") → go clockwise → B
+                      \
+                  hash("server-B")  ← Node B
+         key3 → hash("key3") → go clockwise → C
+                     \
+                 hash("server-C")  ← Node C</div>
+
+<h3>What happens when a node fails</h3>
+<p>If Node B goes down, its keys are reassigned to the <strong>next</strong> node clockwise (Node C). Only keys that belonged to B are affected. All other keys stay where they are. In the naive <code>% N</code> approach, <em>all</em> keys would remap.</p>
+
+<div class="flow"><span class="cm">// Before: 3 nodes, key distribution</span>
+hash("key1") = 10  →  clockwise → A (at 15)
+hash("key2") = 30  →  clockwise → B (at 35)
+hash("key3") = 60  →  clockwise → C (at 70)
+
+<span class="cm">// After B fails: only key2 moves to C</span>
+hash("key1") = 10  →  still A
+hash("key2") = 30  →  clockwise → <span style="color:#7ee787;">C</span> (was B, now C)
+hash("key3") = 60  →  still C</div>
+
+<h3>Virtual nodes (why you need them)</h3>
+<p>With the basic approach, if nodes aren't evenly spaced on the ring, one node might own a much larger range ("hot spot"). Virtual nodes fix this: each physical node maps to <strong>multiple positions</strong> on the ring (e.g., <code>server-A#1</code>, <code>server-A#2</code>, etc.). With enough virtual nodes, the distribution becomes statistically uniform, and when a physical node joins/leaves, the rebalancing is smoother.</p>
+
+<h3>Where it's used in practice</h3>
+<ul>
+  <li><strong>Redis Cluster</strong> — uses a variant (16384 hash slots, not a ring, but same idea: slot-to-node mapping)</li>
+  <li><strong>DynamoDB / Cassandra</strong> — consistent hashing with virtual nodes for partitioning</li>
+  <li><strong>CDNs</strong> — to assign content to edge servers</li>
+  <li><strong>Load balancers</strong> — consistent session affinity (same client always hits same backend)</li>
+</ul>
+
+<div class="callout"><strong>Interview angle:</strong> When asked "how would you scale a cache layer?" — consistent hashing is the answer. Say: "I'd use consistent hashing so adding a cache node only remaps 1/N of the keys. With virtual nodes, I avoid hot spots." That single sentence shows you understand the practical trade-off.</div>
+
+<!-- ========================================================================
+     2. CAP THEOREM & PACELC
+     ======================================================================== -->
+<h2 id="cap">2. CAP Theorem &amp; PACELC</h2>
+
+<h3>The problem it addresses</h3>
+<p>In a distributed system, data is replicated across multiple machines. Network failures are inevitable — a cable gets cut, a switch fails, a node becomes unreachable. When this happens, you must choose: do you serve <strong>stale data</strong> but keep running, or do you <strong>refuse service</strong> until the network heals? CAP says you can't have both.</p>
+
+<h3>The three properties</h3>
+
+<div class="card">
+  <p><strong>Consistency (C)</strong> — Every read receives the most recent write or an error. All nodes see the same data at the same time. If you write "price=100" to node A, a read from node B must return 100 (not 50).</p>
+
+  <p><strong>Availability (A)</strong> — Every request receives a (non-error) response — without guarantee it contains the latest write. The system stays up even if some nodes are down.</p>
+
+  <p><strong>Partition Tolerance (P)</strong> — The system continues to operate despite network failures between nodes. Partitions <em>will</em> happen. You cannot opt out of P in a distributed system. <strong>The real choice is between CP and AP.</strong></p>
+</div>
+
+<h3>Working through the trade-off</h3>
+<p>Imagine two servers (A and B) that replicate data. A network partition occurs — A and B can't talk to each other. A client writes "balance=0" to server A. Another client reads from server B:</p>
+
+<ul>
+  <li><strong>CP choice:</strong> Server B refuses the read (returns error) because it can't guarantee the data is fresh. <em>Consistency wins, availability loses.</em></li>
+  <li><strong>AP choice:</strong> Server B returns "balance=100" (stale data). The system stays up. <em>Availability wins, consistency loses.</em></li>
+</ul>
+
+<div class="flow"><span class="cm">// Network partition between A and B</span>
+Client1 → write(balance=0)   → Server A   (success)
+Client2 → read(balance)      → Server B   (can't reach A)
+<span class="cm">CP: B returns error ("sorry, can't serve")</span>
+<span class="cm">AP: B returns 100 (stale, but system is up)</span></div>
+
+<h3>PACELC — the full picture</h3>
+<p>CAP only tells you what happens <strong>during a partition</strong>. PACELC adds what happens <strong>in normal operation</strong> (when there is no partition).</p>
+
+<div class="flow"><span class="cm">// PAC: when Partition occurs</span>
+  <span style="color:#58a6ff;">CP</span> (Consistency + Partition tolerance) → Zookeeper, etcd, HBase
+  <span style="color:#7ee787;">AP</span> (Availability + Partition tolerance)  → Cassandra, DynamoDB
+
+<span class="cm">// ELC: when Else (normal operation)</span>
+  <span style="color:#58a6ff;">EC</span> (Strong Consistency)   — Higher latency, synchronous replication
+  <span style="color:#7ee787;">EL</span> (Low Latency)          — Faster, async replication</div>
+
+<h3>Examples in the real world</h3>
+<table>
+  <tr><th>System</th><th>Category</th><th>During partition</th><th>Normal operation</th></tr>
+  <tr><td>PostgreSQL (single master + replicas)</td><td>CP/EC</td><td>If master is in minority partition, it stops accepting writes</td><td>Synchronous commit + read-after-write consistency</td></tr>
+  <tr><td>Cassandra</td><td>AP/EL</td><td>Any node accepts writes, eventual consistency</td><td>Tunable consistency, but defaults to eventual</td></tr>
+  <tr><td>DynamoDB (default)</td><td>AP/EL</td><td>Eventually consistent reads, writes succeed</td><td>Low latency, eventually consistent reads</td></tr>
+  <tr><td>Redis Cluster</td><td>CP/EC</td><td>Minority partition stops accepting writes</td><td>Strong consistency within a node</td></tr>
+  <tr><td>MongoDB (replica set)</td><td>CP/EC</td><td>Primary election during partition (downtime)</td><td>Primary handles all writes, secondaries replicate</td></tr>
+</table>
+
+<h3>How to use this in interviews</h3>
+<p>Start every system design by naming the consistency model. "This is a read-heavy social feed. I'll lean <strong>AP with eventual consistency</strong> — it's okay if a user's new post doesn't appear on their friend's feed for a few seconds." Compare that to a banking system where you'd say "I need <strong>CP with strong consistency</strong> — showing a stale balance is unacceptable."</p>
+
+<div class="callout green"><strong>How to answer "CP or AP?":</strong> Ask yourself: is it worse to serve stale data or to serve nothing at all? Social feeds → stale is fine (AP). Banking → wrong data is dangerous (CP). Most real-world systems are AP — users tolerate slight staleness better than downtime.</div>
+
+<!-- ========================================================================
+     3. LOAD BALANCERS
+     ======================================================================== -->
+<h2 id="lb">3. Load Balancers</h2>
+
+<h3>What a load balancer does</h3>
+<p>A load balancer sits between clients and servers. It's the single point of contact that distributes incoming requests across a pool of backend servers. This gives you:</p>
+<ul>
+  <li><strong>Fault tolerance</strong> — if a server fails, the LB routes around it</li>
+  <li><strong>Scalability</strong> — add more servers behind the LB without clients knowing</li>
+  <li><strong>Health checking</strong> — LB periodically pings servers and removes unhealthy ones</li>
+</ul>
+
+<h3>L4 vs L7 — the key distinction</h3>
+
+<p><strong>Layer 4 (Transport):</strong> Works at the TCP/UDP level. The LB looks at IP address and port, then forwards the raw packet to a backend. It never inspects the HTTP request — it doesn't know about URLs, headers, or cookies. This is <em>fast</em> (less CPU) but <em>dumb</em> (can't route based on content).</p>
+
+<p><strong>Layer 7 (Application):</strong> Works at the HTTP/HTTPS level. The LB terminates the TCP connection, reads the HTTP request, inspects the URL path, headers, cookies, or even the body, and then decides where to route it. Example: route <code>/api/users/*</code> to the user service and <code>/api/payments/*</code> to the payment service. This is <em>slower</em> (more CPU) but <em>smarter</em>.</p>
+
+<table>
+  <tr><th></th><th>Layer 4 (e.g., AWS NLB)</th><th>Layer 7 (e.g., AWS ALB, NGINX)</th></tr>
+  <tr><td>Operates on</td><td>TCP/UDP, IP, port</td><td>HTTP, headers, cookies, path</td></tr>
+  <tr><td>Routing decision</td><td>By IP + port</td><td>By URL, host, header, cookie</td></tr>
+  <tr><td>SSL termination</td><td>No (passes TCP through)</td><td>Yes (decrypts, can offload from backend)</td></tr>
+  <tr><td>Performance</td><td>Higher throughput, lower latency</td><td>Lower throughput, terminates connections</td></tr>
+  <tr><td>Typical tools</td><td>HAProxy (TCP), NLB</td><td>NGINX, Envoy, Traefik, ALB</td></tr>
+</table>
+
+<h3>Algorithms</h3>
+<table>
+  <tr><th>Algorithm</th><th>How it works</th><th>Best for</th></tr>
+  <tr><td><strong>Round robin</strong></td><td>Takes turns sending requests to each server</td><td>Equal-capacity servers, uniform request sizes</td></tr>
+  <tr><td><strong>Least connections</strong></td><td>Sends to server with fewest active connections</td><td>Varied request processing times</td></tr>
+  <tr><td><strong>IP hash</strong></td><td>Hashes client IP to pick a server (sticky sessions)</td><td>Stateful apps that need session affinity</td></tr>
+  <tr><td><strong>Weighted</strong></td><td>Servers get proportional traffic based on weight</td><td>Mixed instance sizes (e.g., 3:1 ratio)</td></tr>
+</table>
+
+<h3>Health checks</h3>
+<p>Load balancers periodically send requests (e.g., <code>GET /health</code>) to each backend. If a server fails N consecutive checks, it's removed from the pool. Once it passes checks again, it's re-added. This is how LBs provide fault tolerance without manual intervention.</p>
+
+<div class="callout"><strong>Your context:</strong> Your NestJS apps behind a load balancer would typically use L7 (ALB or NGINX) for path-based routing in a microservices setup. In the P2P messaging system, WebSocket connections need "sticky sessions" (IP hash or a dedicated LB config) so the same client reconnects to the same server that holds their WebSocket state.</div>
+
+<!-- ========================================================================
+     4. CACHING STRATEGIES
+     ======================================================================== -->
+<h2 id="caching">4. Caching Strategies</h2>
+
+<h3>Why cache?</h3>
+<p>Reading from memory is ~1000x faster than reading from disk. A typical Redis read takes ~1ms; a PostgreSQL query might take 10-100ms or more for complex joins. Caching stores frequently accessed data in fast memory so you avoid hitting the slow database.</p>
+
+<h3>Cache layers (from fastest to slowest)</h3>
+<table>
+  <tr><th>Layer</th><th>Latency</th><th>Examples</th><th>What it caches</th></tr>
+  <tr><td>CPU L1/L2 cache</td><td>~1ns</td><td>CPU</td><td>Instructions, hot data</td></tr>
+  <tr><td>Application memory</td><td>~0.1ms</td><td>In-process Map, local LRU cache</td><td>Config, reference data</td></tr>
+  <tr><td>Distributed cache</td><td>~1-5ms</td><td>Redis, Memcached</td><td>Session data, API responses, counters</td></tr>
+  <tr><td>CDN</td><td>~10-50ms</td><td>CloudFront, Cloudflare</td><td>Static assets, images, video</td></tr>
+  <tr><td>Database buffer pool</td><td>~1-10ms</td><td>PostgreSQL shared_buffers, MySQL InnoDB buffer pool</td><td>Frequently accessed rows/indexes</td></tr>
+</table>
+
+<h3>Read strategy: Cache-Aside (most common)</h3>
+<p>The application code is responsible for both reading from and writing to the cache. Here's the flow for a read:</p>
+
+<div class="flow"><span class="cm">// Application reads data</span>
+data = cache.get(key)
+<span class="kw">if</span> data == <span class="kw">null</span>:
+    data = db.query(<span class="str">"SELECT * FROM users WHERE id=?"</span>)
+    cache.set(key, data, ttl=3600)    <span class="cm">// Populate cache, expire in 1 hour</span>
+<span class="kw">return</span> data</div>
+
+<p>This is simple and widely used. The cache only holds data that's actually requested (no waste). The downside: the first request after a cache miss is slow (cache stampede).</p>
+
+<h3>Write strategies — trade-offs explained</h3>
+
+<table>
+  <tr><th>Strategy</th><th>What happens on write</th><th>Read consistency</th><th>Write latency</th><th>Risk</th></tr>
+  <tr><td><strong>Write-through</strong></td><td>Write to cache first, then DB. Both succeed or neither.</td><td>Strong (cache always fresh)</td><td>Higher (two writes)</td><td>Cache failure blocks the write</td></tr>
+  <tr><td><strong>Write-around</strong></td><td>Write to DB only. Invalidate the cache entry.</td><td>Next read may be stale (until invalidation)</td><td>Low (one write)</td><td>Read after write is slow (cache miss)</td></tr>
+  <tr><td><strong>Write-back</strong></td><td>Write to cache only. Async flush to DB later.</td><td>Stale until flushed</td><td>Lowest (one fast write)</td><td>Data loss if cache crashes before flush</td></tr>
+</table>
+
+<div class="syntax-box">
+  <div class="label">Write-through example</div>
+  <pre style="margin:0;border:none;padding:0;">cache.set(key, new_value)
+db.query("UPDATE users SET name = ? WHERE id = ?", [new_value, id])
+// Both succeed or application rolls back</pre>
+</div>
+
+<div class="syntax-box">
+  <div class="label">Write-back example (async flush)</div>
+  <pre style="margin:0;border:none;padding:0;">cache.set(key, new_value)           // Fast, immediate
+queue.enqueue({ key, new_value })   // Deferred DB write
+// Worker picks up from queue, writes to DB seconds later</pre>
+</div>
+
+<h3>Eviction policies</h3>
+<p>You can't store everything in cache. When the cache is full, something must be removed:</p>
+<ul>
+  <li><strong>LRU (Least Recently Used)</strong> — removes the item not accessed for the longest time. Most common. Works well for most workloads.</li>
+  <li><strong>LFU (Least Frequently Used)</strong> — removes the item accessed least often. Better for workloads where "once-popular" data becomes cold.</li>
+  <li><strong>TTL-based</strong> — remove items after a fixed time regardless of access. Guarantees freshness.</li>
+  <li><strong>FIFO (First In, First Out)</strong> — removes the oldest item. Simple, but may evict hot data.</li>
+</ul>
+
+<h3>Cache stampede (thundering herd)</h3>
+<p>When a popular cache key expires, multiple requests might simultaneously find the cache empty and all hit the database at once. Solutions:</p>
+<ul>
+  <li><strong>Mutex / lock</strong> — only one request rebuilds the cache; others wait</li>
+  <li><strong>Early recomputation</strong> — rebuild the cache before it expires (probabilistic early expiration)</li>
+  <li><strong>Stale data serving</strong> — serve stale data while asynchronously refreshing the cache</li>
+</ul>
+
+<div class="callout"><strong>Your context:</strong> Your NestJS apps with TypeORM + PostgreSQL could use Redis as a cache-aside layer for frequent queries (e.g., user profiles, message history). For the real-time analytics dashboard, you'd use Redis sorted sets for leaderboards and TTL-based caching for pre-computed aggregations.</div>
+
+<!-- ========================================================================
+     5. DATABASE INDEXING
+     ======================================================================== -->
+<h2 id="indexing">5. Database Indexing</h2>
+
+<h3>What an index does</h3>
+<p>Think of a book's index at the back. Without it, to find a topic you'd read every page. With it, you look up the topic, get the page number, and go directly there. A database index works the same way — it's a separate data structure that lets the database find rows without scanning the entire table.</p>
+
+<h3>B-Tree — the default index structure</h3>
+<p>PostgreSQL, MySQL (InnoDB), and most relational databases use <strong>B+Tree</strong> as their default index type. It's a balanced tree where:</p>
+<ul>
+  <li>Data is stored in sorted order</li>
+  <li>Each node can have many children (high fan-out), keeping the tree shallow</li>
+  <li>Lookup, insert, and delete are all O(log n)</li>
+  <li>Range queries (<code>WHERE age BETWEEN 20 AND 30</code>) are efficient because leaf nodes are linked</li>
+</ul>
+
+<p>A B-Tree with fan-out of 500 can store 500³ = 125 million entries in just 3 levels. So even for a table with 100M rows, finding any row takes about 3 index traversals.</p>
+
+<h3>When an index helps vs. hurts</h3>
+<table>
+  <tr><th>Operation</th><th>With index</th><th>Without index</th></tr>
+  <tr><td><code>SELECT WHERE id = 5</code></td><td>O(log n) — ~3 lookups</td><td>O(n) — full table scan</td></tr>
+  <tr><td><code>ORDER BY created_at</code></td><td>Already sorted — O(log n) to traverse</td><td>Sorts all rows — O(n log n)</td></tr>
+  <tr><td><code>INSERT</code></td><td>O(log n) — must update the index</td><td>O(1) — append to table</td></tr>
+  <tr><td><code>UPDATE indexed column</code></td><td>O(log n) — update both table and index</td><td>O(1) — update table only</td></tr>
+</table>
+
+<p><strong>Key insight:</strong> Indexes speed up reads but slow down writes. Every INSERT, UPDATE, or DELETE on an indexed column must also update the index. This is why you don't index every column — only the ones used in WHERE, JOIN, and ORDER BY.</p>
+
+<h3>Composite indexes — multiple columns</h3>
+<p>An index on multiple columns: <code>CREATE INDEX ON users (country, status, created_at)</code>.</p>
+
+<p><strong>The leftmost prefix rule:</strong> The index is sorted by <code>country</code> first, then <code>status</code>, then <code>created_at</code>. A query can only use the index if it filters on columns from left to right:</p>
+
+<div class="flow"><span class="cm">// Can use the index:</span>
+WHERE country = 'JP'                              <span class="cm">// uses 1st column ✓</span>
+WHERE country = 'JP' AND status = 'active'         <span class="cm">// uses 1st + 2nd ✓</span>
+WHERE country = 'JP' AND status = 'active'
+  AND created_at &gt; '2024-01-01'                    <span class="cm">// uses all 3 ✓</span>
+
+<span class="cm">// Cannot use the index:</span>
+WHERE status = 'active'                            <span class="cm">// skips 1st column ✗</span>
+WHERE created_at &gt; '2024-01-01'                    <span class="cm">// skips 1st + 2nd ✗</span></div>
+
+<h3>Covering indexes — the fastest reads</h3>
+<p>A covering index contains <strong>all columns</strong> that a query needs. The database can answer the query entirely from the index without ever touching the table. This eliminates the table I/O entirely.</p>
+
+<div class="flow"><span class="cm">-- Without covering index (two I/Os: index + table)</span>
+SELECT email FROM users WHERE country = 'JP' AND status = 'active';
+
+<span class="cm">-- With covering index (one I/O: index only, no table access)</span>
+CREATE INDEX idx_covering ON users (country, status) INCLUDE (email);
+
+<span class="cm">-- PostgreSQL: INCLUDE adds non-key columns (v11+)</span>
+<span class="cm">-- MySQL: you can use a composite index with all columns</span></div>
+
+<div class="callout"><strong>Interview angle:</strong> When designing a database schema in an interview, say: "I'll create a composite index on (user_id, created_at DESC) to cover the 'recent messages' query." This shows you think about query patterns before writing DDL. You can also mention that TypeORM's <code>@Index</code> decorator makes this trivial.</div>
+
+<!-- ========================================================================
+     6. SQL vs NoSQL
+     ======================================================================== -->
+<h2 id="sql-nosql">6. SQL vs NoSQL</h2>
+
+<h3>Core difference: how data is modeled</h3>
+<p><strong>SQL:</strong> Data goes into tables with fixed schemas. Relationships are expressed through foreign keys and JOINs. You define the schema upfront — every row in a table must have the same columns.</p>
+
+<p><strong>NoSQL:</strong> Data is stored as documents (JSON), key-value pairs, wide columns, or graphs. Each record can have different fields. There's no schema enforcement — you just put data in.</p>
+
+<h3>Deep comparison</h3>
+<table>
+  <tr><th>Dimension</th><th>SQL (PostgreSQL, MySQL)</th><th>NoSQL (MongoDB, DynamoDB)</th></tr>
+  <tr><td>Schema</td><td>Fixed, predefined with migrations</td><td>Flexible, dynamic — each doc can differ</td></tr>
+  <tr><td>Relationships</td><td>JOINs via foreign keys (efficient with indexes)</td><td>Embed sub-docs or reference IDs (client-side join)</td></tr>
+  <tr><td>ACID transactions</td><td>Strong by default. Multi-row, multi-table</td><td>Limited. Single-document atomicity in most</td></tr>
+  <tr><td>Query flexibility</td><td>Extremely expressive — GROUP BY, HAVING, subqueries, CTEs, window functions</td><td>Limited — key lookups, simple filters, map-reduce</td></tr>
+  <tr><td>Horizontal scaling</td><td>Harder — requires sharding + application changes</td><td>Built-in — auto-sharding by design</td></tr>
+  <tr><td>Data integrity</td><td>Constraints, triggers, foreign keys enforced by DB</td><td>No enforcement — handled in application code</td></tr>
+</table>
+
+<h3>When to pick SQL</h3>
+<ul>
+  <li>Your data has clear relationships (users have orders, orders have items)</li>
+  <li>You need ACID transactions (financial data, inventory)</li>
+  <li>You run complex analytical queries (reports, aggregations, joins across tables)</li>
+  <li>Data integrity is critical (constraints, foreign keys)</li>
+  <li>You don't expect to grow beyond a single node for writes</li>
+</ul>
+
+<h3>When to pick NoSQL</h3>
+<ul>
+  <li>Your schema changes frequently (startups, evolving products)</li>
+  <li>You need massive write throughput (millions of writes/sec)</li>
+  <li>Your data access is simple — "get me the user by ID" or "insert this event"</li>
+  <li>You need to scale horizontally across many nodes without manual sharding</li>
+  <li>You're storing session data, event logs, user preferences</li>
+</ul>
+
+<h3>The hybrid approach (most real-world systems)</h3>
+<p>Most production systems use <strong>both</strong>. PostgreSQL for the core transactional data (users, accounts, orders) + Redis for caching/session + Elasticsearch for search + a queue for async processing. The question isn't "SQL or NoSQL?" — it's "which tool for which job?"</p>
+
+<div class="callout"><strong>Your context:</strong> Your messaging app uses PostgreSQL + TypeORM — the right choice because message relationships (sender, recipient, thread, status) benefit from relational integrity. If you needed to scale to billions of messages, you might partition by time or add a write buffer. You also used GraphQL + MongoDB-adjacent stores for e-commerce — a good example of picking NoSQL for flexible product catalogs.</div>
+
+<p style="margin-top:3rem; text-align:center; color:#8b949e; font-size:0.85rem;">
+  <a href="../index.html" class="backlink">← All Prerequisites</a> · <a href="../index.html" class="backlink">Back to System Design</a>
+</p>
+
+</div>
+</body>
+</html>
