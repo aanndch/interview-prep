@@ -4,8 +4,8 @@ Study materials for software engineering interviews targeting Japan market.
 
 ## Sites
 
-- [LeetCode Patterns](leetcode/index.html) - DSA pattern guides (two pointers, sliding window)
-- [System Design](system-design/index.html) - System design study materials with architecture diagrams
+- [LeetCode Patterns](https://aanndch.github.io/interview-prep/leetcode/index.html) - DSA pattern guides (two pointers, sliding window)
+- [System Design](https://aanndch.github.io/interview-prep/system-design/index.html) - System design study materials with architecture diagrams
 
 ## Structure
 
