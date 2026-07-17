@@ -1,0 +1,373 @@
+SYSTEM DESIGN INTERVIEW — COMPLETE TOPIC CHECKLIST
+===================================================
+Every topic an interviewer might ask about, organized by interview phase.
+Use this to ensure your design covers all bases.
+
+Note: Not every topic applies to every problem. Pick the relevant ones.
+
+
+═══════════════════════════════════════════════════════════════════
+PHASE 1: REQUIREMENTS (5 min)
+═══════════════════════════════════════════════════════════════════
+
+  1.1  Functional Requirements
+       - Core features (what the system must do)
+       - User roles (who uses it, what can they do)
+       - Edge cases (what happens with bad input)
+
+  1.2  Non-Functional Requirements
+       - Availability (99.9%, 99.99%, etc.)
+       - Latency targets (p50, p95, p99)
+       - Durability (data must never be lost vs. acceptable loss)
+       - Consistency (strong vs. eventual)
+       - Scalability (DAU, QPS, storage growth)
+
+  1.3  Scope Clarification
+       - In-scope vs. out-of-scope
+       - Scale assumptions (startup vs. Google-scale)
+       - Geographic scope (single region vs. global)
+
+
+═══════════════════════════════════════════════════════════════════
+PHASE 2: BACK-OF-ENVELOPE MATH (5 min)
+═══════════════════════════════════════════════════════════════════
+
+  2.1  Traffic Estimation
+       - Daily active users (DAU)
+       - Requests per second (read vs. write)
+       - Peak vs. average throughput
+       - Read-to-write ratio
+
+  2.2  Storage Estimation
+       - Per-record size
+       - Daily/yearly storage growth
+       - Hot vs. cold storage needs
+
+  2.3  Bandwidth Estimation
+       - Ingress (data coming in)
+       - Egress (data going out)
+       - Internal service-to-service traffic
+
+  2.4  Latency Budget
+       - End-to-end latency target
+       - How much time per component (DB, cache, network)
+       - What's acceptable vs. unacceptable
+
+
+═══════════════════════════════════════════════════════════════════
+PHASE 3: HIGH-LEVEL DESIGN (10 min)
+═══════════════════════════════════════════════════════════════════
+
+  3.1  Architecture Diagram
+       - Client (web, mobile, third-party)
+       - API Gateway / Load Balancer
+       - Application servers
+       - Databases (primary + replicas)
+       - Cache layer
+       - Message queue
+       - External services (CDN, third-party APIs)
+
+  3.2  Component Identification
+       - What each component does
+       - Why it's needed
+       - How components communicate (sync vs. async)
+
+  3.3  Data Flow
+       - Read path (most common operation)
+       - Write path (less frequent but complex)
+       - Async path (background processing)
+       - Real-time path (if applicable: WebSockets, SSE)
+
+  3.4  API Design
+       - REST endpoints (method, path, request/response)
+       - Error codes and error response format
+       - Versioning strategy
+       - Authentication/authorization headers
+       - Pagination (cursor-based vs. offset)
+       - Rate limiting headers
+       - Real-time protocols (WebSocket, SSE, polling)
+
+  3.5  Data Model
+       - Core tables/entities
+       - Relationships (1:1, 1:N, N:M)
+       - Indexes (what queries need to be fast)
+       - Partitioning/sharding strategy
+       - Schema design choices and why
+
+
+═══════════════════════════════════════════════════════════════════
+PHASE 4: DEEP DIVE (20 min)
+═══════════════════════════════════════════════════════════════════
+
+  4.1  Core Algorithm / Mechanism
+       - The hardest part of the problem
+       - How to generate unique IDs
+       - How to route requests
+       - How to handle conflicts/collisions
+       - How to rank/sort/filter
+
+  4.2  Caching Strategy
+       - What to cache (hot data, computed results)
+       - Cache layers (in-memory L1, Redis L2, CDN)
+       - Eviction policy (LRU, LFU, TTL)
+       - Cache-aside vs. write-through vs. write-behind
+       - Cache invalidation strategy
+       - Cache stampede / thundering herd prevention
+
+  4.3  Database Design Deep Dive
+       - SQL vs. NoSQL (and why)
+       - Indexing strategy (B-tree, composite, covering)
+       - Partitioning (hash-based, range-based, time-based)
+       - Replication (leader-follower, multi-leader)
+       - Connection pooling
+       - Read replicas vs. write primary
+
+  4.4  Async Processing
+       - Message queue (RabbitMQ vs. Kafka vs. SQS)
+       - When to use async vs. sync
+       - Delivery guarantees (at-most, at-least, exactly-once)
+       - Dead letter queues
+       - Consumer groups and parallelism
+
+  4.5  Real-Time Communication (if applicable)
+       - WebSockets vs. SSE vs. polling
+       - Connection management (sticky sessions)
+       - Message ordering
+       - Offline handling / store-and-forward
+       - Presence / online status
+
+  4.6  Concurrency & Consistency
+       - Race conditions (how to prevent)
+       - Distributed locks (Redis, ZooKeeper)
+       - Idempotency (idempotent operations)
+       - Optimistic vs. pessimistic locking
+       - Eventual consistency vs. strong consistency
+       - CAP theorem trade-offs (CP vs. AP)
+
+  4.7  Search & Filtering (if applicable)
+       - Full-text search (Elasticsearch)
+       - Inverted index
+       - Autocomplete (trie, prefix index)
+       - Relevance scoring (TF-IDF, BM25)
+       - Faceted search
+
+  4.8  Analytics & Metrics (if applicable)
+       - Real-time vs. batch processing
+       - Time-series data
+       - Rollup / pre-aggregation tables
+       - Event sourcing
+       - CQRS (Command Query Responsibility Segregation)
+
+
+═══════════════════════════════════════════════════════════════════
+PHASE 5: SCALING & TRADE-OFFS (10 min)
+═══════════════════════════════════════════════════════════════════
+
+  5.1  Scaling Strategies
+       - Horizontal scaling (add more servers)
+       - Vertical scaling (bigger server)
+       - Database sharding
+       - Read replicas
+       - CDN for static/semi-static content
+       - Auto-scaling policies
+
+  5.2  Bottleneck Analysis
+       - What breaks first at 10x/100x scale
+       - Single points of failure
+       - Hot spots (one shard/server getting too much traffic)
+       - Memory limits
+       - Connection limits
+
+  5.3  Load Balancing
+       - L4 vs. L7 load balancers
+       - Algorithms (round-robin, least connections, IP hash, weighted)
+       - Health checks
+       - Sticky sessions (when needed)
+
+  5.4  Trade-off Analysis
+       - Consistency vs. availability
+       - Latency vs. throughput
+       - Cost vs. performance
+       - Complexity vs. reliability
+       - Simplicity vs. scalability
+       - Strong consistency vs. eventual consistency
+
+  5.5  Multi-Region / Global
+       - Active-active vs. active-passive
+       - Data replication across regions
+       - Geo-routing / geo-DNS
+       - Cross-region consistency
+       - Conflict resolution (last-write-wins, CRDTs)
+
+  5.6  Cost Optimization
+       - Instance sizing
+       - Storage tiering (hot/warm/cold)
+       - Spot instances / reserved instances
+       - Bandwidth costs
+       - Caching economics
+
+
+═══════════════════════════════════════════════════════════════════
+PHASE 6: RELIABILITY & OPERATIONS
+═══════════════════════════════════════════════════════════════════
+
+  6.1  Disaster Recovery
+       - RTO (Recovery Time Objective)
+       - RPO (Recovery Point Objective)
+       - Failover strategy
+       - Backup strategy (frequency, retention)
+       - Chaos engineering (Netflix-style)
+
+  6.2  Monitoring & Observability
+       - Key metrics (latency, error rate, throughput)
+       - Dashboards (real-time, infrastructure, application)
+       - Alerting thresholds (warning vs. critical)
+       - SLIs / SLOs / Error budgets
+       - Distributed tracing (Jaeger, Zipkin)
+       - Structured logging
+
+  6.3  Security
+       - Authentication (JWT, OAuth, API keys)
+       - Authorization (RBAC, ABAC)
+       - Rate limiting (token bucket, sliding window)
+       - Input validation
+       - DDoS protection
+       - Data encryption (at-rest, in-transit)
+       - Secrets management
+
+  6.4  Deployment & CI/CD
+       - Blue-green deployment
+       - Canary releases
+       - Rollback strategy
+       - Feature flags
+
+
+═══════════════════════════════════════════════════════════════════
+PROBLEM-SPECIFIC TOPICS (by problem type)
+═══════════════════════════════════════════════════════════════════
+
+  URL SHORTENER
+    - Key generation (hash vs. auto-increment vs. snowflake)
+    - Base62/base64 encoding
+    - 301 vs. 302 redirects
+    - Collision handling
+    - Custom aliases
+    - Link expiration (TTL)
+    - Click analytics pipeline
+    - CDN caching of redirects
+
+  CHAT / MESSAGING
+    - WebSocket connection management
+    - Message ordering (per-conversation)
+    - Delivery guarantees (at-least-once + idempotency)
+    - Offline messages / store-and-forward
+    - Group chat fan-out (push vs. pull)
+    - Read receipts & typing indicators
+    - Presence / online status
+    - End-to-end encryption (Signal Protocol)
+    - Multi-device sync
+    - Message search
+
+  RATE LIMITER
+    - Token bucket vs. leaky bucket
+    - Sliding window (log vs. counter)
+    - Fixed window boundary problem
+    - Distributed rate limiting (Redis)
+    - Per-user vs. per-IP vs. per-API-key
+    - Rate limit response (429 + Retry-After header)
+
+  NEWS FEED / SOCIAL
+    - Fan-out on write (push) vs. fan-out on read (pull) vs. hybrid
+    - Timeline generation
+    - Celebrity/hot-user problem
+    - Feed ranking (chronological vs. algorithmic)
+    - Media handling (images, videos)
+
+  NOTIFICATION SYSTEM
+    - Multi-channel (push, email, SMS, in-app)
+    - Template engine
+    - Delivery retry & backoff
+    - User preferences (opt-in/out)
+    - Rate limiting per channel
+    - Batching & deduplication
+    - Priority (urgent vs. normal)
+
+  KEY-VALUE STORE
+    - Consistent hashing (virtual nodes)
+    - Replication (quorum reads/writes)
+    - Conflict resolution (vector clocks, CRDTs)
+    - Gossip protocol
+    - Hinted handoff
+    - Anti-entropy (Merkle trees)
+
+  E-COMMERCE
+    - Product catalog
+    - Inventory management (oversell prevention)
+    - Shopping cart (persistent vs. ephemeral)
+    - Checkout flow (idempotency)
+    - Payment processing (Stripe, idempotent keys)
+    - Order management
+    - Search & filtering
+
+  CALENDAR / SCHEDULING
+    - Recurring events (RRULE)
+    - Conflict detection
+    - Timezone handling
+    - Shared calendars (permissions)
+    - Availability queries
+    - Sync protocols (CalDAV)
+
+  VIDEO STREAMING (YouTube)
+    - Video upload pipeline
+    - Transcoding (parallel, multi-resolution)
+    - Adaptive bitrate streaming (HLS/DASH)
+    - CDN caching
+    - Content ID / copyright
+    - Metadata & search
+
+  JOB RECOMMENDATION
+    - Candidate-job matching
+    - Inverted index
+    - Relevance scoring
+    - Real-time updates
+    - Filter & ranking
+
+  MARKETPLACE SEARCH
+    - Elasticsearch
+    - Faceted search
+    - Autocomplete
+    - Relevance ranking
+    - Inventory-aware results
+    - Real-time indexing
+
+
+═══════════════════════════════════════════════════════════════════
+INTERVIEW SOFT SKILLS
+═══════════════════════════════════════════════════════════════════
+
+  COMMUNICATION
+    - Think out loud (explain reasoning)
+    - Start broad, then go deep
+    - Ask clarifying questions before designing
+    - State trade-offs explicitly ("I could do X or Y; I'd pick X because...")
+    - Check in with the interviewer ("Should I go deeper on this?")
+
+  STRUCTURE
+    - Use a consistent framework (requirements → math → design → deep dive)
+    - Number your sections
+    - Draw before you talk (whiteboard / Miro)
+    - Label everything on the diagram
+
+  REVERSE QUESTIONS (always ask 2-3 at the end)
+    - "What's the biggest scaling challenge you've faced with this system?"
+    - "How does the team handle on-call for this service?"
+    - "What's the most common production incident?"
+    - "How do you measure success for this system?"
+
+  JAPAN-SPECIFIC
+    - Punctuality (join 5 min early)
+    - Humility (acknowledge what you don't know)
+    - Keigo (honorific language) for Japanese companies
+    - STAR framework for behavioral questions
+    - "Why did you make that decision?" > "What did you do?"
+    - Reverse questions are mandatory (3 minimum)

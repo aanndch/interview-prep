@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Shortener — Learn the Design</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({theme:'dark',themeVariables:{background:'#0f1117',primaryColor:'#161b22',primaryBorderColor:'#30363d',primaryTextColor:'#e1e4ea',lineColor:'#58a6ff',secondaryColor:'#1c2128',tertiaryColor:'#0d1117'},flowchart:{useMaxWidth:true,htmlLabels:true}});</script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e1e4ea;line-height:1.7;padding:2rem}
+    .container{max-width:960px;margin:0 auto}
+    h1{font-size:2.4rem;background:linear-gradient(135deg,#58a6ff,#8250df);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem}
+    .subtitle{color:#8b949e;font-size:.95rem;margin-bottom:1.2rem}
+    h2{font-size:1.5rem;color:#58a6ff;margin-top:2.8rem;margin-bottom:1rem;padding-bottom:.4rem;border-bottom:2px solid #21262d}
+    h3{font-size:1.15rem;color:#d2a8ff;margin-top:1.8rem;margin-bottom:.8rem}
+    h4{color:#7ee787;margin-top:1.2rem;margin-bottom:.5rem}
+    p{color:#b1bac4;margin-bottom:.6rem}
+    li{color:#b1bac4}
+    a{color:#58a6ff;text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:1.4rem;margin-bottom:1.2rem}
+    .card h3:first-child{margin-top:0}
+
+    .anchor{background:linear-gradient(135deg,#1a2744,#1c2128);border:2px solid #58a6ff;border-radius:12px;padding:1.4rem 1.6rem;margin:1.6rem 0;text-align:center}
+    .anchor p{color:#e1e4ea;font-size:1.05rem;margin:0}
+    .anchor strong{color:#58a6ff}
+    .anchor .small{color:#8b949e;font-size:.85rem;margin-top:.4rem}
+
+    .part-divider{font-size:1.1rem;color:#8b949e;margin-top:3rem;margin-bottom:1.5rem;padding:.6rem 1rem;border:1px solid #30363d;border-radius:8px;background:#161b22;text-align:center;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+    .part-divider.part1{border-color:#58a6ff;color:#58a6ff}
+    .part-divider.part2{border-color:#d29922;color:#d29922}
+
+    .tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.75rem;font-weight:600;margin-right:4px}
+    .tag-prod{background:#1b3a2b;color:#7ee787}
+
+    pre{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1rem;overflow-x:auto;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.88rem;line-height:1.5;margin:1rem 0}
+    code{font-family:inherit}
+    .kw{color:#ff7b72}
+    .fn{color:#d2a8ff}
+    .str{color:#a5d6ff}
+    .cm{color:#8b949e;font-style:italic}
+    .num{color:#79c0ff}
+    .op{color:#ffa657}
+
+    table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}
+    th,td{padding:10px 14px;text-align:left;border-bottom:1px solid #21262d}
+    th{background:#161b22;color:#58a6ff;font-weight:600}
+    tr:hover td{background:#1c2128}
+
+    ul,ol{padding-left:1.4rem;margin-bottom:.8rem}
+    li{margin-bottom:.4rem}
+
+    .flow{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1.2rem;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;margin:1rem 0}
+
+    .callout{background:#1c2128;border-left:3px solid #d2a8ff;padding:.7rem 1.1rem;margin:1rem 0;font-size:.88rem;border-radius:0 6px 6px 0}
+    .callout strong{color:#d2a8ff}
+    .callout.green{border-left-color:#7ee787}
+    .callout.green strong{color:#7ee787}
+    .callout.orange{border-left-color:#d29922}
+    .callout.orange strong{color:#d29922}
+    .callout.red{border-left-color:#ff7b72}
+    .callout.red strong{color:#ff7b72}
+
+    .think-box{background:#0d1117;border:1px dashed #d29922;border-radius:8px;padding:1rem 1.2rem;margin:1rem 0;font-size:.9rem}
+    .think-box strong{color:#d29922}
+
+    .script-box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.2rem;margin:1rem 0;font-size:.88rem}
+    .script-box .label{font-size:.65rem;font-weight:700;color:#484f58;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .script-box p{color:#c9d1d9;margin:0}
+
+    .depth-link{display:inline-block;font-size:.82rem;color:#d29922;padding:2px 8px;border:1px solid #3a2b1b;border-radius:4px;background:#1c2128;margin:.2rem 0 .6rem 0}
+    .depth-link:hover{border-color:#d29922}
+
+    .toc{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:1.2rem 1.6rem;margin-bottom:2rem}
+    .toc h3{margin:.8rem 0 .4rem 0;color:#e1e4ea}
+    .toc h3:first-child{margin-top:0}
+    .toc a{display:block;padding:2px 0;font-size:.9rem}
+    .toc .toc-part{font-size:.75rem;font-weight:700;margin-right:6px}
+    .toc .toc-part.p1{color:#58a6ff}
+    .toc .toc-part.p2{color:#d29922}
+
+    .backlink{display:inline-block;margin-top:2rem;color:#8b949e;font-size:.85rem}
+    .backlink:hover{color:#58a6ff}
+
+    .progress-bar{height:4px;background:#21262d;border-radius:2px;margin:1rem 0 .5rem 0;overflow:hidden}
+    .progress-bar .fill{height:100%;border-radius:2px;transition:width .3s}
+
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+    @media(max-width:700px){.two-col{grid-template-columns:1fr}}
+
+    @media(max-width:640px){body{padding:1rem}h1{font-size:1.8rem}}
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Design a URL Shortener</h1>
+<p class="subtitle">System Design Interview &middot; 45-minute walkthrough &middot; from intuition to architecture</p>
+
+<div class="anchor">
+  <p><strong>The one thing to remember:</strong> This is a <em>read-heavy</em> system. 100:1 read-to-write ratio. The entire design revolves around making reads fast (cache) and writes cheap (async).</p>
+  <p class="small">Every decision below flows from this single insight.</p>
+</div>
+
+<!-- ================================================================
+     TABLE OF CONTENTS
+     ================================================================ -->
+
+<div class="toc">
+  <h3>Part 1 — Interview Walkthrough (~30 min structured + Q&A)</h3>
+  <a href="#mental-model"><span class="toc-part p1">0</span> Mental Model</a>
+  <a href="#requirements"><span class="toc-part p1">1</span> Requirements (3 min)</a>
+  <a href="#math"><span class="toc-part p1">2</span> Back-of-Envelope Math (5 min)</a>
+  <a href="#highlevel"><span class="toc-part p1">3</span> High-Level Design (7 min)</a>
+  <a href="#keygen"><span class="toc-part p1">4</span> Key Generation (5 min)</a>
+  <a href="#schema"><span class="toc-part p1">5</span> Data Model (3 min)</a>
+  <a href="#caching-deep"><span class="toc-part p1">6</span> Caching Strategy (5 min)</a>
+  <a href="#bottlenecks"><span class="toc-part p1">7</span> Bottlenecks &amp; Scaling (3 min)</a>
+
+  <h3>Part 2 — Reference (study before, use for follow-ups)</h3>
+  <a href="#api"><span class="toc-part p2">A1</span> API Design</a>
+  <a href="#redirect"><span class="toc-part p2">A2</span> Redirect Flow &amp; 301 vs 302</a>
+  <a href="#analytics"><span class="toc-part p2">A3</span> Analytics &amp; Extras</a>
+  <a href="#loadbalancing"><span class="toc-part p2">A4</span> Load Balancing</a>
+  <a href="#concurrency"><span class="toc-part p2">A5</span> Concurrency &amp; Race Conditions</a>
+  <a href="#monitoring"><span class="toc-part p2">A6</span> Monitoring &amp; Observability</a>
+  <a href="#cost"><span class="toc-part p2">A7</span> Cost Optimization</a>
+  <a href="#dr"><span class="toc-part p2">A8</span> Disaster Recovery</a>
+
+  <h3>Deep Dives</h3>
+  <a href="#deep-encode"><span class="toc-part p2">D1</span> Base62 Encoding</a>
+  <a href="#deep-snowflake"><span class="toc-part p2">D2</span> Snowflake ID Generation</a>
+  <a href="#deep-caching"><span class="toc-part p2">D3</span> Two-Level Caching In Depth</a>
+  <a href="#deep-analytics"><span class="toc-part p2">D4</span> Analytics Pipeline</a>
+  <a href="#deep-sharding"><span class="toc-part p2">D5</span> Database Sharding</a>
+  <a href="#deep-abuse"><span class="toc-part p2">D6</span> Abuse &amp; Security</a>
+
+  <h3>Reference</h3>
+  <a href="#interview-scripts"><span class="toc-part p1">+</span> Interview Scripts &amp; Follow-Ups</a>
+  <a href="#cheatsheet"><span class="toc-part p1">+</span> Cheat Sheet</a>
+</div>
+
+<!-- ====================================================================
+     PART 1: THE INTERVIEW
+     ==================================================================== -->
+<div class="part-divider part1">Part 1 — The Interview (~30 min + Q&amp;A)</div>
+<p style="margin-bottom:1.5rem;color:#8b949e;">This is exactly what you present in a 45-minute interview. ~30 minutes of structured walkthrough, then 15-20 minutes of interviewer-driven follow-up questions. Each section has a <strong>"What to say"</strong> script and a <strong>"What the interviewer is thinking"</strong> note.</p>
+
+<!-- 0. MENTAL MODEL -->
+<h2 id="mental-model">0. Mental Model — Think Before You Draw</h2>
+
+<p>Before touching the whiteboard, internalize three facts. These shape every decision:</p>
+
+<div class="card">
+  <h3>Fact 1: It's read-heavy</h3>
+  <p>For every URL you create, people will click it hundreds of times. The read:write ratio is 100:1 or higher. This means your <strong>caching layer is the most important component</strong>. A cache miss on the read path is a disaster; a slow write path is fine.</p>
+</div>
+
+<div class="card">
+  <h3>Fact 2: Reads are simple, writes are complex</h3>
+  <p>A redirect is just: "give me the long URL for this short code." One key lookup. But creating a short URL requires: generate a unique code, validate the input, check for conflicts, store it, and optionally run analytics. <strong>Optimize for the simple path.</strong></p>
+</div>
+
+<div class="card">
+  <h3>Fact 3: The code space is huge</h3>
+  <p>A 7-character code using base62 (a-z, A-Z, 0-9) gives you 62<sup>7</sup> ≈ 3.5 trillion possible codes. At 1 billion URLs per year, you won't run out for 3,500 years. You don't need complex hash-collision handling. <strong>Just generate a unique ID and encode it.</strong></p>
+</div>
+
+<div class="think-box">
+  <strong>Think like an engineer:</strong> Most interviewers aren't testing if you know TinyURL's architecture. They're testing if you can <em>reason about trade-offs</em>. When you say "I'd use a cache because this is read-heavy," that's reasoning. When you say "I'd use Redis," that's just naming a tool. Always lead with the <em>why</em>.
+</div>
+
+<!-- 1. REQUIREMENTS -->
+<h2 id="requirements">1. Requirements Gathering <span style="font-size:.8rem;color:#8b949e;">(3 min)</span></h2>
+
+<p>The interviewer says: "Design a URL shortener like TinyURL." Don't start designing. Ask questions first.</p>
+
+<div class="script-box">
+  <div class="label">Interview Script</div>
+  <p>"Let me clarify the scope. I'm assuming a public-facing service — not an internal tool. A few questions:</p>
+  <p>1. <strong>Scale:</strong> Are we designing for 100M daily active users and 1B new URLs per day?</p>
+  <p>2. <strong>Features:</strong> Core features — shorten a URL, redirect, and analytics (click tracking). Should I also support custom aliases and link expiration?</p>
+  <p>3. <strong>Read:write ratio:</strong> I'd expect around 100:1 — heavy reads, few writes. Does that match your expectation?</p>
+  <p>I'll assume TinyURL-scale unless you tell me otherwise."</p>
+</div>
+
+<div class="callout green"><strong>What the interviewer is checking:</strong> Do you clarify scope before designing? A senior engineer doesn't assume. Say: "I'll focus on shortening and redirect. Custom aliases and analytics are stretch goals I'll cover if time permits."</div>
+
+<h3>Functional Requirements</h3>
+<table>
+  <tr><th>Feature</th><th>Description</th></tr>
+  <tr><td><strong>Shorten</strong></td><td>Given a long URL, return a short code (e.g., <code>bit.ly/abc123</code>)</td></tr>
+  <tr><td><strong>Redirect</strong></td><td>Given a short code, redirect to the original long URL</td></tr>
+  <tr><td><strong>Custom alias</strong></td><td>User picks their own short code (optional)</td></tr>
+  <tr><td><strong>Expiration</strong></td><td>Links can expire after a TTL (optional)</td></tr>
+  <tr><td><strong>Analytics</strong></td><td>Track clicks: count, referrer, device, geo</td></tr>
+</table>
+
+<h3>Non-Functional Requirements</h3>
+<table>
+  <tr><th>Requirement</th><th>Target</th><th>Why it matters</th></tr>
+  <tr><td>Availability</td><td>99.99%</td><td>Redirects are user-facing — downtime means broken links everywhere</td></tr>
+  <tr><td>Latency</td><td>&lt; 50ms (p99)</td><td>Users expect instant redirects</td></tr>
+  <tr><td>Durability</td><td>100%</td><td>Once created, a short URL must never disappear</td></tr>
+  <tr><td>Read:Write ratio</td><td>100:1</td><td>Drives the caching-heavy architecture</td></tr>
+</table>
+
+<!-- 2. MATH -->
+<h2 id="math">2. Back-of-Envelope Math <span style="font-size:.8rem;color:#8b949e;">(5 min)</span></h2>
+
+<p>Do these <strong>out loud</strong>. You don't need exact numbers — you need reasonable orders of magnitude.</p>
+
+<table>
+  <tr><th>Metric</th><th>Calculation</th><th>Result</th></tr>
+  <tr><td>New URLs/day</td><td>100M DAU × 10 URLs/user</td><td>1B/day</td></tr>
+  <tr><td>Redirects/day</td><td>1B × 100 (read:write ratio)</td><td>100B/day</td></tr>
+  <tr><td>Redirects/sec (avg)</td><td>100B / 86,400</td><td><strong>~1.15M QPS</strong></td></tr>
+  <tr><td>Writes/sec</td><td>1B / 86,400</td><td>~11.5K QPS</td></tr>
+  <tr><td>Storage per URL</td><td>short_code (7B) + long_url (500B) + metadata (100B)</td><td>~600 bytes</td></tr>
+  <tr><td>Storage/year (URLs only)</td><td>1B × 600 bytes × 365</td><td>~220 TB/year</td></tr>
+  <tr><td>Storage/day (analytics)</td><td>100B clicks × 200 bytes</td><td>~20 TB/day</td></tr>
+</table>
+
+<div class="callout">
+  <strong>What the numbers tell you:</strong> "1.15M reads per second means we <em>cannot</em> hit the database for every redirect. We need a caching layer that absorbs 99%+ of reads. Writes at 11.5K/sec are modest — a single PostgreSQL primary can handle that. Analytics at 20 TB/day is the real storage challenge."
+</div>
+
+<div class="think-box">
+  <strong>Common mistake:</strong> Getting the math wrong is fine. Getting the <em>implications</em> wrong is not. If you say "1.15M QPS" and then design a system without caching, the interviewer will think you don't understand your own numbers.
+</div>
+
+<!-- 3. HIGH LEVEL -->
+<h2 id="highlevel">3. High-Level Design <span style="font-size:.8rem;color:#8b949e;">(7 min)</span></h2>
+
+<p>Now draw the architecture. Start with the simplest version, then add components as the interviewer probes.</p>
+
+<h3>The Simple Version (start here)</h3>
+
+<pre class="mermaid">
+flowchart LR
+    User["User"] --> LB["Load Balancer"]
+    LB --> API["URL Service"]
+    API --> DB[("PostgreSQL")]
+</pre>
+
+<p>A single stateless service behind a load balancer, with PostgreSQL as the source of truth. This handles 1K DAU. Now scale it.</p>
+
+<h3>The Production Version</h3>
+
+<pre class="mermaid">
+flowchart TD
+    User["User"] --> CDN["CDN Edge<br/>(Cloudflare)"]
+    CDN --> LB["Load Balancer<br/>(L7, rate limiting)"]
+    LB --> API1["URL Service<br/>instance 1"]
+    LB --> API2["URL Service<br/>instance 2"]
+    API1 --> Cache[("Redis Cluster<br/>hot URLs L2")]
+    API2 --> Cache
+    API1 --> L1["L1 In-Memory<br/>Cache (per instance)"]
+    API2 --> L1b["L1 In-Memory<br/>Cache (per instance)"]
+    API1 --> PG_primary[("PostgreSQL<br/>Primary (writes)")]
+    API2 --> PG_replica[("PostgreSQL<br/>Replica (reads)")]
+    API1 --> Kafka["Kafka<br/>click events"]
+    Kafka --> Analytics["Analytics<br/>Processor"]
+    Analytics --> PG_analytics[("Analytics DB<br/>(partitioned)")]
+</pre>
+
+<h3>Component Breakdown</h3>
+
+<table>
+  <tr><th>Component</th><th>Role</th><th>Why it's there</th></tr>
+  <tr><td><strong>CDN</strong></td><td>Caches 301 redirects at the edge</td><td>For viral URLs, 80%+ of traffic never reaches our servers.</td></tr>
+  <tr><td><strong>L7 Load Balancer</strong></td><td>Routes requests, rate limits, SSL termination</td><td>L7 can inspect the URL path. Rate limit <code>POST /shorten</code>.</td></tr>
+  <tr><td><strong>URL Service</strong></td><td>Core business logic (stateless)</td><td>Handles shortening and redirect. Multiple instances for scaling.</td></tr>
+  <tr><td><strong>L1 Cache (in-memory)</strong></td><td>Per-instance hot URL cache</td><td>Fastest reads (~0.1ms). Absorbs 90% of reads.</td></tr>
+  <tr><td><strong>Redis Cluster (L2)</strong></td><td>Shared cache across all instances</td><td>Survives restarts. Absorbs 9% of reads. ~1-2ms.</td></tr>
+  <tr><td><strong>PostgreSQL Primary</strong></td><td>Source of truth for URL mappings</td><td>All writes. ACID guarantees. Indexed on <code>short_code</code>.</td></tr>
+  <tr><td><strong>PostgreSQL Replica</strong></td><td>Read overflow (cache misses)</td><td>If both L1 and L2 miss, read from replica.</td></tr>
+  <tr><td><strong>Kafka</strong></td><td>Buffers click events</td><td>Decouples redirect from analytics. Fire-and-forget.</td></tr>
+  <tr><td><strong>Analytics Processor</strong></td><td>Consumes click events</td><td>Batch writes. Updates rollup tables for dashboards.</td></tr>
+</table>
+
+<div class="callout green"><strong>Interview tip:</strong> Draw the simple version first. Then say: "This works for small scale. Let me add caching and analytics." This shows you build incrementally, not jump to complexity.</div>
+
+<h3>The Redirect Flow (301 vs 302)</h3>
+
+<p>When a user visits <code>GET /Kx8mB2p</code>, the request flows: CDN → LB → URL Service → L1 cache → L2 (Redis) → PostgreSQL. But which HTTP status code do you return?</p>
+
+<table>
+  <tr><th></th><th>301 Permanent</th><th>302 Temporary</th></tr>
+  <tr><td>Browser behavior</td><td>Caches redirect — future visits skip our server</td><td>Every visit hits our server</td></tr>
+  <tr><td>Server load</td><td>Very low (first request only)</td><td>High (every request)</td></tr>
+  <tr><td>Analytics</td><td>Can't track (browser doesn't call us)</td><td>Can track every click</td></tr>
+  <tr><td>When to use</td><td>Analytics not needed, or URL is permanent</td><td>You need click tracking</td></tr>
+</table>
+
+<div class="callout green"><strong>Interview answer:</strong> "I'd use 302 for the first few requests to build an analytics baseline, then switch to 301 so browsers cache it. If analytics aren't needed, start with 301. The CDN can cache 301 redirects at the edge — for viral URLs, 80% of traffic never reaches our servers."</div>
+
+<div class="think-box">
+  <strong>Key insight:</strong> The choice of 301 vs 302 is a perfect example of a trade-off. There's no "right" answer — it depends on whether analytics matter more than server load. State the trade-off, pick a side, and explain why.
+</div>
+
+<!-- 4. KEY GENERATION -->
+<h2 id="keygen">4. Key Generation <span style="font-size:.8rem;color:#8b949e;">(5 min)</span></h2>
+
+<p>This is the most interesting design decision. How do you generate a unique 7-character code?</p>
+
+<h3>Option Comparison</h3>
+
+<table>
+  <tr><th>Approach</th><th>How it works</th><th>Pros</th><th>Cons</th></tr>
+  <tr>
+    <td><strong>MD5 hash + truncate</strong></td>
+    <td>Hash the long URL, take first 7 chars of base64</td>
+    <td>Deterministic (same URL → same code)</td>
+    <td>Collisions possible. Need retry logic.</td>
+  </tr>
+  <tr>
+    <td><strong>DB auto-increment → base62</strong></td>
+    <td>Get next ID from DB sequence, convert to base62</td>
+    <td>Simple, guaranteed unique</td>
+    <td>Sequential (predictable). DB is bottleneck.</td>
+  </tr>
+  <tr>
+    <td><strong>Snowflake ID → base62</strong></td>
+    <td>Distributed ID generator (timestamp + worker + seq)</td>
+    <td>Distributed, no single point, time-sortable</td>
+    <td>Requires clock sync.</td>
+  </tr>
+  <tr>
+    <td><strong>Pre-generated key service</strong></td>
+    <td>Offline service generates batches of codes</td>
+    <td>Ultra-fast allocation. No contention.</td>
+    <td>Extra moving part.</td>
+  </tr>
+</table>
+
+<h3>Recommended: Snowflake → Base62</h3>
+
+<div class="flow"><span class="cm">// Step 1: Generate a unique 64-bit ID</span>
+<span class="kw">function</span> <span class="fn">generateId</span>(workerId) {
+    <span class="kw">const</span> timestamp = <span class="fn">Date.now</span>() - EPOCH;  <span class="cm">// ms since 2024-01-01</span>
+    <span class="kw">return</span> (timestamp << <span class="num">22</span>)         <span class="cm">// 41 bits → ~69 years</span>
+         | (workerId << <span class="num">12</span>)           <span class="cm">// 10 bits → 1024 workers</span>
+         | (sequence);                 <span class="cm">// 12 bits → 4096/ms</span>
+}
+
+<span class="cm">// Step 2: Encode to base62</span>
+<span class="kw">function</span> <span class="fn">toBase62</span>(num) {
+    <span class="kw">const</span> chars = <span class="str">'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'</span>;
+    <span class="kw">let</span> result = <span class="str">''</span>;
+    <span class="kw">while</span> (num > <span class="num">0</span>) {
+        result = chars[num % <span class="num">62</span>] + result;
+        num = Math.<span class="fn">floor</span>(num / <span class="num">62</span>);
+    }
+    <span class="kw">return</span> result.<span class="fn">padStart</span>(<span class="num">7</span>, <span class="str">'0'</span>);  <span class="cm">// always 7 chars</span>
+}
+
+<span class="cm">// Result: "Kx8mB2p" — unique, non-sequential, 7 chars</span></div>
+
+<div class="callout orange"><strong>Why not MD5?</strong> MD5 truncation gives you a 7-char code, but you must handle collisions. Snowflake IDs are unique by construction — no collision handling needed.</div>
+
+<!-- 5. DATA MODEL -->
+<h2 id="schema">5. Data Model <span style="font-size:.8rem;color:#8b949e;">(3 min)</span></h2>
+
+<p>Two tables: one for URL mappings, one for analytics. Keep it simple.</p>
+
+<pre><span class="kw">CREATE TABLE</span> url_mappings (
+    id            <span class="kw">BIGSERIAL PRIMARY KEY</span>,
+    short_code    <span class="kw">VARCHAR</span>(10) <span class="kw">UNIQUE NOT NULL</span>,
+    long_url      <span class="kw">TEXT NOT NULL</span>,
+    user_id       <span class="kw">BIGINT</span>,                            <span class="cm">-- null for anonymous</span>
+    custom_alias  <span class="kw">BOOLEAN DEFAULT FALSE</span>,
+    expires_at    <span class="kw">TIMESTAMP</span>,                          <span class="cm">-- null = never</span>
+    created_at    <span class="kw">TIMESTAMP DEFAULT NOW</span>()
+);
+
+<span class="kw">CREATE UNIQUE INDEX</span> idx_short_code <span class="kw">ON</span> url_mappings (short_code);
+<span class="kw">CREATE INDEX</span> idx_user_urls <span class="kw">ON</span> url_mappings (user_id);</pre>
+
+<h3>Key Design Choices</h3>
+<table>
+  <tr><th>Choice</th><th>Why</th></tr>
+  <tr><td><code>short_code</code> with UNIQUE index (not PK)</td><td>Narrower index than making it the PK. Integer PK is 8 bytes; <code>short_code</code> is 10 bytes.</td></tr>
+  <tr><td>Analytics as a separate table</td><td>Click events are append-only and massive (20 TB/day). Mixing them with URL mappings would slow both.</td></tr>
+  <tr><td>Time-based partitioning on analytics</td><td>Each day is a separate partition. Old data archived without affecting recent queries.</td></tr>
+</table>
+
+<p><span class="depth-link" style="cursor:default;">+ Full schema with click_events table → Appendix A3</span></p>
+
+<!-- 6. CACHING -->
+<h2 id="caching-deep">6. Caching Strategy <span style="font-size:.8rem;color:#8b949e;">(5 min)</span></h2>
+
+<p>Caching is the most critical component. Let's design the two-level cache properly.</p>
+
+<h3>Two-Level Cache Architecture</h3>
+
+<div class="flow"><span class="cm">// Request flow for a redirect:</span>
+
+1. L1 (in-memory, per instance)    → <span class="num">0.1ms</span>   → 90% hit rate
+2. L2 (Redis, shared cluster)      → <span class="num">1-2ms</span>   → 9% hit rate
+3. PostgreSQL (read replica)       → <span class="num">5-10ms</span>  → 1% hit rate (cold URLs)
+
+<span class="cm">// Weighted average latency:</span>
+0.90 × 0.1ms + 0.09 × 1.5ms + 0.01 × 7ms
+= <span class="num">0.09 + 0.135 + 0.07 = 0.295ms average</span>
+
+<span class="cm">// At 1.15M QPS, only 1% hits the DB = 11.5K DB reads/sec</span>
+<span class="cm">// A single PostgreSQL replica handles ~100K reads/sec easily</span></div>
+
+<h3>Cache Parameters</h3>
+
+<table>
+  <tr><th>Parameter</th><th>L1 (In-Memory)</th><th>L2 (Redis)</th></tr>
+  <tr><td>Size per instance</td><td>10K entries (~6MB)</td><td>100M entries (~60GB cluster)</td></tr>
+  <tr><td>Eviction</td><td>LRU</td><td>LRU + TTL (7 days)</td></tr>
+  <tr><td>Populate on</td><td>L2 hit or DB hit</td><td>DB hit or URL creation</td></tr>
+  <tr><td>Invalidate on</td><td>URL update/delete</td><td>URL update/delete</td></tr>
+  <tr><td>Survives restart</td><td>No (rebuilds from L2)</td><td>Yes (persistent)</td></tr>
+</table>
+
+<h3>Write Strategy</h3>
+
+<div class="flow"><span class="cm">// URL Creation (write-through):</span>
+1. Write to PostgreSQL (source of truth)
+2. Write to Redis (L2 cache)
+3. Return response
+
+<span class="cm">// On URL update/delete (cache invalidation):</span>
+1. Update/delete in PostgreSQL
+2. Delete from Redis (L2)
+3. Broadcast invalidation to all instances (clear L1)
+   → Use Redis pub/sub: each instance subscribes to "cache_invalidation" channel</div>
+
+<!-- 7. BOTTLENECKS -->
+<h2 id="bottlenecks">7. Bottlenecks &amp; Scaling <span style="font-size:.8rem;color:#8b949e;">(3 min)</span></h2>
+
+<p>Every system has a weakest link. Find it and fix it.</p>
+
+<h3>Scaling Progression</h3>
+
+<table>
+  <tr><th>Scale</th><th>Architecture</th><th>New Bottleneck</th></tr>
+  <tr><td>1K DAU</td><td>Single server + PostgreSQL + Redis</td><td>Single point of failure</td></tr>
+  <tr><td>10M DAU</td><td>Multi-instance + Redis cluster + DB replicas</td><td>Write throughput on primary DB</td></tr>
+  <tr><td>100M DAU</td><td>CDN + Kafka + time-partitioned analytics DB</td><td>Analytics storage (20 TB/day)</td></tr>
+  <tr><td>1B DAU</td><td>Sharded PostgreSQL + multi-region</td><td>Cross-region consistency</td></tr>
+</table>
+
+<h3>Key Bottlenecks &amp; Solutions</h3>
+
+<div class="card">
+  <p><strong>Cache miss storm</strong> — If Redis goes down, 1.15M QPS hits PostgreSQL directly. That's 100× what it can handle.</p>
+  <p><strong>Fix:</strong> Redis Sentinel for automatic failover. L1 cache absorbs the first wave. Circuit breaker: if DB latency > 100ms, serve stale L1 entries.</p>
+</div>
+
+<div class="card">
+  <p><strong>ID generation contention</strong> — If using a DB auto-increment, every <code>POST /shorten</code> needs a sequence lock.</p>
+  <p><strong>Fix:</strong> Snowflake IDs are generated locally on each instance (no coordination).</p>
+</div>
+
+<div class="card">
+  <p><strong>Hot URLs</strong> — A viral link (e.g., a tweet with 1M clicks) overwhelms a single DB shard.</p>
+  <p><strong>Fix:</strong> CDN caching handles this naturally. A 301 redirect cached at the edge means 1M clicks = 0 server requests.</p>
+</div>
+
+<div class="callout green"><strong>Interview answer:</strong> "The biggest risk is a cache miss storm. If Redis fails, we need three defenses: (1) Sentinel for fast failover, (2) L1 cache absorbs the initial spike, (3) circuit breaker protects the database."</div>
+
+<!-- ====================================================================
+     PART 2: REFERENCE MATERIAL
+     ==================================================================== -->
+<div class="part-divider part2">Part 2 — Reference Material</div>
+<p style="margin-bottom:1.5rem;color:#8b949e;">Study these before the interview. Use them for follow-up questions. The interviewer will drive the conversation based on what you present in Part 1.</p>
+
+<!-- A1. API DESIGN -->
+<h2 id="api">A1. API Design</h2>
+
+<h3>REST Endpoints</h3>
+
+<pre><span class="cm">// Shorten a URL</span>
+POST /api/v1/shorten
+Headers: Authorization: Bearer &lt;jwt&gt;
+Request:  { "long_url": "https://example.com/very/long/path", "custom_alias": "my-link" }
+Response: { "short_code": "Kx8mB2p", "short_url": "https://sho.rt/Kx8mB2p", "expires_at": null }
+Status:   201 Created
+Errors:   400 (invalid URL), 409 (alias taken), 413 (URL too long), 429 (rate limited)
+
+<span class="cm">// Redirect</span>
+GET /{short_code}
+Response: 301/302 → Location: "https://example.com/very/long/path"
+Errors:   404 (code not found), 410 (link expired)
+
+<span class="cm">// Get analytics</span>
+GET /api/v1/{short_code}/analytics?from=2024-01-01&to=2024-06-01
+Response: { "total_clicks": 12345, "clicks_by_day": [...], "top_referrers": [...] }
+Errors:   403 (not owner), 404 (code not found)
+
+<span class="cm">// Update destination</span>
+PUT /api/v1/{short_code}
+Request:  { "long_url": "https://new-destination.com" }
+Errors:   403 (not owner), 404 (not found)
+
+<span class="cm">// Delete</span>
+DELETE /api/v1/{short_code}
+Response: 204 No Content</pre>
+
+<h3>Error Response Format</h3>
+
+<pre>{
+    "error": {
+        "code": "ALIAS_TAKEN",
+        "message": "The alias 'my-link' is already in use.",
+        "status": 409
+    }
+}</pre>
+
+<h3>Rate Limiting Headers</h3>
+
+<pre>X-RateLimit-Limit: 10           <span class="cm">// max requests per window</span>
+X-RateLimit-Remaining: 7        <span class="cm">// requests left</span>
+X-RateLimit-Reset: 1624567890   <span class="cm">// epoch when window resets</span>
+Retry-After: 3                  <span class="cm">// seconds to wait (on 429)</span></pre>
+
+<h3>Why This API Design Works</h3>
+<table>
+  <tr><th>Design Choice</th><th>Reasoning</th></tr>
+  <tr><td>Versioned URLs (<code>/api/v1/</code>)</td><td>Allows breaking changes in v2 without affecting existing clients.</td></tr>
+  <tr><td>Redirect at root (<code>GET /{code}</code>)</td><td>Shortest possible URL. Handled by CDN/LB — never hits the app server for popular URLs.</td></tr>
+  <tr><td>Management via <code>/api/v1/</code></td><td>CRUD operations are slower, less frequent. Avoids routing conflicts with short codes.</td></tr>
+</table>
+
+<!-- A2. REDIRECT FLOW -->
+<h2 id="redirect">A2. Redirect Flow &amp; 301 vs 302</h2>
+
+<h3>The redirect path (step by step)</h3>
+
+<div class="flow"><span class="cm">// User visits: GET /Kx8mB2p</span>
+
+<span class="num">1.</span> CDN checks if this code is cached → <span class="kw">if</span> yes, return 301 immediately (<span class="num">~5ms</span>)
+<span class="num">2.</span> Load balancer → URL Service instance
+<span class="num">3.</span> L1 (in-memory) cache lookup → <span class="kw">if</span> hit (<span class="num">~0.1ms</span>), return
+<span class="num">4.</span> L2 (Redis) cache lookup → <span class="kw">if</span> hit (<span class="num">~1ms</span>), populate L1, return
+<span class="num">5.</span> PostgreSQL query → <span class="kw">if</span> found (<span class="num">~5ms</span>), populate L2+L1, return
+<span class="num">6.</span> Publish click event to Kafka (<span class="kw">async</span>, doesn't slow the redirect)
+<span class="num">7.</span> Return 301 or 302 redirect</div>
+
+<h3>301 vs 302 — the trade-off</h3>
+
+<table>
+  <tr><th></th><th>301 Permanent</th><th>302 Temporary</th></tr>
+  <tr><td>Browser behavior</td><td>Caches redirect — future visits skip our server</td><td>Every visit hits our server</td></tr>
+  <tr><td>Server load</td><td>Very low (first request only)</td><td>High (every request)</td></tr>
+  <tr><td>Analytics</td><td>Can't track (browser doesn't call us)</td><td>Can track every click</td></tr>
+  <tr><td>When to use</td><td>Analytics not needed, or URL is permanent</td><td>You need click tracking</td></tr>
+</table>
+
+<div class="callout green"><strong>Interview answer:</strong> "I'd use 302 for the first few requests to build an analytics baseline, then switch to 301 so browsers cache it. If analytics aren't needed, start with 301. The CDN can cache 301 redirects at the edge — for viral URLs, 80% of traffic never reaches our servers."</div>
+
+<!-- A3. ANALYTICS -->
+<h2 id="analytics">A3. Analytics &amp; Extras</h2>
+
+<h3>Async Analytics Pipeline</h3>
+
+<div class="flow"><span class="cm">// On redirect (critical path — must be fast):</span>
+1. Look up URL in cache (fast)
+2. Publish click event to Kafka (<span class="kw">fire-and-forget</span>, ~1ms)
+3. Return 301/302 redirect
+<span class="cm">// Total redirect time: ~5ms. Analytics = 0ms added.</span>
+
+<span class="cm">// Analytics processor (separate service, async):</span>
+1. Consume from Kafka topic "click_events"
+2. Enrich: geolocate IP, parse user_agent
+3. Batch-write to click_events table (every 1000 rows or 5s)
+4. Update daily rollup table for dashboard queries</div>
+
+<h3>Rollup Tables for Fast Dashboard Queries</h3>
+
+<pre><span class="kw">CREATE TABLE</span> analytics_daily (
+    short_code    <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+    date          <span class="kw">DATE NOT NULL</span>,
+    click_count   <span class="kw">BIGINT DEFAULT 0</span>,
+    unique_ips    <span class="kw">BIGINT DEFAULT 0</span>,
+    top_referrers <span class="kw">JSONB</span>,
+    <span class="kw">PRIMARY KEY</span> (short_code, date)
+);</pre>
+
+<h3>Click Events Table (append-only, write-heavy)</h3>
+
+<pre><span class="kw">CREATE TABLE</span> click_events (
+    id            <span class="kw">BIGSERIAL PRIMARY KEY</span>,
+    short_code    <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+    referrer      <span class="kw">VARCHAR</span>(512),
+    user_agent    <span class="kw">VARCHAR</span>(512),
+    ip_address    <span class="kw">INET</span>,
+    country       <span class="kw">VARCHAR</span>(2),
+    clicked_at    <span class="kw">TIMESTAMP DEFAULT NOW</span>()
+) <span class="kw">PARTITION BY RANGE</span> (clicked_at);</pre>
+
+<h3>Custom Aliases &amp; Expiration</h3>
+
+<table>
+  <tr><th>Feature</th><th>Implementation</th></tr>
+  <tr><td>Custom alias</td><td>User provides <code>my-link</code>. Validate with regex <code>^[a-zA-Z0-9_-]{3,32}$</code>. Check availability.</td></tr>
+  <tr><td>Expiration</td><td>Default: never. TTL links: <code>expires_at</code> column. Expired → return 410 Gone. Background job reclaims after 30-day grace.</td></tr>
+</table>
+
+<!-- A4. LOAD BALANCING -->
+<h2 id="loadbalancing">A4. Load Balancing</h2>
+
+<h3>L4 vs L7 — Which One?</h3>
+
+<table>
+  <tr><th></th><th>Layer 4 (TCP)</th><th>Layer 7 (HTTP)</th></tr>
+  <tr><td>Operates on</td><td>IP address + port</td><td>HTTP headers, URL path, cookies</td></tr>
+  <tr><td>Speed</td><td>Faster (no HTTP parsing)</td><td>Slower (parses HTTP)</td></tr>
+  <tr><td>Routing</td><td>By IP + port only</td><td>By URL path, header, cookie</td></tr>
+  <tr><td>SSL termination</td><td>No (passes through)</td><td>Yes (decrypts, offloads from backend)</td></tr>
+  <tr><td>URL shortener use</td><td>Not ideal</td><td><strong>Best choice</strong></td></tr>
+</table>
+
+<p><strong>Why L7 for URL shortener:</strong> You need to route <code>GET /{code}</code> (redirect) differently from <code>POST /api/v1/shorten</code> (create). L7 can inspect the URL path and apply different rate limits.</p>
+
+<h3>Algorithm</h3>
+
+<div class="card">
+  <p><strong>Least connections</strong> — route to the server with fewest active connections. Better than round-robin because redirect requests are fast (~5ms) but <code>POST /shorten</code> is slower (~50ms).</p>
+</div>
+
+<p><strong>Sticky sessions?</strong> Not needed. URL Service is stateless — any instance can handle any request.</p>
+
+<!-- A5. CONCURRENCY -->
+<h2 id="concurrency">A5. Concurrency &amp; Race Conditions</h2>
+
+<h3>Race Condition 1: Custom Alias Collision</h3>
+
+<div class="flow"><span class="cm">// Two users try to claim "my-link" at the same time:</span>
+Request A: POST /shorten { "long_url": "...", "custom_alias": "my-link" }
+Request B: POST /shorten { "long_url": "...", "custom_alias": "my-link" }
+
+<span class="cm">// Without protection:</span>
+A: SELECT WHERE short_code = 'my-link'  →  not found
+B: SELECT WHERE short_code = 'my-link'  →  not found
+A: INSERT short_code = 'my-link'        →  success
+B: INSERT short_code = 'my-link'        →  success (DUPLICATE! 💥)
+
+<span class="cm">// Fix: Use the UNIQUE constraint as the safety net</span>
+A: INSERT short_code = 'my-link'        →  success
+B: INSERT short_code = 'my-link'        →  UNIQUE violation → 409 Conflict</div>
+
+<h3>Race Condition 2: Cache Stale Read</h3>
+
+<div class="flow"><span class="cm">// User updates their URL destination, but a redirect reads stale cache:</span>
+1. User A updates /abc123 → new-destination.com
+2. Request B reads /abc123 from L1 cache → old-destination.com (stale!)
+
+<span class="cm">// Fix: Write-through + cache invalidation</span>
+1. Update PostgreSQL (source of truth)
+2. Delete from Redis (L2)
+3. Broadcast L1 invalidation via Redis pub/sub
+4. All instances clear their L1 entry for this key
+
+<span class="cm">// Window of staleness: ~50-100ms — acceptable for URL shortener</span></div>
+
+<h3>Race Condition 3: Analytics Double-Count</h3>
+
+<div class="flow"><span class="cm">// Kafka consumer crashes after DB write but before offset commit:</span>
+1. Consumer reads batch of 1000 click events
+2. Writes to PostgreSQL successfully
+3. Crashes before committing Kafka offset
+4. Restarts, re-reads the same batch → double-counts 1000 clicks
+
+<span class="cm">// Fix: Click events are idempotent (append-only)</span>
+<span class="cm">// Double-counting is acceptable for analytics — it's approximate anyway</span></div>
+
+<h3>Idempotency on Shorten Endpoint</h3>
+
+<div class="flow"><span class="cm">// Problem: Client sends POST /shorten, connection times out.</span>
+<span class="cm">// Client doesn't know if it succeeded. Retries. Now two URLs exist.</span>
+
+<span class="cm">// Fix: Client-generated request ID (idempotency key)</span>
+POST /api/v1/shorten
+Headers: Idempotency-Key: "req-uuid-123"
+Body: { "long_url": "..." }
+
+<span class="cm">// Server side:</span>
+1. Check if idempotency-key exists in Redis
+2. If exists → return cached response (deduplicated)
+3. If not → process, store response in Redis with 24h TTL</div>
+
+<!-- A6. MONITORING -->
+<h2 id="monitoring">A6. Monitoring &amp; Observability</h2>
+
+<h3>Key Metrics</h3>
+<table>
+  <tr><th>Metric</th><th>Target</th><th>Alert Threshold</th></tr>
+  <tr><td>Redirect latency (p50)</td><td>&lt; 10ms</td><td>&gt; 20ms for 5 min</td></tr>
+  <tr><td>Redirect latency (p99)</td><td>&lt; 50ms</td><td>&gt; 100ms for 5 min</td></tr>
+  <tr><td>Error rate (4xx)</td><td>&lt; 1%</td><td>&gt; 5% for 5 min</td></tr>
+  <tr><td>Error rate (5xx)</td><td>&lt; 0.1%</td><td>&gt; 1% for 2 min</td></tr>
+  <tr><td>L1 cache hit rate</td><td>&gt; 90%</td><td>&lt; 80% for 5 min</td></tr>
+  <tr><td>L2 cache hit rate</td><td>&gt; 9%</td><td>&lt; 5% for 5 min</td></tr>
+  <tr><td>DB connection pool</td><td>&lt; 60%</td><td>&gt; 80% for 5 min</td></tr>
+  <tr><td>Kafka consumer lag</td><td>&lt; 10K messages</td><td>&gt; 50K for 5 min</td></tr>
+</table>
+
+<h3>SLIs / SLOs</h3>
+<ul>
+  <li><strong>SLI (what we measure):</strong> Redirect latency, cache hit rate, error rate, Kafka lag</li>
+  <li><strong>SLO (what we promise):</strong> 99.99% availability, &lt;50ms p99 redirect latency</li>
+  <li><strong>Error budget:</strong> 99.99% = 52 min/year of downtime. If we exceed that, freeze feature launches.</li>
+</ul>
+
+<h3>Dashboard Essentials</h3>
+<ul>
+  <li><strong>Real-time:</strong> QPS per endpoint, latency distribution (p50/p95/p99), error rate by type</li>
+  <li><strong>Cache:</strong> L1/L2 hit rates, eviction rates, memory usage per Redis node</li>
+  <li><strong>Database:</strong> Query latency, connection pool usage, replication lag</li>
+  <li><strong>Infrastructure:</strong> CPU/memory per URL Service instance, Kafka consumer lag</li>
+</ul>
+
+<div class="callout green"><strong>Interview answer:</strong> "I'd instrument the redirect path with structured logging. Every request logs: short_code, latency_ms, cache_hit (L1/L2/miss), status_code. Use Prometheus for metrics, Grafana for dashboards, and PagerDuty for alerting."</div>
+
+<!-- A7. COST -->
+<h2 id="cost">A7. Cost Optimization</h2>
+
+<h3>Instance Sizing</h3>
+<table>
+  <tr><th>Component</th><th>Specs</th><th>Capacity</th><th>Est. Cost/Month</th></tr>
+  <tr><td>URL Service</td><td>4 vCPU, 8GB RAM</td><td>~5K QPS per instance</td><td>~$150</td></tr>
+  <tr><td>Redis Cluster</td><td>64GB (3 nodes)</td><td>~100M entries</td><td>~$500</td></tr>
+  <tr><td>PostgreSQL Primary</td><td>16 vCPU, 64GB RAM</td><td>~11K writes/s, ~100K reads/s</td><td>~$800</td></tr>
+  <tr><td>PostgreSQL Replica</td><td>Same as primary</td><td>Read overflow</td><td>~$800</td></tr>
+  <tr><td>Kafka</td><td>3 brokers, 1TB disk each</td><td>~1M events/s</td><td>~$400</td></tr>
+</table>
+
+<h3>The Caching Math</h3>
+
+<div class="flow"><span class="cm">// Without cache:</span>
+100B reads/day × $0.000001 per DB read = $100,000/day = <span class="num">$3M/month</span>
+
+<span class="cm">// With cache (99% hit rate):</span>
+1B DB reads/day × $0.000001 = $1,000/day = <span class="num">$30K/month</span>
+100GB Redis = <span class="num">$10K/month</span>
+Total = <span class="num">$40K/month</span>  <span class="cm">(87% savings)</span></div>
+
+<h3>Storage Tiering</h3>
+<table>
+  <tr><th>Tier</th><th>Age</th><th>Storage</th><th>Cost/GB/Month</th></tr>
+  <tr><td>Hot</td><td>0-30 days</td><td>PostgreSQL SSD</td><td>~$0.10</td></tr>
+  <tr><td>Warm</td><td>30-90 days</td><td>S3 Standard</td><td>~$0.023</td></tr>
+  <tr><td>Cold</td><td>90+ days</td><td>S3 Glacier</td><td>~$0.004</td></tr>
+</table>
+
+<!-- A8. DR -->
+<h2 id="dr">A8. Disaster Recovery</h2>
+
+<h3>RTO / RPO Targets</h3>
+<table>
+  <tr><th>Component</th><th>RPO (Data Loss)</th><th>RTO (Recovery Time)</th></tr>
+  <tr><td>URL Mappings</td><td>5 minutes (async replication)</td><td>30 minutes (failover + DNS swap)</td></tr>
+  <tr><td>Analytics Events</td><td>0 (Kafka retention)</td><td>1 hour (reprocess from Kafka)</td></tr>
+  <tr><td>Redis Cache</td><td>5 minutes (RDB snapshots)</td><td>5 minutes (rebuild from DB)</td></tr>
+</table>
+
+<h3>Failure Scenarios</h3>
+
+<div class="card">
+  <p><strong>Single URL Service instance fails:</strong> Load balancer removes it from the pool. Clients retry and hit a healthy instance. L1 cache lost, but L2 (Redis) survives. Recovery: ~30 seconds.</p>
+</div>
+
+<div class="card">
+  <p><strong>Redis cluster fails:</strong> Sentinel promotes a replica. Traffic temporarily hits PostgreSQL (cache miss storm). L1 caches absorb the initial spike. Circuit breaker protects the DB. Recovery: ~10 seconds.</p>
+</div>
+
+<div class="card">
+  <p><strong>PostgreSQL primary fails:</strong> Promote read replica to primary. Update connection strings. RPO: ~5 min (async replication lag). RTO: ~30 min.</p>
+</div>
+
+<div class="card">
+  <p><strong>Full region failure:</strong> DNS failover to secondary region. Cold-start Redis from PostgreSQL. RPO: ~5 min. RTO: ~2-5 min.</p>
+</div>
+
+<h3>Backup Strategy</h3>
+<ul>
+  <li><strong>URL mappings:</strong> Daily pg_dump to S3. Retain 30 days. Point-in-time recovery enabled.</li>
+  <li><strong>Analytics:</strong> Kafka retains events for 7 days. Can reprocess everything if needed.</li>
+  <li><strong>Redis:</strong> RDB snapshots every 5 minutes to S3. AOF enabled for durability.</li>
+</ul>
+
+<!-- ====================================================================
+     DEEP DIVES
+     ==================================================================== -->
+<div class="part-divider part2">Deep Dives</div>
+<p style="margin-bottom:1.5rem;color:#8b949e;">These sections go deeper than you'd present in a 45-minute interview. Read them to understand <em>why</em> each decision was made — this depth is what separates good answers from great ones.</p>
+
+<!-- D1 -->
+<h2 id="deep-encode">D1. Base62 Encoding Explained</h2>
+
+<p>Base62 uses 62 characters: <code>0-9</code> (10), <code>a-z</code> (26), <code>A-Z</code> (26). It's like decimal (0-9) but with 62 symbols instead of 10.</p>
+
+<div class="flow"><span class="cm">// Convert decimal 1,234,567 to base62:</span>
+1,234,567 ÷ 62 = 19,912 remainder <span class="num">23</span>  → char[23] = <span class="str">'n'</span>
+   19,912 ÷ 62 =   321 remainder <span class="num">10</span>  → char[10] = <span class="str">'a'</span>
+      321 ÷ 62 =     5 remainder <span class="num">11</span>  → char[11] = <span class="str">'b'</span>
+        5 ÷ 62 =     0 remainder  <span class="num">5</span>  → char[5]  = <span class="str">'5'</span>
+
+Read remainders bottom-to-top: <span class="str">"5ban"</span> = 1,234,567 in base62</div>
+
+<h3>Capacity Math</h3>
+
+<table>
+  <tr><th>Code Length</th><th>Combinations</th><th>Enough for</th></tr>
+  <tr><td>5 chars</td><td>62<sup>5</sup> ≈ 916M</td><td>Less than 1 year at 1B URLs/year</td></tr>
+  <tr><td><strong>6 chars</strong></td><td><strong>62<sup>6</sup> ≈ 56B</strong></td><td><strong>56 years at 1B URLs/year</strong></td></tr>
+  <tr><td><strong>7 chars</strong></td><td><strong>62<sup>7</sup> ≈ 3.5T</strong></td><td><strong>3,500 years at 1B URLs/year</strong></td></tr>
+</table>
+
+<!-- D2 -->
+<h2 id="deep-snowflake">D2. Distributed ID Generation (Snowflake)</h2>
+
+<p>Snowflake IDs are 64-bit integers that encode <strong>time + worker + sequence</strong>. No central coordinator needed.</p>
+
+<div class="flow"><span class="cm">// Bit layout (64 bits total):</span>
+  0 - [41 bits timestamp] - [10 bits worker] - [12 bits sequence]
+  |        |                        |                  |
+  sign   ms since epoch          worker ID          counter
+         (~69 years)            (1024 workers)     (4096/ms)
+
+<span class="cm">// Max throughput per worker: 4096 IDs/ms = 4.1M IDs/sec</span>
+<span class="cm">// Total cluster: 1024 workers × 4.1M = 4.2B IDs/sec</span>
+<span class="cm">// We need 11.5K writes/sec — overkill by 365,000×</span></div>
+
+<h3>Clock Skew Handling</h3>
+<p>If a worker's clock jumps backward (NTP sync), the worker detects the anomaly and <strong>waits</strong> until the previous timestamp catches up. This prevents ID collisions from time reversal.</p>
+
+<!-- D3 -->
+<h2 id="deep-caching">D3. Two-Level Caching In Depth</h2>
+
+<h3>Cache Stampede Prevention</h3>
+
+<div class="flow"><span class="cm">// Problem: Hot URL expires from L1 simultaneously on all instances</span>
+<span class="cm">// 1000 instances all miss L1 → all hit Redis → Redis overloaded</span>
+
+<span class="cm">// Solution 1: Mutex lock (one instance rebuilds, others wait)</span>
+<span class="kw">if</span> (l1.has(key)) <span class="kw">return</span> l1.get(key);
+
+<span class="kw">if</span> (mutex.tryLock(<span class="str">`rebuild:</span>${key}<span class="str">`</span>)) {
+    <span class="kw">const</span> value = <span class="kw">await</span> redis.get(key);
+    l1.set(key, value, TTL);
+    mutex.unlock(<span class="str">`rebuild:</span>${key}<span class="str">`</span>);
+} <span class="kw">else</span> {
+    <span class="kw">await</span> sleep(<span class="num">50</span>);  <span class="cm">// wait for the rebuild</span>
+    <span class="kw">return</span> l1.get(key);  <span class="cm">// try again</span>
+}
+
+<span class="cm">// Solution 2: Probabilistic early expiration</span>
+<span class="kw">if</span> (TTL_remaining / TTL_total < Math.<span class="fn">random</span>()) {
+    refresh(key);
+}</div>
+
+<h3>L1 Invalidation Across Instances</h3>
+
+<div class="flow"><span class="cm">// On URL update:</span>
+1. Update PostgreSQL
+2. Delete from Redis (L2)
+3. Publish: PUBLISH cache_invalidation "short:Kx8mB2p"
+
+<span class="cm">// Each URL Service instance subscribes:</span>
+SUBSCRIBE cache_invalidation
+<span class="kw">on</span> message:
+    l1.delete(message.key)</div>
+
+<!-- D4 -->
+<h2 id="deep-analytics">D4. Analytics Pipeline Architecture</h2>
+
+<h3>Kafka Topic Design</h3>
+
+<div class="flow"><span class="cm">// Topic: "click_events" — 32 partitions</span>
+<span class="cm">// Partition key: short_code (all clicks for same code go to same partition)</span>
+
+<span class="cm">// Message value (Avro or Protobuf):</span>
+{
+  short_code: string,
+  referrer:   string,
+  user_agent: string,
+  ip_address: string,
+  timestamp:  int64
+}</div>
+
+<h3>Consumer Design</h3>
+<ul>
+  <li><strong>Batch writes:</strong> Accumulate 1000 events or 5 seconds, whichever comes first.</li>
+  <li><strong>Exactly-once:</strong> Kafka offsets committed only after successful DB write. Re-processing is safe (append-only).</li>
+  <li><strong>Rollup updates:</strong> After batch insert, update <code>analytics_daily</code> with <code>INSERT ... ON CONFLICT DO UPDATE SET click_count = click_count + N</code>.</li>
+</ul>
+
+<h3>Storage Tiers</h3>
+
+<table>
+  <tr><th>Tier</th><th>Age</th><th>Storage</th><th>Query Latency</th><th>Cost/GB/Month</th></tr>
+  <tr><td>Hot</td><td>0-30 days</td><td>PostgreSQL (partitioned)</td><td>~10ms</td><td>$0.10</td></tr>
+  <tr><td>Warm</td><td>30-90 days</td><td>S3 Standard (Parquet)</td><td>~2s (Athena)</td><td>$0.023</td></tr>
+  <tr><td>Cold</td><td>90+ days</td><td>S3 Glacier</td><td>~5min</td><td>$0.004</td></tr>
+</table>
+
+<!-- D5 -->
+<h2 id="deep-sharding">D5. Database Sharding at Scale</h2>
+
+<h3>When to Shard</h3>
+<p>PostgreSQL on a single node handles ~11K writes/sec and ~100K reads/sec. At 100M DAU, writes (11.5K/sec) are at the limit. If you grow beyond that, you need sharding.</p>
+
+<h3>Sharding Strategy for URL Mappings</h3>
+
+<div class="flow"><span class="cm">// Hash-based sharding on short_code</span>
+shard = hash(short_code) % NUM_SHARDS
+
+<span class="cm">// Example with 4 shards:</span>
+hash("Kx8mB2p") % 4 = 2  → Shard 2
+hash("abc1234") % 4 = 0  → Shard 0
+
+<span class="cm">// Each shard is a separate PostgreSQL instance with 1-2 read replicas</span></div>
+
+<p><strong>Why hash-based, not range-based?</strong> URL codes are uniformly distributed (snowflake IDs are random-looking). Hash sharding gives even distribution.</p>
+
+<!-- D6 -->
+<h2 id="deep-abuse">D6. Abuse, Spam &amp; Security</h2>
+
+<h3>Rate Limiting</h3>
+
+<div class="flow"><span class="cm">// Token Bucket in Redis (Lua script for atomicity)</span>
+<span class="kw">local</span> key = KEYS[1]               <span class="cm">// "ratelimit:user:123"</span>
+<span class="kw">local</span> limit = <span class="fn">tonumber</span>(ARGV[1])   <span class="cm">// max tokens</span>
+<span class="kw">local</span> refill = <span class="fn">tonumber</span>(ARGV[2])  <span class="cm">// tokens per second</span>
+
+<span class="kw">local</span> tokens = redis.<span class="fn">call</span>(<span class="str">"GET"</span>, key) <span class="kw">or</span> limit
+<span class="kw">if</span> <span class="fn">tonumber</span>(tokens) > <span class="num">0</span> <span class="kw">then</span>
+    redis.<span class="fn">call</span>(<span class="str">"DECR"</span>, key)
+    <span class="kw">return</span> <span class="num">1</span>  <span class="cm">// allowed</span>
+<span class="kw">else</span>
+    <span class="kw">return</span> <span class="num">0</span>  <span class="cm">// rate limited</span>
+<span class="kw">end</span>
+
+<span class="cm">// Limits:</span>
+<span class="cm">// - POST /shorten: 10 req/s per authenticated user</span>
+<span class="cm">// - POST /shorten: 5 req/s per anonymous IP</span>
+<span class="cm">// - Custom alias: 10/hour per user</span></div>
+
+<h3>URL Validation</h3>
+<ul>
+  <li><strong>Malicious URLs:</strong> Check against Google Safe Browsing API on creation.</li>
+  <li><strong>URL length:</strong> Reject URLs > 2048 characters (HTTP limit).</li>
+  <li><strong>Scheme:</strong> Only allow <code>http://</code> and <code>https://</code>. Block <code>javascript:</code>, <code>data:</code>, <code>file:</code>.</li>
+  <li><strong>Squatting:</strong> Custom aliases expire after 30 days of no clicks. Block reserved words (<code>admin</code>, <code>api</code>, <code>health</code>).</li>
+</ul>
+
+<!-- ====================================================================
+     INTERVIEW SCRIPTS & FOLLOW-UPS
+     ==================================================================== -->
+<div class="part-divider part1">Interview Scripts &amp; Follow-Up Questions</div>
+
+<h2 id="interview-scripts">How to Open the Problem</h2>
+
+<div class="script-box">
+  <div class="label">Opening (first 2 minutes)</div>
+  <p>"I'll design a URL shortening service like TinyURL. Let me confirm the requirements:</p>
+  <p><span style="color:#7ee787;">Functional:</span> Shorten URLs, redirect to original, support custom aliases, optional expiration, click analytics.</p>
+  <p><span style="color:#7ee787;">Non-functional:</span> Highly available (redirects must work), low latency (&lt;50ms p99), read-heavy (100:1 read:write), 100M DAU, 1B shortenings/day, 100B redirects/day.</p>
+  <p><span style="color:#7ee787;">Scale:</span> 1.15M redirects/sec average. We need a strong caching layer.</p>
+  <p><span style="color:#7ee787;">Architecture:</span> API gateway for rate limiting, stateless URL service, Redis for caching, PostgreSQL for persistence, Kafka for async analytics."</p>
+</div>
+
+<div class="script-box">
+  <div class="label">Transition to Deep Dive (after high-level design)</div>
+  <p>"The core flow is straightforward — the interesting questions are around caching and key generation. Want me to dive into the caching strategy first, or the key generation approach?"</p>
+</div>
+
+<h2>Common Follow-Up Questions</h2>
+
+<table>
+  <tr><th>Question</th><th>How to Answer</th></tr>
+  <tr><td>"What happens if Redis goes down?"</td><td>"Three defenses: (1) Redis Sentinel for automatic failover in ~10s. (2) L1 cache absorbs the initial burst. (3) Circuit breaker: if DB latency > 100ms, serve stale L1 entries. Better a slightly stale redirect than a 503."</td></tr>
+  <tr><td>"How do you handle duplicate short codes?"</td><td>"Generated codes via snowflake ID are unique by construction. No collision possible. For custom aliases, the UNIQUE constraint is the safety net."</td></tr>
+  <tr><td>"Why not just use a hash of the long URL?"</td><td>"MD5 truncation: (1) collisions require retry logic, (2) same URL from different users gets same code (privacy issue), (3) MD5 is 32 hex chars — truncating to 7 increases collision probability. Snowflake IDs avoid all three."</td></tr>
+  <tr><td>"How do you update a URL's destination?"</td><td>"<code>PUT /{short_code}</code>. On update: write to DB, delete from Redis (L2), broadcast L1 invalidation. Short code stays the same."</td></tr>
+  <tr><td>"How would you support a viral link (1M clicks/min)?"</td><td>"CDN caching handles this naturally. A 301 redirect cached at the edge means 1M clicks = 0 requests to our servers."</td></tr>
+  <tr><td>"What about GDPR / privacy?"</td><td>"Click analytics store IP hashes, not raw IPs. Users can request deletion. Analytics data older than 90 days is purged."</td></tr>
+  <tr><td>"How do you monitor this system?"</td><td>"Three pillars: metrics (Prometheus — latency, error rate, cache hit), logs (structured JSON), traces (distributed tracing for write path). SLI is redirect latency p99. SLO is &lt;50ms."</td></tr>
+  <tr><td>"What if the primary database goes down?"</td><td>"Promote the read replica to primary (RPO ~5min from async replication lag). Update connection strings via service discovery. DNS failover to secondary region for regional outages."</td></tr>
+</table>
+
+<div class="callout green"><strong>Japan-specific tip:</strong> Japanese interviewers often ask about disaster recovery. "If the primary database region goes down, I'd promote the read replica to primary (RPO ~5min, RTO ~30min). DNS failover to the secondary region handles regional outages."</div>
+
+<!-- ====================================================================
+     CHEAT SHEET
+     ==================================================================== -->
+<h2 id="cheatsheet">Cheat Sheet</h2>
+
+<div class="card" style="border-left:3px solid #58a6ff;">
+  <h3 style="margin:0 0 .6rem 0;color:#e1e4ea;">URL Shortener at a Glance</h3>
+  <table style="margin:0;">
+    <tr><th style="width:200px;">Aspect</th><th>Decision</th></tr>
+    <tr><td>Read:Write ratio</td><td>100:1 — cache-heavy architecture</td></tr>
+    <tr><td>Key generation</td><td>Snowflake ID → base62 (7 chars, 3.5T combos)</td></tr>
+    <tr><td>API</td><td>POST /shorten, GET /{code} (redirect), GET /{code}/analytics</td></tr>
+    <tr><td>Redirect</td><td>302 first (analytics), then 301 (browser cache)</td></tr>
+    <tr><td>Cache</td><td>L1 in-memory (10K, 90%) + L2 Redis (100M, 9%) → 1% to DB</td></tr>
+    <tr><td>Database</td><td>PostgreSQL (source of truth) + read replicas</td></tr>
+    <tr><td>Analytics</td><td>Async via Kafka → batch write → rollup tables</td></tr>
+    <tr><td>Monitoring</td><td>Prometheus + Grafana + PagerDuty. SLI: latency, cache hit, error rate</td></tr>
+    <tr><td>Rate limiting</td><td>Token bucket in Redis (10 req/s per user)</td></tr>
+    <tr><td>DR</td><td>Active-passive multi-region. RPO 5min, RTO 30min</td></tr>
+    <tr><td>Cost</td><td>Caching saves $2.96M/month. Storage tiered hot/warm/cold</td></tr>
+    <tr><td>Availability</td><td>99.99% — CDN + Redis Sentinel + multi-instance</td></tr>
+    <tr><td>Latency target</td><td>&lt; 50ms p99 for redirects</td></tr>
+    <tr><td>Storage/year</td><td>~220 TB (URLs) + ~7.3 PB (analytics before archival)</td></tr>
+  </table>
+</div>
+
+<p style="margin-top:3rem;text-align:center;color:#8b949e;font-size:.85rem;">
+  <a href="../index.html" class="backlink">&larr; Back to System Design Hub</a>
+</p>
+
+</div>
+</body>
+</html>
