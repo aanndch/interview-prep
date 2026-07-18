@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design — Fundamentals</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:"dark",themeVariables:{primaryColor:"#1e40af",primaryTextColor:"#e1e4ea",primaryBorderColor:"#58a6ff",lineColor:"#30363d",secondaryColor:"#161b22",tertiaryColor:"#0d1117",fontFamily:"'Segoe UI',system-ui,sans-serif"}});</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#0f1117;
+  color:#e1e4ea;
+  line-height:1.7;
+  padding:2rem;
+}
+.container{max-width:960px;margin:0 auto}
+
+h1{
+  font-size:2.4rem;
+  background:linear-gradient(135deg,#f0883e,#58a6ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:0.3rem;
+}
+.subtitle{color:#8b949e;margin-bottom:1.5rem;font-size:0.95rem}
+
+h2{
+  font-size:1.5rem;
+  color:#58a6ff;
+  margin-top:2.5rem;
+  margin-bottom:1rem;
+  padding-bottom:0.4rem;
+  border-bottom:2px solid #21262d;
+}
+h2 .num{color:#58a6ff}
+
+h3{
+  font-size:1.15rem;
+  color:#d2a8ff;
+  margin-top:1.5rem;
+  margin-bottom:0.5rem;
+}
+
+p,li{color:#b1bac4}
+a{color:#58a6ff;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* TOC */
+.toc{
+  background:#161b22;
+  border:1px solid #21262d;
+  border-radius:10px;
+  padding:1.2rem 1.6rem;
+  margin-bottom:2rem;
+}
+.toc h3{margin:0 0 0.6rem 0;color:#e1e4ea;font-size:1.1rem}
+.toc a{display:block;padding:2px 0;font-size:0.9rem}
+.toc .toc-sub{padding-left:1.2rem}
+.toc .toc-sub a{font-size:0.82rem;color:#8b949e}
+
+/* Definition / callout */
+.definition{
+  color:#b1bac4;
+  border-left:3px solid #58a6ff;
+  padding:0.6rem 1rem;
+  margin:0.8rem 0;
+  border-radius:0 6px 6px 0;
+  font-size:0.95rem;
+}
+.callout{
+  background:#1c2128;
+  border-left:3px solid #d2a8ff;
+  padding:0.6rem 1rem;
+  margin:0.8rem 0;
+  font-size:0.88rem;
+  border-radius:0 6px 6px 0;
+}
+.callout strong{color:#d2a8ff;display:block;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px}
+.callout.why{border-left-color:#58a6ff}
+.callout.why strong{color:#58a6ff}
+.callout.tip{border-left-color:#d2a8ff}
+.callout.tip strong{color:#d2a8ff}
+.callout.example{border-left-color:#7ee787}
+.callout.example strong{color:#7ee787}
+.callout.warn{border-left-color:#f472b6}
+.callout.warn strong{color:#f472b6}
+
+/* Cards */
+.concept-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:1rem 0}
+.concept-card{background:#161b22;border:1px solid #21262d;border-radius:10px;overflow:hidden}
+.concept-card .card-title{padding:12px 16px;font-weight:600;font-size:0.9rem;color:#e1e4ea;border-bottom:1px solid #21262d}
+.concept-card .card-body{padding:12px 16px;font-size:0.88rem;color:#b1bac4;line-height:1.7}
+.concept-card .card-body ul{margin:4px 0;padding-left:1.2rem}
+.concept-card .card-body li{margin:2px 0}
+.concept-card .card-body code{padding:1px 5px;font-family:'Consolas','JetBrains Mono',monospace;font-size:0.82rem;background:#0d1117;border-radius:4px;color:#f472b6}
+.concept-card .tag{display:inline-block;padding:1px 7px;font-size:0.65rem;font-weight:600;border-radius:4px;margin-left:6px;text-transform:uppercase;letter-spacing:0.04em}
+.concept-card .tag.pro{background:rgba(126,231,135,0.15);color:#7ee787}
+.concept-card .tag.con{background:rgba(244,114,182,0.15);color:#f472b6}
+.concept-card .tag.info{background:rgba(126,231,135,0.15);color:#7ee787}
+
+/* Mermaid */
+.mermaid-wrapper{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1.2rem;margin:1rem 0;overflow-x:auto}
+.mermaid-wrapper .mermaid-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:#8b949e;margin-bottom:10px;font-weight:600}
+.mermaid-wrapper svg{width:100%;height:auto;margin:0 auto;display:block}
+
+/* Tables */
+.comp-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.9rem}
+.comp-table th,.comp-table td{padding:10px 14px;text-align:left;border-bottom:1px solid #21262d}
+.comp-table th{background:#161b22;color:#58a6ff;font-weight:600}
+.comp-table tr:hover td{background:#1c2128}
+
+/* Footer */
+.footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid #21262d;color:#8b949e;font-size:0.85rem}
+
+@media (max-width:640px){
+  body{padding:1rem}
+  h1{font-size:1.8rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>System Design Fundamentals</h1>
+<p class="subtitle">Core concepts for distributed systems — interview-ready explanations with diagrams. For fullstack developers with 5 years experience, Japan market focus.</p>
+
+<div class="toc">
+<h3>Contents</h3>
+<a href="#sec-1-1">1.1 Scalability</a>
+<a href="#sec-1-2">1.2 Reliability &amp; Fault Tolerance</a>
+<div class="toc-sub">
+<a href="#sec-1-2-cb">Circuit Breaker</a>
+<a href="#sec-1-2-rl">Rate Limiting</a>
+<a href="#sec-1-2-id">Idempotency</a>
+</div>
+<a href="#sec-1-3">1.3 Performance</a>
+<a href="#sec-1-4">1.4 CAP Theorem</a>
+<a href="#sec-1-5">1.5 Caching</a>
+<a href="#sec-1-6">1.6 Load Balancing</a>
+<a href="#sec-1-7">1.7 Databases</a>
+<a href="#sec-1-8">1.8 Sharding &amp; Partitioning</a>
+<a href="#sec-1-9">1.9 Consistent Hashing</a>
+<a href="#sec-1-10">1.10 Replication</a>
+<a href="#sec-1-11">1.11 Indexing</a>
+<a href="#sec-1-12">1.12 Message Queues</a>
+<a href="#sec-1-13">1.13 Observability</a>
+<a href="#sec-1-14">1.14 Data Pipelines</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1.1 SCALABILITY -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-1">
+<h2><span class="num">1.1</span> Scalability</h2>
+<p class="definition">The ability of a system to handle increasing load by adding resources.</p>
+
+<div class="callout why">
+<strong>Why This Matters</strong>
+Interviewers want to see you identify scalability bottlenecks first. Start every design by asking: &quot;Is this system read-heavy or write-heavy?&quot; and &quot;What's the expected QPS growth?&quot;
+</div>
+
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">What Is "Load"? Understanding the Problem</div>
+<div class="card-body">
+<p>Before you scale anything, you need to understand what kind of load your system faces. Load is more than just "number of users":</p>
+<ul>
+<li><strong>Requests per second (QPS):</strong> How many requests hit your server each second. A photo-sharing app might have 10,000 image uploads/sec.</li>
+<li><strong>Concurrent users:</strong> Users active at the same time. On a shopping site, Black Friday might have 1M concurrent users but relatively few actual purchases.</li>
+<li><strong>Read/write ratio:</strong> Twitter is read-heavy (most users scroll, few tweet). Sensor data logging is write-heavy. A caching strategy depends heavily on this ratio.</li>
+<li><strong>Data volume:</strong> Storing 100 bytes per user is easy. Storing 100MB per user (photos, videos) is hard. You need blob storage (S3), not a database.</li>
+<li><strong>Growth rate:</strong> 100 users today is different from 100K users next month. Design for the expected growth path.</li>
+<li><strong>Key question to ask:</strong> "Is this system read-heavy or write-heavy? What's the expected QPS and data size per user?"</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Stateless vs Stateful — Why App Servers Are Easy</div>
+<div class="card-body">
+<p>Understanding the difference between stateless and stateful services is the key to knowing what to scale vertically vs horizontally:</p>
+<ul>
+<li><strong>Stateless services</strong> (app servers, API servers, workers): Store no data locally. Any request can go to any server. To scale, just add more servers behind a load balancer. No code changes needed for scaling.</li>
+<li><strong>Stateful services</strong> (databases, caches, file storage): Maintain data that must persist across requests. Scaling requires distributing that data (sharding, replication). Much harder.</li>
+<li><strong>Best practice:</strong> Make as many services stateless as possible. Store session data in Redis, not in the app server's memory. Use object storage (S3) for files. The more stateless your architecture, the easier it scales.</li>
+<li><strong>Example:</strong> A Node.js API server with sessions stored locally cannot scale horizontally (user B goes to server 2 and loses their session). Move sessions to Redis → now it's stateless → add as many API servers as needed.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Vertical Scaling <span class="tag con">Trade-off</span></div>
+<div class="card-body">
+Upgrading a single machine (more CPU, RAM, faster SSD). Simple but hits hardware limits. Used for small-to-medium databases, legacy systems.
+<ul>
+<li>No code changes needed</li>
+<li>Limited by max hardware capacity</li>
+<li>Single point of failure — if the machine goes down, everything goes down</li>
+<li>Example: Moving from 16GB RAM to 64GB on your DB server</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Horizontal Scaling <span class="tag pro">Preferred</span></div>
+<div class="card-body">
+Adding more machines to distribute the load. The foundation of all large-scale systems.
+<ul>
+<li>Near-limitless growth (add servers as needed)</li>
+<li>Better fault tolerance (lose one server, others pick up)</li>
+<li>Requires load balancer, shared-nothing or distributed state</li>
+<li>Database sharding is a form of horizontal scaling</li>
+<li>Example: A web app behind Nginx routing to 10 app servers</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Always start with horizontal scaling for stateless tiers (app servers). Reserve vertical scaling for stateful tiers (databases) where horizontal scaling is harder. Say: &quot;I'd scale the app tier horizontally behind a load balancer, and consider sharding the database when we outgrow vertical.&quot;
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.2 RELIABILITY & FAULT TOLERANCE -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-2">
+<h2><span class="num">1.2</span> Reliability &amp; Fault Tolerance</h2>
+<p class="definition">Failures are inevitable in distributed systems. Build for failure from day one.</p>
+
+<div class="callout why">
+<strong>Why This Matters</strong>
+The single biggest differentiator between junior and senior engineers is anticipating failures. Interviewers probe this by asking &quot;What happens when your cache goes down?&quot; or &quot;How do you handle a database outage?&quot;
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">What Is Availability? The "Nines"</div>
+<div class="card-body">
+<p>Availability measures how often your system is up and serving requests. It's expressed as a percentage of uptime per year:</p>
+<ul>
+<li><strong>99% ("two nines"):</strong> ~3.65 days downtime per year. Acceptable for internal tools, prototypes.</li>
+<li><strong>99.9% ("three nines"):</strong> ~8.76 hours downtime per year. Typical for consumer web apps.</li>
+<li><strong>99.99% ("four nines"):</strong> ~52.6 minutes downtime per year. Expected for production systems, API services.</li>
+<li><strong>99.999% ("five nines"):</strong> ~5.26 minutes downtime per year. Telco, financial infrastructure, mission-critical.</li>
+<li>Each additional "nine" costs significantly more in infrastructure and operational complexity.</li>
+<li><strong>Japan context:</strong> Japanese users expect high reliability. Even consumer apps target 99.99% uptime in Japan.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">MTBF, MTTR, and Failure Modes</div>
+<div class="card-body">
+<ul>
+<li><strong>MTBF (Mean Time Between Failures):</strong> Average time the system runs between failures. Higher is better.</li>
+<li><strong>MTTR (Mean Time To Recover):</strong> Average time to detect, diagnose, and fix a failure. Lower is better.</li>
+<li><strong>Availability formula:</strong> MTBF / (MTBF + MTTR). To improve availability, increase MTBF (make fewer mistakes) or decrease MTTR (fail faster, recover faster).</li>
+<li><strong>Failure modes:</strong>
+  <ul>
+    <li><strong>Crash:</strong> Process stops entirely. Easy to detect (health check fails).</li>
+    <li><strong>Hang:</strong> Process is alive but not responding. Harder to detect (process looks fine but isn't doing work).</li>
+    <li><strong>Slow:</strong> Process responds but takes too long. Slow requests accumulate and exhaust resources.</li>
+    <li><strong>Byzantine:</strong> Process returns incorrect data. Very hard to detect — needs data validation and cross-checking.</li>
+  </ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Replication</div>
+<div class="card-body">
+Duplicating data or services across multiple nodes for failover.
+<ul>
+<li><strong>Active-Passive:</strong> Standby replica takes over when primary fails</li>
+<li><strong>Active-Active:</strong> All replicas serve traffic simultaneously</li>
+<li><strong>Replication factor:</strong> How many copies of your data exist</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Retry &amp; Exponential Backoff</div>
+<div class="card-body">
+Auto-reattempt failed requests with increasing delays.
+<ul>
+<li>First retry after 100ms, second after 200ms, third after 400ms...</li>
+<li>Add <strong>jitter</strong> (randomness) to prevent <em>thundering herd</em> problem</li>
+<li>Set max retries (3-5) and use circuit breaker for persistent failures</li>
+<li>Example: AWS SDK uses exponential backoff by default</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- Circuit Breaker -->
+<h3 id="sec-1-2-cb">Circuit Breaker</h3>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">State Diagram: Circuit Breaker Pattern</div>
+<pre class="mermaid">
+flowchart TD
+    subgraph CB["Circuit Breaker Pattern"]
+        S([Start]) --> Closed[CLOSED<br/>Requests pass through]
+        Closed -->|"Failure threshold<br/>exceeded"| Open[OPEN<br/>Requests fail fast]
+        Open -->|"Reset timeout<br/>elapsed"| HalfOpen[HALF-OPEN<br/>Probe request]
+        HalfOpen -->|"Probe succeeds"| Closed
+        HalfOpen -->|"Probe fails"| Open
+    end
+</pre>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+When designing any system that calls external services, explicitly mention circuit breakers. It shows you understand cascading failures. Highlight: &quot;In an outage, the circuit breaker prevents our API from waiting on a dead dependency, keeping our system responsive.&quot;
+</div>
+
+<!-- Rate Limiting -->
+<h3 id="sec-1-2-rl">Rate Limiting Algorithms</h3>
+
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Token Bucket <span class="tag pro">Most Common</span></div>
+<div class="card-body">
+A bucket holds N tokens. Tokens refill at a fixed rate (e.g., 10/sec). Each request consumes a token.
+<ul>
+<li><strong>Burst handling:</strong> Allows short bursts up to bucket size</li>
+<li><strong>Strict rate:</strong> Long-term rate equals refill rate</li>
+<li><strong>Use case:</strong> API rate limiting per user (e.g., 100 req/min with burst to 200)</li>
+<li><strong>Trade-off:</strong> Memory efficient but allows short bursts</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Sliding Window Log / Counter</div>
+<div class="card-body">
+Two approaches for precise rate tracking:
+<ul>
+<li><strong>Log:</strong> Store timestamps of each request. Count in rolling window. Memory-heavy.</li>
+<li><strong>Counter:</strong> Hybrid of fixed window + sliding log. Smooth edge-case bursts.</li>
+<li><strong>When to use:</strong> When you need precise, fair rate limiting (e.g., per-user 10 req/sec)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Leaky Bucket &amp; Fixed Window</div>
+<div class="card-body">
+<ul>
+<li><strong>Leaky Bucket:</strong> Request queue processed at constant rate. Drops overflow. Good for shaping traffic.</li>
+<li><strong>Fixed Window:</strong> Count requests per clock minute. Simple but allows double burst at reset boundary (11:59:59 + 12:00:00).</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- Idempotency -->
+<h3 id="sec-1-2-id">Idempotency</h3>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Idempotency Keys <span class="tag pro">Critical</span></div>
+<div class="card-body">
+Ensuring repeated requests produce the same result. Critical for payment, order creation, and any operation with retries.
+<ul>
+<li><strong>Mechanism:</strong> Client sends <code>Idempotency-Key</code> header. Server deduplicates via DB unique constraint or cache with TTL.</li>
+<li><strong>Safe methods:</strong> GET, PUT, DELETE are naturally idempotent. POST is not.</li>
+<li><strong>Example:</strong> Stripe's Idempotency-Key header. Same key = same result, no duplicate charge.</li>
+<li>Store key+response in Redis with a 24h TTL; on retry, return cached response</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+For payment or order systems, lead with idempotency. Say: &quot;Every payment request includes an idempotency key so retries don't double-charge the user.&quot; This is a must-know for fintech interviews.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.3 PERFORMANCE -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-3">
+<h2><span class="num">1.3</span> Performance</h2>
+<p class="definition">Measured by latency (response time) and throughput (requests/second). Optimize both.</p>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Sequence: Connection Pooling</div>
+<pre class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant P as Connection Pool
+    participant DB as Database
+
+    C->>P: Request a connection
+    alt Connection available
+        P->>C: Return existing connection
+        C->>DB: Query
+        DB-->>C: Result
+        C->>P: Return connection
+    else No free connection
+        P->>C: Wait or error
+    end
+    Note over P: Pool size = (core_count * 2) + 1
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Connection Pooling <span class="tag pro">Essential</span></div>
+<div class="card-body">
+Reuse pre-established database connections instead of creating a new TCP connection per request.
+<ul>
+<li>Reduces latency (no TCP handshake, SSL negotiation, or authentication)</li>
+<li>Limits concurrent DB connections under load</li>
+<li>Pool sizing: (core_count × 2) + 1 is a good starting point</li>
+<li>Tools: HikariCP (Java), PgBouncer (PostgreSQL), ProxySQL (MySQL)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Key Optimization Strategies</div>
+<div class="card-body">
+<ul>
+<li><strong>Caching:</strong> Reduce network round-trips by serving from RAM</li>
+<li><strong>Database indexing:</strong> Speed up reads, slightly slow writes</li>
+<li><strong>Data compression:</strong> Smaller payloads = faster transfer</li>
+<li><strong>Batch network calls:</strong> Combine requests to reduce overhead</li>
+<li><strong>gRPC:</strong> Binary protocol, smaller payloads, faster serialization</li>
+<li><strong>WebSockets:</strong> Persistent connection for real-time updates</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Understanding Latency: p50, p95, p99, p999</div>
+<div class="card-body">
+<p>Average latency hides problems. Percentiles reveal the real story:</p>
+<ul>
+<li><strong>p50 (median):</strong> Half of requests are faster than this. Your "typical" experience.</li>
+<li><strong>p95:</strong> 95% of requests are faster than this. 1 in 20 users experience worse. Often used for SLAs.</li>
+<li><strong>p99:</strong> 99% are faster. 1 in 100 users. This catches real issues.</li>
+<li><strong>p999:</strong> 99.9% are faster. 1 in 1000. The worst-of-the-worst.</li>
+<li><strong>Why percentiles matter:</strong> A system with 100ms average but 5000ms p99 is terrible for 1% of users. In a microservice architecture, a request may call 50 services. If each has 1% slow requests, a user has a ~40% chance of hitting at least one slow service (0.99^50 ≈ 0.60). This is the <strong>tail at scale</strong> problem.</li>
+<li><strong>Optimization:</strong> Focus on eliminating p99 outliers before optimizing p50. Common causes: GC pauses, network congestion, hot keys, cold caches.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Little's Law — Predicting Queue Size</div>
+<div class="card-body">
+<p>A fundamental queueing theory formula: <strong>L = λ × W</strong></p>
+<ul>
+<li><strong>L</strong> = Average number of requests in the system (concurrency)</li>
+<li><strong>λ (lambda)</strong> = Arrival rate (requests per second)</li>
+<li><strong>W</strong> = Average time a request spends in the system (latency)</li>
+<li><strong>Example:</strong> If 100 requests arrive per second (λ=100) and each takes 200ms (W=0.2), the system has L = 100 × 0.2 = 20 requests in flight at any moment.</li>
+<li><strong>Practical application:</strong> If your DB can handle 50 concurrent connections (L=50) and each query takes 100ms (W=0.1), your max throughput is λ = L/W = 50/0.1 = 500 QPS. To go higher, you either need more connections or faster queries.</li>
+<li><strong>Pool sizing:</strong> If your target is 1000 QPS and each query takes 50ms, you need L = 1000 × 0.05 = 50 connections in the pool (at minimum).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Amdahl's Law — Limits of Parallelism</div>
+<div class="card-body">
+<p>Adding more servers doesn't always help. <strong>Speedup = 1 / ((1-P) + P/N)</strong></p>
+<ul>
+<li><strong>P</strong> = Portion of the work that can be parallelized</li>
+<li><strong>N</strong> = Number of processors/servers</li>
+<li><strong>(1-P)</strong> = Sequential portion — this is the bottleneck</li>
+<li><strong>Example:</strong> If 80% of the work can be parallelized (P=0.8), the maximum speedup even with infinite servers is 1 / (0.2) = 5x. The 20% sequential portion always limits you.</li>
+<li><strong>Real-world application:</strong> Database transactions often have sequential portions (locking, serialization). No matter how many replicas you add, writes to the primary are still single-threaded for many operations. This is why sharding is needed — it's the only way to parallelize writes.</li>
+<li><strong>Connection pooling insight:</strong> If queries have a sequential dependency (transaction isolation), pooling won't help beyond a certain point. Amdahl's Law applies.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+When asked about performance, always distinguish between latency and throughput. Say: "Our p50 is 50ms but p99 is 800ms — I'd investigate the tail latency before optimizing the median." Use Little's Law to calculate required pool size and max throughput. Back-of-envelope: 1M DAU ≈ 10–15 QPS.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.4 CAP THEOREM -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-4">
+<h2><span class="num">1.4</span> CAP Theorem</h2>
+<p class="definition">A distributed data store can only provide 2 of 3 guarantees: Consistency, Availability, Partition Tolerance.</p>
+
+<div class="callout why">
+<strong>Why This Matters</strong>
+CAP is the first decision you make when choosing a database. Interviewers watch for your reasoning: "In a network partition, do you serve stale data or return an error?"
+</div>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">CAP Theorem: CP vs AP Systems</div>
+<pre class="mermaid">
+flowchart TB
+    subgraph CAP["CAP Theorem"]
+        direction TB
+        C[Consistency<br/>Every read = latest write]
+        A[Availability<br/>Every request gets a response]
+        P[Partition Tolerance<br/>System works despite network failures]
+    end
+    C --- A
+    A --- P
+    P --- C
+
+    CP[CP Systems<br/>Banking, Payment<br/>PostgreSQL, MongoDB] --> C
+    CP --> P
+    CP -.->|Not Available<br/>during partition| A
+
+    AP[AP Systems<br/>Social Feeds, Search<br/>Cassandra, DynamoDB] --> A
+    AP --> P
+    AP -.->|Eventually Consistent| C
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Consistency (C)</div>
+<div class="card-body">
+Every read receives the most recent write. All nodes see the same data at the same time.
+<ul>
+<li>Strong consistency: After a write completes, all readers see it</li>
+<li>Eventual consistency: Reads may return stale data but will eventually converge</li>
+<li>CP trade-off: If a node can't guarantee consistency, it refuses to respond</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Availability (A)</div>
+<div class="card-body">
+Every non-failed node returns a response (success or error), no matter what.
+<ul>
+<li>AP trade-off: During a partition, nodes accept writes on both sides — data may diverge</li>
+<li>Conflict resolution (last-write-wins, CRDTs) needed for eventual consistency</li>
+<li>Example: DynamoDB AP mode — you always can write, but two users might see different data temporarily</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Partition Tolerance (P)</div>
+<div class="card-body">
+The system continues to operate despite network failures (dropped packets, latency spikes).
+<ul>
+<li>In distributed systems, network partitions <strong>will</strong> happen — you must choose P</li>
+<li>Real choice is CP vs AP, not CA (CA is impossible in a distributed system)</li>
+<li>Partition: two nodes can't communicate, but each thinks the other is down</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">PACELC — CAP's Important Extension</div>
+<div class="card-body">
+<p>CAP only tells you what happens <em>during a partition</em>. But what about when the network is working normally? <strong>PACELC</strong> answers that:</p>
+<ul>
+<li><strong>P (Partition):</strong> If a partition occurs, trade between Availability and Consistency (this is CAP).</li>
+<li><strong>E (Else):</strong> When the system is running normally (no partition), trade between <strong>Latency</strong> and <strong>Consistency</strong>.</li>
+<li><strong>Example — DynamoDB:</strong> In AP mode, during a partition it prefers availability. In normal operation, it uses eventually consistent reads (low latency, potentially stale) as default. Strongly consistent reads are slower (require quorum) but available as an opt-in.</li>
+<li><strong>Example — PostgreSQL:</strong> In CP mode, during a partition it rejects writes if consistency can't be guaranteed. In normal operation, it prefers strong consistency (higher latency, serializable transactions).</li>
+<li><strong>Interview value:</strong> Mentioning PACELC shows you understand that CAP is not the whole story — the trade-off between latency and consistency in normal operation is just as important.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Consistency Levels — Beyond CAP</div>
+<div class="card-body">
+<p>Not all "consistency" is the same. Different systems offer different levels:</p>
+<ul>
+<li><strong>Strong Consistency:</strong> After a write, all subsequent reads see that write (linearizability). Highest correctness, highest latency. Example: PostgreSQL primary reads.</li>
+<li><strong>Eventual Consistency:</strong> If no new writes, all replicas will eventually converge. Reads may return stale data during convergence. Example: DNS propagation, DynamoDB default reads, CDN cache updates.</li>
+<li><strong>Read-After-Write Consistency:</strong> A user who writes data will always see their own write. Other users might see stale data. Example: Most social networks — you see your own post immediately, friends may see it after a slight delay.</li>
+<li><strong>Monotonic Reads:</strong> A user who reads once will never see older data in subsequent reads. Time moves forward, not backward in what you see. Prevents the "disappearing data" problem.</li>
+<li><strong>Casual Consistency:</strong> Related events are seen in the correct order. If Alice comments on Bob's post, no one sees the comment without also seeing Bob's post.</li>
+</ul>
+</div>
+</div>
+
+<div class="callout example">
+<strong>Real-World Analogy</strong>
+Like a restaurant menu: you can have fast, cheap, or good — pick two. CAP is the same: Consistency, Availability, Partition Tolerance — pick two (and P is mandatory).
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Immediately establish that P is non-negotiable in distributed systems. Then reason: "If we choose CP, we sacrifice availability during partitions. For a payment system, that's acceptable. For a social feed, we choose AP for user experience." For extra depth, mention PACELC: "During normal operation, I'd trade consistency for lower latency using eventual consistency, with read-after-write guarantees for the user's own data."
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.5 CACHING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-5">
+<h2><span class="num">1.5</span> Caching</h2>
+<p class="definition">Storing copies of data in high-speed memory (RAM) to reduce latency and load on databases.</p>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Cache-Aside Pattern (Most Common)</div>
+<pre class="mermaid">
+flowchart LR
+    C[Client] --> R{Read from Cache}
+    R -->|Cache Hit| CR[Return cached data<br/>✅ Fast]
+    R -->|Cache Miss| DB[Query Database]
+    DB --> WC[Write to Cache<br/>set TTL]
+    WC --> CR
+    
+    W[Client Write] --> DBW[Write to Database]
+    DBW --> INV[Invalidate Cache<br/>entry or TTL expire]
+</pre>
+</div>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Write Strategies: Through vs Behind</div>
+<pre class="mermaid">
+flowchart LR
+    subgraph WT["Write-Through (Synchronous)"]
+        WT1[Write] --> WT2[Cache]
+        WT2 --> WT3[Database]
+        WT3 --> WT4[✅ Data always consistent]
+        WT4 --> WT5[❌ Higher write latency]
+    end
+    subgraph WB["Write-Behind (Asynchronous)"]
+        WB1[Write] --> WB2[Cache]
+        WB2 --> WB3[Acknowledge]
+        WB3 --> WB4[Database<br/>batch write later]
+        WB4 --> WB5[❌ Risk of data loss]
+        WB5 --> WB6[✅ Very fast writes]
+    end
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Cache Types</div>
+<div class="card-body">
+<ul>
+<li><strong>Application Cache:</strong> In-memory within the service instance. Fastest but not shared across nodes.</li>
+<li><strong>Distributed Cache:</strong> Shared across nodes (Redis cluster, Memcached). Consistent but adds network hop.</li>
+<li><strong>CDN Cache:</strong> Static assets from geographically close edge servers. Best for images, JS, CSS.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Cache Invalidation</div>
+<div class="card-body">
+One of the hardest problems in computer science. Three main approaches:
+<ul>
+<li><strong>TTL:</strong> Automatically expire data after a time window. Simple, possible stale data.</li>
+<li><strong>Write-Through:</strong> Update cache synchronously on write. Consistent but slower writes.</li>
+<li><strong>Write-Behind:</strong> Update cache immediately, DB asynchronously. Fast but risk of loss.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Cache Hit Ratio — Measuring Effectiveness</div>
+<div class="card-body">
+<p><strong>Cache hit ratio = cache hits / (cache hits + cache misses)</strong>. A 90%+ hit ratio means the cache is effective; <90% suggests the cache is too small, TTL is too short, or the cache key design is wrong.</p>
+<ul>
+<li><strong>Cold start:</strong> When a new cache node comes online, hit ratio starts at 0%. It climbs as data is populated. Pre-warming (loading popular data into cache before going live) helps.</li>
+<li><strong>Working set:</strong> The set of data that's accessed frequently. If your working set fits in cache, you get high hit ratios. If it's larger than cache, you get cache churn — data evicted before it's re-read.</li>
+<li><strong>Improving hit ratio:</strong> Increase cache size, use smarter eviction (LRU over TTL-only), pre-warm, or redesign cache keys for better locality.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Eviction Policies — What Gets Removed</div>
+<div class="card-body">
+<p>When the cache is full, something must go. Different policies for different patterns:</p>
+<ul>
+<li><strong>LRU (Least Recently Used):</strong> Remove the item that hasn't been accessed the longest. Best for most general-purpose workloads. Used by Redis's allkeys-lru, Memcached.</li>
+<li><strong>LFU (Least Frequently Used):</strong> Remove the item accessed the fewest times. Best when popularity matters (e.g., content recommendation). Prevents one-hit-wonders from polluting cache.</li>
+<li><strong>FIFO (First In, First Out):</strong> Remove the oldest item regardless of access. Simple but can evict hot data. Rarely used alone.</li>
+<li><strong>TTL-only:</strong> No explicit eviction — data expires based on time. Can combine with LRU (Redis: volatile-lru).</li>
+<li>Redis offers 8 eviction policies. Choose based on whether you want to evict only TTL-set keys or any key.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Cache Stampede (Thundering Herd)</div>
+<div class="card-body">
+<p><strong>The problem:</strong> A popular cache key expires. 1000 concurrent requests all miss the cache and hit the database simultaneously. The database melts down.</p>
+<ul>
+<li><strong>Solution 1 — Early Recompute:</strong> Before the key expires (at 80% TTL), proactively recompute it in the background. A single worker does the work; other requests get the stale-but-not-expired value.</li>
+<li><strong>Solution 2 — Mutex/Locking:</strong> On a cache miss, the first request acquires a lock and recomputes. Other requests wait briefly or get a stale value. Only one DB query.</li>
+<li><strong>Solution 3 — Stale-While-Revalidate:</strong> Serve the stale value immediately but trigger a background refresh. Used by CDNs (Cloudflare) and Varnish.</li>
+<li><strong>Solution 4 — Jittered TTL:</strong> Add random variation to TTLs (e.g., 300s ± 30s). Prevents all keys from expiring at the same time.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">CDN — Caching at the Edge</div>
+<div class="card-body">
+<p>CDNs cache static (and sometimes dynamic) content at servers close to the user.</p>
+<ul>
+<li><strong>PoP (Points of Presence):</strong> CDN servers in hundreds of locations worldwide. A user in Tokyo gets content from a Tokyo PoP, not your origin server in us-east-1.</li>
+<li><strong>Origin Pull vs Push:</strong> Pull = CDN fetches from your origin on first miss (lazy, simpler). Push = you upload assets to CDN ahead of time (proactive, for predictable catalog).</li>
+<li><strong>Cache rules:</strong> Use Cache-Control headers (max-age, s-maxage, stale-while-revalidate). Set aggressive cache for images/fonts (1 year + versioned URLs), minimal for HTML/API responses.</li>
+<li><strong>Cache invalidation:</strong> Most CDNs support purging (instant removal) but it takes time to propagate to all edge nodes. Versioned URLs (bundle.v2.js) avoid invalidation entirely.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Name the cache strategy explicitly. Say: "I'd use Cache-Aside with a Redis cluster set to allkeys-lru eviction and a cache stampede protection using early recompute at 80% TTL." Mention CDN for static assets with versioned URLs to avoid invalidation problems. These details separate senior-level answers from generic ones.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.6 LOAD BALANCING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-6">
+<h2><span class="num">1.6</span> Load Balancing</h2>
+<p class="definition">Distributes incoming traffic evenly across a pool of servers to maximize throughput and reliability.</p>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Load Balancing Architecture</div>
+<pre class="mermaid">
+graph TB
+    U[Users] --> LB[Load Balancer<br/>Nginx / HAProxy / AWS ALB]
+    LB --> S1[App Server 1]
+    LB --> S2[App Server 2]
+    LB --> S3[App Server 3]
+    LB -.-> S4[App Server N]
+    S1 --> DB[(Database)]
+    S2 --> DB
+    S3 --> DB
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Algorithms</div>
+<div class="card-body">
+<ul>
+<li><strong>Round Robin:</strong> Simple rotation — request 1 to server A, 2 to B, 3 to C. Works for uniform servers.</li>
+<li><strong>Least Connections:</strong> Route to server with fewest active connections. Best for varying request duration.</li>
+<li><strong>IP Hashing:</strong> Same client IP routes to same server (session persistence / sticky sessions).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">L4 vs L7</div>
+<div class="card-body">
+<ul>
+<li><strong>L4 (Transport layer):</strong> Routes based on IP + TCP/UDP port. Faster, less intelligent. Ideal for simple TCP traffic.</li>
+<li><strong>L7 (Application layer):</strong> Routes based on HTTP headers, URL path, cookies. Slower but enables advanced routing.</li>
+<li>Example: Route <code>/api/users</code> to user-service, <code>/api/orders</code> to order-service.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Health Checks — Keeping Dead Servers Out</div>
+<div class="card-body">
+<p>A load balancer is only useful if it stops sending traffic to broken servers.</p>
+<ul>
+<li><strong>Passive health check:</strong> LB monitors responses. If a server returns 5xx errors or times out repeatedly, the LB marks it as unhealthy and stops routing to it. Good for catching unexpected failures.</li>
+<li><strong>Active health check:</strong> LB periodically pings a dedicated <code>/health</code> endpoint on each server (e.g., every 5 seconds). If the endpoint doesn't return 200, the server is removed from rotation. Proactive — catches issues before users hit them.</li>
+<li><strong>Graceful shutdown:</strong> When scaling down, the server tells the LB "I'm going away" (deregister), finishes in-flight requests, then shuts down. Prevents dropped connections during deploys.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">DNS Load Balancing — The First Line of Defense</div>
+<div class="card-body">
+<p>Before traffic even reaches your load balancer, DNS can distribute it:</p>
+<ul>
+<li><strong>Round-robin DNS:</strong> A single domain name resolves to multiple IP addresses. Different users get different IPs. Simple but no health checking — if one IP goes down, some users get errors.</li>
+<li><strong>Geographic routing:</strong> Users in Asia resolve to the Tokyo data center, users in US to us-east-1. Reduces latency. Used by CDNs.</li>
+<li><strong>Weighted routing:</strong> Route 90% of traffic to v2, 10% to v1 for canary deployments.</li>
+<li><strong>DNS caching (TTL):</strong> DNS responses are cached by ISPs and browsers. A low TTL (60 seconds) means changes propagate fast but increases DNS query volume. High TTL (300+) means slower failover.</li>
+<li>Best practice: Use DNS to route between regions, and an internal LB within each region.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Session Persistence (Sticky Sessions)</div>
+<div class="card-body">
+<p>Some apps store session data on the server (in-memory). If the next request goes to a different server, the session is lost.</p>
+<ul>
+<li><strong>Cookie-based:</strong> LB sets a cookie identifying the server. All subsequent requests with that cookie go to the same server. Simple but breaks if the server goes down.</li>
+<li><strong>IP hash:</strong> Consistent hashing of the client IP → same server every time (as long as the server pool doesn't change).</li>
+<li><strong>Better alternative: Externalize sessions.</strong> Store session data in Redis or a database. Any server can serve any request. This is the recommended approach — servers become stateless, sticky sessions are unnecessary.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Mention L4 for internal traffic and L7 for API gateway routing. Say: "I'd use an L7 load balancer at the edge for path-based routing and an L4 internally for TCP traffic to database replicas." Mention health checks and graceful shutdown. For sessions, advocate for stateless services with externalized session storage (Redis).
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.7 DATABASES -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-7">
+<h2><span class="num">1.7</span> Databases</h2>
+<p class="definition">Relational (SQL) and Non-Relational (NoSQL) databases serve different needs. Choose based on schema, scale, and consistency requirements.</p>
+
+<div class="callout why">
+<strong>Why This Matters</strong>
+Database choice is one of the first architecture decisions. Interviewers expect you to justify SQL vs NoSQL for each use case, not default to one.
+</div>
+
+<table class="comp-table">
+<thead>
+<tr><th>Dimension</th><th>SQL (PostgreSQL, MySQL)</th><th>NoSQL (MongoDB, Cassandra, DynamoDB)</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Data Model</strong></td><td>Structured, schema-enforced, relations</td><td>Flexible schemas, documents, wide-columns</td></tr>
+<tr><td><strong>Transaction Model</strong></td><td>ACID (Atomicity, Consistency, Isolation, Durability)</td><td>BASE (Basically Available, Soft state, Eventual consistency)</td></tr>
+<tr><td><strong>Query Capability</strong></td><td>JOINs, complex queries, aggregations</td><td>Simple key-value lookups, limited aggregations</td></tr>
+<tr><td><strong>Best For</strong></td><td>User profiles, billing, inventory, banking</td><td>Large-scale unstructured data, high write throughput</td></tr>
+<tr><td><strong>Scaling</strong></td><td>Vertical scaling primary, sharding complex</td><td>Horizontal scaling by design, auto-sharding</td></tr>
+<tr><td><strong>Consistency</strong></td><td>Strong consistency by default</td><td>Eventual consistency prioritized</td></tr>
+</tbody>
+</table>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">ACID Properties Explained Simply</div>
+<div class="card-body">
+<p>ACID guarantees make SQL databases predictable even when things go wrong:</p>
+<ul>
+<li><strong>Atomicity:</strong> A transaction either completes fully or is rolled back entirely. No "half-charged, not delivered" scenarios. Like a bank transfer — money leaves one account and arrives in another, or neither happens.</li>
+<li><strong>Consistency:</strong> The database is always in a valid state. Constraints, triggers, and rules are enforced. You can't save an order without a user_id.</li>
+<li><strong>Isolation:</strong> Concurrent transactions don't interfere with each other. Two simultaneous purchases from the last item in stock — only one succeeds, the other gets "out of stock."</li>
+<li><strong>Durability:</strong> Once committed, data survives crashes, power outages, and reboots. Written to disk, not just memory.</li>
+<li>In contrast, BASE (NoSQL) prioritizes availability: "database is always writable, but reads might be stale."</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Storage Engines: How Data Is Physically Stored</div>
+<div class="card-body">
+<p>The storage engine is the low-level component that actually writes bytes to disk. Two dominant types:</p>
+<ul>
+<li><strong>B-Tree (InnoDB, MySQL default):</strong> Data is stored in a balanced tree structure. Excellent for reads with range queries. Writes modify pages in place (random I/O). Better for read-heavy workloads, small-to-medium datasets.</li>
+<li><strong>LSM-Tree (LevelDB, RocksDB, Cassandra, ScyllaDB):</strong> Writes go to an in-memory buffer first, then flushed to immutable SSTables. Merged/compacted in the background. Excellent for write-heavy workloads. Reads need to check multiple levels (bloom filters help). Better for time-series, high-ingestion.</li>
+<li>PostgreSQL uses a variant of B-Tree (no LSM option). MySQL supports both: InnoDB (B-Tree) and MyRocks (LSM-Tree via RocksDB).</li>
+<li><strong>Real-world:</strong> Use B-Tree for user profiles and orders. Use LSM-Tree for logs, analytics, time-series, and any high-write scenario.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">ORM Pitfalls with Connection Pooling</div>
+<div class="card-body">
+<p>ORMs (Sequelize, Prisma, Hibernate, Django ORM) abstract database access but introduce common issues:</p>
+<ul>
+<li><strong>N+1 query problem:</strong> ORM loads a list of posts, then fires one query per post to load comments. 1 + N queries instead of 1 JOIN. Use eager loading (<code>.include()</code> or <code>.prefetch()</code>).</li>
+<li><strong>Connection pool exhaustion:</strong> ORM libraries often hold connections longer than raw SQL. Each transaction occupies a connection. Long-running transactions + high concurrency = pool exhausted, app hangs.</li>
+<li><strong>Pool sizing:</strong> ORM pools need careful tuning. Common default (10 connections) might be too low for web apps. Monitor pool usage under load.</li>
+<li><strong>Auto-commit vs explicit transactions:</strong> ORM defaults to auto-commit unless wrapped in transaction. Unintended long transactions block other queries.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Don't just say "I'll use PostgreSQL." Explain why: "I need ACID for orders and complex JOINs for inventory reports. I'll put read-heavy data behind a cache layer and consider read replicas before sharding." For large-scale systems, consider hybrid: SQL for transactional, NoSQL for high-throughput analytics. Mention storage engines to show depth (B-Tree for reads, LSM-Tree for writes).
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.8 SHARDING & PARTITIONING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-8">
+<h2><span class="num">1.8</span> Sharding &amp; Partitioning</h2>
+<p class="definition">Splitting data across multiple servers based on a key (e.g., UserID). Also called horizontal partitioning.</p>
+
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Hash-Based <span class="tag pro">Common</span></div>
+<div class="card-body">
+hash(key) % N → assigns each key to a shard.
+<ul>
+<li>Even distribution across shards</li>
+<li>Problem: Adding/removing a shard changes N, remapping nearly all keys</li>
+<li>Solution: Consistent hashing (see 1.9)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Choosing a Shard Key <span class="tag pro">Critical</span></div>
+<div class="card-body">
+<p>The shard key is the most important decision in sharding. A bad shard key destroys performance:</p>
+<ul>
+<li><strong>High cardinality:</strong> The key should have many unique values (user_id is great, gender is terrible).</li>
+<li><strong>Even distribution:</strong> Each shard should get roughly equal data. <code>user_id % N</code> distributes evenly. Date-based sharding often creates hotspots (one shard gets all of January's data).</li>
+<li><strong>Supports the main query pattern:</strong> If most queries are "get orders for this user," shard by <code>user_id</code>. Avoid keys that force cross-shard queries.</li>
+<li><strong>Avoid monotonically increasing keys:</strong> Sharding by <code>created_at</code> or auto-increment ID means new data all goes to one shard (the "hot tail" problem).</li>
+<li><strong>Compound shard keys:</strong> Some DBs (Cassandra, DynamoDB) support multi-column keys. E.g., <code>(customer_id, order_date)</code> — partition by customer, sort by date.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">The Hotspot Problem</div>
+<div class="card-body">
+<p>Even with good sharding, some shards can get overwhelmed:</p>
+<ul>
+<li><strong>Celebrity/user peak:</strong> A influencer posts and millions of requests hit their user shard. That one shard melts while others are idle.</li>
+<li><strong>Time-based spikes:</strong> Black Friday creates 100x normal traffic. If sharded by product category, electronics shard gets hammered.</li>
+<li><strong>Solutions:</strong>
+  <ul>
+    <li>Use consistent hashing + virtual nodes to distribute load more evenly</li>
+    <li>Cache aggressively for hotspot keys (popular user's data cached in Redis)</li>
+    <li>Split the hot shard further (sub-sharding)</li>
+    <li>Read replicas for read-heavy hotspots</li>
+  </ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Rebalancing — Adding/Removing Shards</div>
+<div class="card-body">
+<p>What happens when you need to add a shard because data is growing?</p>
+<ul>
+<li><strong>Offline rebalancing:</strong> Stop writes, move data, restart. Simple but causes downtime. Acceptable for scheduled maintenance.</li>
+<li><strong>Online rebalancing:</strong> Move data in the background while serving traffic. Complex but no downtime. Reads go to old or new shard; writes go to both during migration.</li>
+<li><strong>Consistent hashing advantage:</strong> Only ~1/N of keys move when adding a shard. With modulo hashing, nearly <em>all</em> keys would need to move.</li>
+<li><strong>Cost of rebalancing:</strong> Moving 1GB of data over a network takes time. For large datasets (TB+), rebalancing can take hours or days. Plan for it.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Range-Based</div>
+<div class="card-body">
+Divide key ranges across shards. E.g., users with IDs 0-1000 → shard 1, 1001-2000 → shard 2.
+<ul>
+<li>Supports range queries within a shard</li>
+<li>Risk of hotspots if key distribution is uneven</li>
+<li>Example: Date-based sharding (Jan → shard 1, Feb → shard 2)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Directory-Based</div>
+<div class="card-body">
+A lookup service maps each key to its shard.
+<ul>
+<li>Most flexible — can move data between shards dynamically</li>
+<li>Single point of failure and performance bottleneck (the lookup service)</li>
+<li>Used when data distribution policy changes frequently</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+When discussing sharding, immediately address the challenges: "JOINs across shards are expensive, cross-shard transactions need distributed coordination (Saga pattern), and rebalancing is painful. I'd use consistent hashing to minimize data movement when scaling."
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.9 CONSISTENT HASHING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-9">
+<h2><span class="num">1.9</span> Consistent Hashing</h2>
+<p class="definition">A technique to minimize data movement when the number of nodes changes, used in distributed caches, databases, and load balancers.</p>
+
+<div class="callout why">
+<strong>Why This Matters</strong>
+Consistent hashing is the backbone of DynamoDB, Cassandra, Redis Cluster, and CDNs. Interviewers frequently ask: "How would you design a distributed cache?" — consistent hashing is the answer.
+</div>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Problem: Modulo Hashing Breaks on Scale Changes</div>
+<pre class="mermaid">
+flowchart LR
+    subgraph Before["3 Nodes: hash(key) % 3"]
+        M1[Key X → Node 2] 
+        M2[Key Y → Node 1]
+        M3[Key Z → Node 0]
+    end
+    subgraph After["4 Nodes: hash(key) % 4"]
+        M4[Key X → Node 1]
+        M5[Key Y → Node 0]
+        M6[Key Z → Node 2]
+    end
+    Before --> Note["❌ Nearly all keys remap!<br/>Massive data migration"]
+    After --> Note
+</pre>
+</div>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Solution: Consistent Hashing Ring</div>
+<pre class="mermaid">
+graph LR
+    subgraph Ring["Hash Ring (0 → 2³²-1)"]
+        direction LR
+        N1[Node A<br/>hash=100] --> N2[Node B<br/>hash=300]
+        N2 --> N3[Node C<br/>hash=600]
+        N3 --> N4[Node D<br/>hash=900]
+    end
+    K1[Key X<br/>hash=250] -.->|"→ clockwise to"| N2
+    K2[Key Y<br/>hash=550] -.->|"→ clockwise to"| N3
+    K3[Key Z<br/>hash=950] -.->|"→ clockwise to"| N1
+    Note4["✅ Add/remove node → only ~1/N keys remap"]
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">The Problem — Why Not Modulo?</div>
+<div class="card-body">
+<p>Most people first think of <code>hash(key) % N</code> to distribute keys across N servers. It works great when N never changes. But when you add or remove a server, <strong>every key's mapping changes</strong>:</p>
+<ul>
+<li>3 servers: <code>hash(X) % 3 = 2</code> → server 2</li>
+<li>Add one: <code>hash(X) % 4 = 1</code> → server 1 (different!)</li>
+<li>Result: All keys need to be moved. With 1TB of cached data, that's 1TB of network traffic — slow and expensive.</li>
+<li><strong>Consistent hashing solves this:</strong> Adding a node only moves ~1/N of the keys (with 4 nodes, only ~25%).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Walk Through: How the Ring Works</div>
+<div class="card-body">
+<p>Imagine a clock face instead of a line:</p>
+<ul>
+<li>Take both your servers (nodes) and your data items (keys) and hash them to numbers on a circle (0 to 2<sup>32</sup> - 1).</li>
+<li>Place them on the circle based on their hash.</li>
+<li><strong>Rule:</strong> Each key belongs to the <strong>next node you encounter going clockwise</strong>.</li>
+<li><strong>Example:</strong> Node A at position 10, Node B at 30, Node C at 60. Key X at position 25 → goes to Node B (the next clockwise node).</li>
+<li><strong>Add Node D at 45:</strong> Key X still goes to Node B (25 → 30). Key at position 35 would have gone to Node C but now goes to Node D. Only keys between 30-45 moved. Keys at 0-30 and 45-60 and 60+ are unaffected.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">How It Works</div>
+<div class="card-body">
+<ul>
+<li>Both nodes and keys are hashed onto a circular ring (0 to 2³² − 1)</li>
+<li>Each key is assigned to the <strong>next clockwise node</strong> on the ring</li>
+<li>Adding a node only affects keys in its immediate vicinity</li>
+<li>Only ~1/N of keys need remapping (vs nearly all with modulo)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Virtual Nodes <span class="tag pro">Important</span></div>
+<div class="card-body">
+Each physical node maps to multiple positions on the ring.
+<ul>
+<li>Improves load distribution (prevents hot spots from uneven hashing)</li>
+<li>Handles heterogeneous hardware (assign more vnodes to powerful machines)</li>
+<li>Example: 3 physical nodes × 100 vnodes = 300 positions on the ring</li>
+<li>Used by: DynamoDB, Cassandra, Redis Cluster</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Applications</div>
+<div class="card-body">
+<ul>
+<li><strong>Distributed caches:</strong> Memcached, Redis Cluster — minimize cache misses on scale changes</li>
+<li><strong>Databases:</strong> DynamoDB, Cassandra — partitioning + replication together</li>
+<li><strong>Load balancers:</strong> Consistent hashing for sticky sessions</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+When asked about distributed caching or database partitioning, lead with consistent hashing. Say: "I'd use consistent hashing with virtual nodes so scaling only moves ~1/N of data, and heterogeneous machines can have more weight." Mention the ring, virtual nodes, and the clockwise assignment.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.10 REPLICATION -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-10">
+<h2><span class="num">1.10</span> Replication</h2>
+<p class="definition">Copying data across multiple nodes for durability, availability, and read throughput.</p>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Replication Strategies</div>
+<pre class="mermaid">
+flowchart LR
+    subgraph PR["Primary-Replica (Single-Master)"]
+        P[(Primary)] --> R1[(Replica 1<br/>read-only)]
+        P --> R2[(Replica 2<br/>read-only)]
+        W[All writes] --> P
+        READS[Reads] --> R1 & R2
+    end
+    subgraph MM["Multi-Master (Active-Active)"]
+        M1[(Master 1<br/>read + write)]
+        M2[(Master 2<br/>read + write)]
+        M1 <--> M2[Sync / Async<br/>replication]
+        W2[Writes] --> M1 & M2
+    end
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Primary-Replica <span class="tag pro">Standard</span></div>
+<div class="card-body">
+All writes go to the primary node. Replicas serve read traffic.
+<ul>
+<li>Simple, predictable consistency model</li>
+<li>Scales read throughput linearly with replica count</li>
+<li>Primary is single point of failure for writes (failover needed)</li>
+<li>Replication lag can cause stale reads</li>
+<li>Example: PostgreSQL streaming replication</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Multi-Master</div>
+<div class="card-body">
+Any node accepts both reads and writes. Changes propagate between nodes.
+<ul>
+<li>Higher write availability (no single point of failure)</li>
+<li>Complicated conflict resolution (last-write-wins, CRDTs)</li>
+<li>Network latency between masters affects consistency</li>
+<li>Example: DynamoDB Global Tables, MySQL Group Replication</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Synchronous vs Asynchronous Replication</div>
+<div class="card-body">
+<p>The trade-off between data safety and write speed:</p>
+<ul>
+<li><strong>Synchronous:</strong> Primary waits for <em>all</em> replicas to confirm the write before acknowledging the client. Guarantees no data loss if the primary fails. Slower writes (higher latency). Used for financial transactions, write-ahead logs.</li>
+<li><strong>Asynchronous:</strong> Primary acknowledges the client immediately. Replicas catch up in the background. Fast writes but data loss possible if the primary fails before replication completes. Used for most web apps (fast, acceptable trade-off).</li>
+<li><strong>Quorum replication:</strong> Wait for a "majority" (W + R > N). Example: 3 nodes, write waits for 2 acks, read queries 2 nodes. Balances safety and speed. Used by Cassandra, etcd, Consul.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Split-Brain Problem</div>
+<div class="card-body">
+<p>What happens when two nodes both think they're the primary?</p>
+<ul>
+<li><strong>The scenario:</strong> A network partition isolates the primary from replicas. Replicas promote a new primary. When the partition heals, there are two primaries accepting writes. Data diverges.</li>
+<li><strong>Solutions:</strong>
+  <ul>
+    <li><strong>Quorum:</strong> Only a node that holds the majority of votes can be primary (Paxos / Raft). The isolated node can't form a quorum and steps down.</li>
+    <li><strong>Lease-based:</strong> Primary has a time-limited lease. If it can't renew the lease, it abdicates.</li>
+    <li><strong>Fencing:</strong> A "fencing token" (monotonically increasing counter) — older tokens are rejected. The old primary's writes are invalid.</li>
+  </ul>
+</li>
+<li>Split-brain is why you should never rely on just two nodes for a database. Use an odd number (3, 5) for reliable quorum.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Read-Your-Writes Consistency</div>
+<div class="card-body">
+<p>A common problem with replica reads: A user writes data, then immediately reads from a replica that hasn't received the update yet. They see their own data as missing!</p>
+<ul>
+<li><strong>Solution 1:</strong> Read from primary for the user's own data. Writes → primary reads → primary for "my profile," replicas for "all profiles."</li>
+<li><strong>Solution 2:</strong> Read-after-write consistency with version stamps. The write returns a timestamp; subsequent reads only accept data >= that timestamp.</li>
+<li><strong>Solution 3:</strong> Sticky sessions — the same user always hits the same replica. Fragile but simple.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Start with Primary-Replica for simplicity. Say: "I'll use primary-replica replication — all writes go to the primary, replicas handle reads. Asynchronous replication for speed. If primary fails, promote a replica. For higher data safety, I'd use quorum-based replication (write to 2 of 3, read from 2 of 3)." Mention split-brain risk and read-your-writes consistency to show experience.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.11 INDEXING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-11">
+<h2><span class="num">1.11</span> Indexing</h2>
+<p class="definition">Data structures that speed up data retrieval without scanning the entire table.</p>
+
+<div class="callout why">
+<strong>Why This Matters</strong>
+The most common performance bottleneck in databases is missing or wrong indexes. Interviewers ask: "Your query is slow — what do you check?" Indexes are always the first answer.
+</div>
+
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Composite Indexes <span class="tag pro">Crucial</span></div>
+<div class="card-body">
+An index on multiple columns. Column order matters due to the <strong>leftmost prefix rule</strong>.
+<ul>
+<li><strong>Example:</strong> <code>INDEX(city, status, date)</code></li>
+<li>Covers queries on: <code>city</code>, <code>city+status</code>, <code>city+status+date</code></li>
+<li>Does <strong>NOT</strong> cover: <code>status</code> alone, <code>date</code> alone, <code>status+date</code></li>
+<li>Put the most selective column first for best performance</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Covering Indexes</div>
+<div class="card-body">
+An index that contains <strong>all columns</strong> needed by a query. The DB reads entirely from the index without touching the table.
+<ul>
+<li>Dramatically faster than non-covering indexes (no table lookup)</li>
+<li>Known as "index-only scan" in PostgreSQL</li>
+<li>Trade-off: More columns = larger index = slower writes</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Index Selectivity &amp; Partial Indexes</div>
+<div class="card-body">
+<ul>
+<li><strong>Selectivity:</strong> Ratio of unique values to total rows. High selectivity (e.g., email) = good filter. Low selectivity (e.g., <code>is_active</code> boolean) — DB may ignore index.</li>
+<li><strong>Partial Index:</strong> Index only a subset of rows matching a <code>WHERE</code> clause. Smaller, faster. Example: <code>CREATE INDEX ON orders(status) WHERE status = 'pending';</code></li>
+<li><strong>Clustered Index:</strong> Data rows stored in index order. One per table (InnoDB primary key).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">How B-Trees Work (Simply)</div>
+<div class="card-body">
+<p>Think of a B-tree like a library's card catalog:</p>
+<ul>
+<li><strong>Internal nodes:</strong> Like the "A–D, E–H, I–L" signs on cabinets. They tell you which cabinet to look in, but don't have actual books.</li>
+<li><strong>Leaf nodes:</strong> The actual cards pointing to the shelf location. In a DB, leaf nodes contain the actual row location (or the row data for clustered indexes).</li>
+<li><strong>The tree is balanced:</strong> All leaf nodes are at the same depth. This means finding any row takes the same number of steps (O(log n)).</li>
+<li><strong>Fan-out:</strong> Each internal node can point to hundreds of children. A 4-level B-tree can index billions of rows because each level multiplies capacity.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Table Scan vs Index Scan — Cost Comparison</div>
+<div class="card-body">
+<p>The DB chooses between scanning the whole table or using an index based on cost:</p>
+<ul>
+<li><strong>Table Scan (Sequential Scan):</strong> Read every row, check the condition. Fast when the table is small or when most rows match. Efficient for bulk operations.</li>
+<li><strong>Index Scan:</strong> Traverse the B-tree to find matching rows, then fetch each row from the table. Good when few rows match (high selectivity).</li>
+<li><strong>Index-Only Scan:</strong> All needed columns are in the index. No table fetch needed. The fastest option.</li>
+<li><strong>Rule of thumb:</strong> If more than ~5-10% of rows match, a table scan may be faster than an index scan (because random I/O is slower than sequential).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">When Indexes Hurt Performance</div>
+<div class="card-body">
+<p>Indexes aren't free. Each index adds cost:</p>
+<ul>
+<li><strong>Write slowdown:</strong> Every INSERT/UPDATE/DELETE must update every index on the table. A table with 5 indexes is ~5x slower to write to than an unindexed table.</li>
+<li><strong>Storage:</strong> Each index consumes disk space. A table's indexes can be larger than the table itself.</li>
+<li><strong>Memory:</strong> Indexes are cached in memory (buffer pool). Too many indexes = less memory for caching actual data.</li>
+<li><strong>Over-indexing anti-pattern:</strong> Adding an index on every column "just in case" kills write performance. Only add indexes for known query patterns.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+When optimizing a slow query, always check: (1) Is the right index present? (2) Is it selective enough? (3) Is there a covering index possible? Show depth by discussing composite indexes and the leftmost prefix rule in detail. Use EXPLAIN/EXPLAIN ANALYZE to check if the DB is using your index.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.12 MESSAGE QUEUES & ASYNCHRONOUS PROCESSING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-12">
+<h2><span class="num">1.12</span> Message Queues &amp; Asynchronous Processing</h2>
+<p class="definition">Decouple services by sending messages between them asynchronously via a queue or stream.</p>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Producer → Queue → Consumer Pattern</div>
+<pre class="mermaid">
+sequenceDiagram
+    participant P as Producer (e.g., Order Service)
+    participant Q as Message Queue (Kafka / RabbitMQ)
+    participant C1 as Consumer 1 (Email Service)
+    participant C2 as Consumer 2 (Analytics Service)
+    
+    P->>Q: Publish "order_created" event
+    Q->>C1: Deliver event
+    Q->>C2: Deliver event
+    Note over C1: Send confirmation email
+    Note over C2: Update dashboard
+    C1-->>Q: Acknowledge
+    C2-->>Q: Acknowledge
+    Note over Q: Kafka: event persists<br/>RabbitMQ: deleted after ack
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Use Cases</div>
+<div class="card-body">
+<ul>
+<li><strong>Background tasks:</strong> Email sending, video encoding, report generation</li>
+<li><strong>Load buffering:</strong> Queue spikes in traffic — consumers process at their own pace</li>
+<li><strong>Event-driven architectures:</strong> Emit events (order_created, payment_received) → multiple services react</li>
+<li><strong>Decoupling:</strong> Producer doesn't need to know about consumers</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Kafka vs RabbitMQ</div>
+<div class="card-body">
+<ul>
+<li><strong>Kafka:</strong> Event streaming platform. Persistent logs, replay capability, high throughput. Best for event sourcing, data pipelines, analytics.</li>
+<li><strong>RabbitMQ:</strong> Message broker. Smart queuing, routing, immediate delivery. Best for task queues, RPC-like patterns.</li>
+<li><strong>Redis Pub/Sub:</strong> Lightweight, in-memory. Best for real-time notifications, chat. No persistence.</li>
+<li><strong>SQS:</strong> AWS-managed, fully serverless. Best for simple worker queues.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Delivery Semantics</div>
+<div class="card-body">
+<p>How many times will a message reach the consumer? This is a critical design decision:</p>
+<ul>
+<li><strong>At-most-once:</strong> Message sent once, no retry if it fails. Fast but data loss possible. Use for: non-critical analytics, sensor readings where fresh data replaces stale.</li>
+<li><strong>At-least-once:</strong> Message retried until acknowledged. No data loss but duplicates possible. Consumer must be idempotent. Use for: order processing, email sending. <em>Most common choice.</em></li>
+<li><strong>Exactly-once:</strong> Deduplication built into the system (Kafka transactions + idempotent producer + transactional consumer). Highest complexity. Use for: financial transactions, inventory counts.</li>
+<li>In practice, most systems use at-least-once + idempotent consumers. It's simpler and covers the same ground.</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Dead Letter Queue &amp; Backpressure</div>
+<div class="card-body">
+<ul>
+<li><strong>Dead Letter Queue (DLQ):</strong> When a message can't be processed after max retries, move it to a separate "dead letter" queue. A human or automated script can inspect and fix DLQ messages later. Prevents messages from getting stuck in loop.</li>
+<li><strong>Backpressure:</strong> When consumers can't keep up with producers. Strategies:
+  <ul>
+    <li><strong>Rate limiting:</strong> Slow down or reject new producer requests</li>
+    <li><strong>Buffer overflow:</strong> In Kafka, increase partition count or retention; in RabbitMQ, increase queue length limits</li>
+    <li><strong>Drop messages:</strong> Accept that some messages will be lost (for non-critical data)</li>
+    <li><strong>Scale consumers:</strong> Add more consumer instances to increase processing capacity</li>
+  </ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Introduce queues when you need reliability or decoupling. Say: "I'd put a message queue between the order service and email service. If email is slow, orders aren't blocked. If email fails, messages stay in the queue for retry." Choose Kafka for high-throughput event streaming, RabbitMQ for task queues. Always mention at-least-once delivery + idempotent consumers as the standard approach.
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.13 OBSERVABILITY & MONITORING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-13">
+<h2><span class="num">1.13</span> Observability &amp; Monitoring</h2>
+<p class="definition">Understanding what's happening inside your system through Metrics, Logs, and Tracing (the three pillars).</p>
+
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Distributed Tracing in Practice</div>
+<div class="card-body">
+<strong>Debugging a slow request:</strong>
+<ol>
+<li>Request hits API Gateway → TraceID is generated</li>
+<li>TraceID propagates via HTTP headers (<code>x-trace-id</code>) to each downstream service</li>
+<li>Each service emits spans: service name, operation, timestamps, parent span ID</li>
+<li>Jaeger collects spans and reconstructs the full request tree</li>
+<li>If auth-service span takes 800ms but db-query span takes 50ms → bottleneck is auth-service business logic (cache miss? external API call?)</li>
+<li>Correlate TraceID with structured logs for deeper debugging</li>
+</ol>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Alerting Strategy</div>
+<div class="card-body">
+<ul>
+<li><strong>Latency alerts:</strong> p99 latency > 500ms for 5 minutes</li>
+<li><strong>Error rate alerts:</strong> 5xx errors > 1% for 5 minutes</li>
+<li><strong>Infrastructure alerts:</strong> CPU > 80%, disk space < 20%</li>
+<li><strong>Business alerts:</strong> Order success rate < 95%</li>
+<li>Use <strong>SLIs</strong> (indicators), <strong>SLOs</strong> (targets, e.g., 99.9% uptime), and <strong>SLAs</strong> (contractual)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">RED vs USE Method</div>
+<div class="card-body">
+<p>Two complementary frameworks to decide <em>what</em> to measure:</p>
+<ul>
+<li><strong>RED Method (for services/requests):</strong> Rate (requests/sec), Errors (failed requests), Duration (latency). Request-centric. Best for user-facing services.</li>
+<li><strong>USE Method (for infrastructure/resources):</strong> Utilization (% busy), Saturation (queue length), Errors (failure count). Resource-centric. Best for servers, databases, network.</li>
+<li>Together they give a complete picture: RED tells you if users are unhappy, USE tells you <em>why</em> (which resource is saturated).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Health Checks &amp; Dashboards</div>
+<div class="card-body">
+<p>Every service should expose endpoints for the infrastructure to check:</p>
+<ul>
+<li><strong>/healthz (liveness):</strong> Is the process alive? Returns 200 OK if running. Simple check (process start).</li>
+<li><strong>/readyz (readiness):</strong> Is the service ready to serve traffic? Returns 200 OK only after DB connection pool is warm, migrations are done, cache is populated.</li>
+<li><strong>Dashboards vs Alerts:</strong> Dashboards are for <em>exploration</em> (what happened?). Alerts are for <em>notification</em> (wake someone up). Dashboard your SLIs, alert on your SLOs. Too many alerts = alert fatigue.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Wrap up your design by mentioning observability. Say: "I'd add structured logging with TraceID propagation across all services, Prometheus for metrics using the RED method (Rate, Errors, Duration), and Jaeger for distributed tracing. /healthz and /readyz endpoints for every service. Alert on SLO violations, dashboard everything else."
+</div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 1.14 DATA PIPELINES & STREAMING -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1-14">
+<h2><span class="num">1.14</span> Data Pipelines &amp; Streaming</h2>
+<p class="definition">Processing data in batches (scheduled) or streams (real-time) for analytics, reporting, and ML.</p>
+
+<div class="mermaid-wrapper">
+<div class="mermaid-label">Lambda Architecture: Batch + Stream</div>
+<pre class="mermaid">
+flowchart TD
+    DATA[(Raw Data)] --> BATCH[Batch Layer<br/>Spark / Hadoop<br/>Full historical accuracy]
+    DATA --> STREAM[Speed Layer<br/>Kafka / Flink<br/>Real-time, approximate]
+    
+    BATCH --> BATCHV[Batch View<br/>Precomputed aggregates<br/>Hourly / daily]
+    STREAM --> STREAMV[Real-Time View<br/>Rolling window<br/>Low latency, seconds]
+    
+    BATCHV --> MERGE[Merge Service<br/>Combine both views]
+    STREAMV --> MERGE
+    
+    MERGE --> QUERY[Query / Dashboard<br/>User sees complete picture]
+    
+    BATCH -.->|"Corrects<br/>stream"| STREAM
+</pre>
+</div>
+
+<div class="concept-grid">
+<div class="concept-card">
+<div class="card-title">Batch Processing</div>
+<div class="card-body">
+<p><strong>Process large chunks of data on a schedule.</strong> Think of it like doing your weekly laundry — you wait until you have a full load, then wash everything at once.</p>
+<ul>
+<li><strong>When it runs:</strong> Hourly, daily, or weekly (scheduled)</li>
+<li><strong>Latency:</strong> Minutes to hours — not for real-time decisions</li>
+<li><strong>Accuracy:</strong> High — you can process all data and correct mistakes</li>
+<li><strong>Common tools:</strong> Hadoop, Spark, Airflow</li>
+<li><strong>Example:</strong> Generate daily sales report at 2:00 AM processing all orders from yesterday</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Stream Processing</div>
+<div class="card-body">
+<p><strong>Process events as they happen, in real-time.</strong> Like sorting mail as it arrives rather than waiting for the whole week's mail to pile up.</p>
+<ul>
+<li><strong>When it runs:</strong> Continuously — processes each event when it arrives</li>
+<li><strong>Latency:</strong> Milliseconds to seconds — real-time decisions</li>
+<li><strong>Accuracy:</strong> Approximate — trades precision for speed. Late-arriving data may be missed if the window closes</li>
+<li><strong>Common tools:</strong> Kafka, Flink, Spark Streaming</li>
+<li><strong>Example:</strong> Show real-time order count dashboard. Each order immediately increments the counter</li>
+<li><strong>Windowing:</strong> Define time buckets for aggregation — tumbling (fixed non-overlapping), sliding (overlapping window), session (group by activity)</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Lambda vs Kappa Architecture</div>
+<div class="card-body">
+<p>Two main approaches to building data pipelines:</p>
+<ul>
+<li><strong>Lambda Architecture:</strong> Runs batch and stream <em>in parallel</em>. Batch gives you correctness (reprocess everything), stream gives you speed. A merge service combines both views at query time. Example: Show last hour's revenue in real-time + historically accurate daily totals.</li>
+<li><strong>Kappa Architecture:</strong> Stream-only. Everything is a stream — even batch is just a "replay" of stream data. Simpler to operate (one pipeline instead of two). Relies on Kafka's ability to replay events from a point in time.</li>
+<li>In practice, Kappa is gaining popularity. Lambda still used when historical reprocessing is very heavy (e.g., ML model training).</li>
+</ul>
+</div>
+</div>
+
+<div class="concept-card">
+<div class="card-title">Kafka Fundamentals</div>
+<div class="card-body">
+<p>Understanding Kafka is key to streaming systems:</p>
+<ul>
+<li><strong>Topic:</strong> A named stream of records (like a table in a DB)</li>
+<li><strong>Partition:</strong> A topic is split into partitions for parallel processing. Each partition is ordered. Messages within a partition have a sequential offset.</li>
+<li><strong>Offset:</strong> A unique ID for each message within a partition. Consumers track which offset they've read (like a bookmark).</li>
+<li><strong>Consumer Group:</strong> A set of consumers that divide partitions among themselves. One partition is consumed by exactly one consumer in a group.</li>
+<li><strong>Retention:</strong> Kafka persists messages even after consumption (configurable retention — e.g., 7 days). Enables replay.</li>
+<li><strong>At-least-once delivery:</strong> Kafka guarantees no data loss, but duplicates are possible if a consumer crashes after processing but before committing offset.</li>
+</ul>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>Interview Tip</strong>
+Mention data pipelines in systems that need analytics (e.g., "dashboard for business metrics"). Say: "I'd use Kafka for event ingestion, Flink for real-time processing, and Spark for daily batch aggregates. For simpler systems, Kappa Architecture avoids maintaining two separate pipelines." Mention partitioning and consumer groups to show depth.
+</div>
+</section>
+
+
+<div class="footer">System Design Fundamentals — Interview Preparation for Fullstack Role, 5 Years Experience, Japan Market</div>
+
+</div><!-- /container -->
+
+</body>
+</html>

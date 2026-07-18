@@ -1,0 +1,438 @@
+================================================================================
+                    SYSTEM DESIGN INTERVIEW PREPARATION
+                          Fullstack Role - 5 Years Experience
+                              Japan Market Focus
+================================================================================
+
+Table of Contents:
+-----------------
+1. Core Fundamentals
+2. Key Technologies
+3. Common Patterns
+4. Assessment Criteria
+5. Japan-Specific Considerations
+6. Trade-offs to Know
+
+================================================================================
+1. CORE FUNDAMENTALS
+================================================================================
+
+1.1 SCALABILITY
+--------------
+Definition: Ability of a system to handle increasing load by adding resources.
+
+Two Types:
+- Vertical Scaling (Scale Up):
+  - Increase CPU/RAM of single server
+  - Easier to implement, no code changes
+  - Limited by hardware capacity
+  - Single point of failure
+
+- Horizontal Scaling (Scale Out):
+  - Add more servers to distribute load
+  - Supports massive growth
+  - Better fault tolerance
+  - Introduces complexity in data consistency
+  - Database sharding is a form of horizontal scaling
+
+1.2 RELIABILITY & FAULT TOLERANCE
+----------------------------------
+Failures are inevitable in distributed systems.
+
+Strategies:
+- Replication: Duplicate services/data for failover
+- Retry & Backoff: Auto-reattempt failed requests with exponential delays
+- Circuit Breakers: Block requests to failing services temporarily
+- Rate Limiting: Protect services from being overwhelmed
+  Algorithms:
+  - Token Bucket: Tokens refilled at fixed rate; each request consumes one. Allows bursts up to bucket capacity.
+  - Sliding Window Log: Timestamp-based rolling window. Precise but memory-intensive.
+  - Sliding Window Counter: Hybrid of fixed window + sliding log. Smooths edge-case spikes.
+  - Leaky Bucket: Constant-rate processing; excess requests are queued or dropped.
+  - Fixed Window: Count requests per time unit. Simple but allows burst at window boundaries.
+- Graceful Degradation: System continues with reduced functionality
+- Idempotency: Ensures repeated identical requests produce the same result.
+  - Idempotency Key: Unique key sent by client (e.g., idempotency-key header); server deduplicates
+  - Critical for payment, order creation, and any operation with retries
+  - Typically implemented via DB unique constraint or cache with TTL
+  - Safe methods: GET, PUT, DELETE are naturally idempotent; POST is not
+  - Example: Stripe's Idempotency-Key header prevents duplicate charges
+
+1.3 PERFORMANCE
+---------------
+Two critical metrics:
+- Latency: Time for system to respond
+- Throughput: Number of requests per second
+
+Optimization strategies:
+- Caching to reduce network round-trips
+- Database indexing for faster reads
+- Database connection pooling: Reuse a pool of pre-established DB connections to avoid connection overhead
+  - Reduces latency on each request (no TCP handshake/authentication)
+  - Limits concurrent DB connections under load
+  - Common pool sizes: 10-30 per app instance (rule of thumb: (core_count * 2) + 1)
+  - Tools: HikariCP (Java), PgBouncer (PostgreSQL), ProxySQL (MySQL)
+- Data compression
+- Batch network calls
+- Use gRPC for internal services (smaller payloads, faster serialization)
+- WebSockets for real-time connections
+
+1.4 CAP THEOREM
+----------------
+A distributed data store can only provide 2 of 3 guarantees:
+
+- Consistency (C): Every read receives most recent write
+- Availability (A): Every request receives non-error response
+- Partition Tolerance (P): System operates despite network failures
+
+In distributed systems, network partitions are inevitable.
+Must choose between CP or AP during partitions:
+
+- CP Systems (Banking, Payment):
+  Strong consistency, may reduce availability
+  Example: PostgreSQL, MongoDB
+
+- AP Systems (Social Feeds, Search):
+  High availability, eventual consistency
+  Example: Cassandra, DynamoDB
+
+1.5 CACHING
+-----------
+Caches store copies of data in high-speed memory (RAM).
+
+Types:
+- Application Cache: In-memory within service instance, fast but not shared
+- Distributed Cache: Shared across nodes (Redis cluster)
+- CDN Cache: Static assets from geographically close servers
+
+Caching Strategies:
+- TTL (Time-to-Live): Data expires automatically
+- Write-Through: Write to cache first, then persist to DB synchronously
+- Write-Behind/Write-Back: Write to cache, async persist to DB
+- Cache-Aside: Application manages cache invalidation
+
+Cache Invalidation: One of the hardest problems in CS.
+
+1.6 LOAD BALANCING
+-------------------
+Distributes traffic evenly across servers.
+
+Algorithms:
+- Round Robin: Simple rotation of requests
+- Least Connections: Route to server with fewest active connections
+- IP Hashing: Same client mapped to same server (session persistence)
+
+Types:
+- L4 Load Balancer: Works at transport layer (TCP/UDP)
+- L7 Load Balancer: Works at application layer (HTTP)
+
+Tools: Nginx, HAProxy, AWS ALB/NLB
+
+1.7 DATABASES
+-------------
+Relational (SQL): MySQL, PostgreSQL
+- ACID properties (Atomicity, Consistency, Isolation, Durability)
+- Structured data, schema enforced
+- Great for: User profiles, billing, inventory
+- JOIN operations, complex queries
+
+Non-Relational (NoSQL): MongoDB, Cassandra, DynamoDB
+- BASE model (Basically Available, Soft state, Eventual consistency)
+- Flexible schemas, high write throughput
+- Great for: Large-scale unstructured data
+- Eventual consistency prioritized
+
+1.8 SHARDING & PARTITIONING
+-----------------------------
+Splitting data across multiple servers based on a key (e.g., UserID).
+
+Sharding Strategies:
+- Hash-based: Consistent hashing
+- Range-based: Divide by value ranges
+- Directory-based: Lookup service maps data to shards
+
+Challenges:
+- Complex queries (JOINs across shards)
+- Cross-shard transactions
+- Rebalancing when adding shards
+
+1.9 CONSISTENT HASHING
+-----------------------
+A technique to minimize data movement when the number of nodes changes.
+
+Problem: In hash-based sharding (hash(key) % N), adding/removing a node changes N → nearly all keys remap.
+
+How it works:
+- Hash both keys and nodes onto a circular ring (0 to 2^32 - 1)
+- Each key is assigned to the next clockwise node on the ring
+- Adding/removing a node only affects keys in its immediate vicinity
+- Only ~1/N of keys need re-mapping on node change (vs nearly all with modulo)
+
+Virtual Nodes:
+- Each physical node maps to multiple positions on the ring
+- Improves load distribution (prevents hot spots)
+- Handles heterogeneous hardware (assign more vnodes to powerful machines)
+
+Applications:
+- Distributed caches (Memcached, Redis Cluster)
+- DynamoDB, Cassandra (partitioning + replication)
+- Load balancers (consistent hashing for sticky sessions)
+
+1.10 REPLICATION
+----------------
+Primary-Replica: Writes to single node, reads from multiple nodes
+Multi-Master: Writes to any node, improves availability, complicates conflict resolution
+
+1.11 INDEXING
+--------------
+Optimizes data retrieval without scanning entire database.
+
+Types:
+- B-tree Indexes: Standard for relational DBs, great for range queries
+- Hash Indexes: Exact-match lookups, not for range queries
+- Inverted Indexes: Backbone of search engines (Elasticsearch)
+- Trie Structures: Used in autocomplete systems
+- Bitmap Indexes: Efficient for low-cardinality columns (gender, status)
+
+Advanced Concepts:
+- Composite Indexes: Index on multiple columns. Column order matters (leftmost prefix rule).
+  Example: INDEX(city, status, date) covers queries on city, city+status, city+status+date.
+  Does NOT cover queries on status or date alone.
+- Covering Indexes: Index contains all columns needed by a query.
+  Query reads entirely from index, no table lookup (index-only scan).
+  Significantly faster than non-covering indexes.
+- Index Selectivity: Ratio of unique values to total rows.
+  High selectivity (e.g., user_email) = efficient filter.
+  Low selectivity (e.g., is_active boolean) = poor filter; index may be ignored.
+- Partial Indexes: Index only a subset of rows (WHERE clause). Smaller, faster.
+- Clustered Indexes: Data rows stored in index order. One per table (e.g., InnoDB primary key).
+
+Trade-offs:
+- Indexes speed up reads but slow down writes (INSERT/UPDATE/DELETE must update each index)
+- Each index consumes disk space and memory (buffer pool)
+- Over-indexing can degrade write performance significantly
+
+1.12 MESSAGE QUEUES & ASYNCHRONOUS PROCESSING
+----------------------------------------------
+Decouples services for async communication.
+
+Use Cases:
+- Background tasks (email, video encoding)
+- Load buffering
+- Event-driven architectures
+
+Tools: Kafka, RabbitMQ, SQS, Redis Pub/Sub
+
+1.13 OBSERVABILITY & MONITORING
+--------------------------------
+Three Pillars:
+- Metrics: Aggregated data over time (Prometheus, Grafana)
+- Logs: Discrete events (ELK Stack)
+- Tracing: Track single request across microservices (Jaeger, Zipkin)
+
+Practical Tracing Example (debugging a slow request):
+1. A user request hits API Gateway → notification is generated with TraceID
+2. TraceID propagates via HTTP headers (x-trace-id) to each downstream service
+3. Each service emits spans (service name, operation, start/end timestamps, parent span ID)
+4. Jaeger collects spans and reconstructs the full request tree
+5. Identifying bottleneck: If auth-service span takes 800ms but db-query span takes 50ms,
+   the bottleneck is likely in auth-service business logic (cache miss? external API call?)
+6. Integration: correlate TraceID with structured logs for deeper debugging
+
+1.14 DATA PIPELINES & STREAMING
+--------------------------------
+- Batch Processing: Periodic aggregation (Hadoop, Spark)
+- Stream Processing: Real-time events (Kafka, Flink)
+- Lambda Architecture: Combines batch + stream layers
+
+================================================================================
+2. KEY TECHNOLOGIES
+================================================================================
+
+DATABASES:
+- PostgreSQL: ACID-compliant, great for complex queries
+- MySQL: Widely used, reliable
+- MongoDB: Document store, flexible schemas
+- Cassandra: Wide-column, high write throughput
+- DynamoDB: AWS managed, serverless
+- Redis: In-memory, caching + data structures
+
+SEARCH & ANALYTICS:
+- Elasticsearch: Full-text search, inverted indexes
+- Apache Flink: Stream processing
+
+MESSAGING:
+- Apache Kafka: Event streaming platform
+- RabbitMQ: Message broker
+- Amazon SQS: Managed message queue
+
+CACHING:
+- Redis: In-memory data store
+- Memcached: Distributed caching
+
+API GATEWAYS:
+- Kong, AWS API Gateway, Apigee
+
+COORDINATION:
+- ZooKeeper: Distributed coordination service
+
+================================================================================
+3. COMMON PATTERNS
+================================================================================
+
+3.1 REAL-TIME UPDATES
+----------------------
+- WebSockets: Bidirectional, persistent connections
+- Server-Sent Events (SSE): One-way server to client
+- Long Polling: Fallback mechanism
+
+3.2 DEALING WITH CONTENTION
+----------------------------
+- Optimistic Concurrency Control
+- Pessimistic Locking
+- Version Vectors
+- Compare-and-Swap (CAS)
+
+3.3 MULTI-STEP PROCESSES
+-------------------------
+- Saga Pattern: Distributed transactions
+- Choreography vs Orchestration
+- Compensating Transactions
+
+3.4 SCALING READS
+------------------
+- Read Replicas
+- Caching (Redis, CDN)
+- Database Indexing
+- Denormalization
+
+3.5 SCALING WRITES
+-------------------
+- Sharding/Partitioning
+- Write-Ahead Logs (WAL)
+- Event Sourcing
+- CQRS (Command Query Responsibility Segregation)
+
+3.6 HANDLING LARGE BLOBS
+-------------------------
+- Object Storage (S3, GCS)
+- CDN for static assets
+- Chunked uploads
+- Metadata separation from content
+
+3.7 MANAGING LONG RUNNING TASKS
+--------------------------------
+- Background Job Queues
+- Async Processing
+- Progress Tracking
+- Timeout & Retry mechanisms
+
+================================================================================
+5. ASSESSMENT CRITERIA
+================================================================================
+
+5.1 PROBLEM NAVIGATION (Most Important)
+----------------------------------------
+- Break down complex problems
+- Prioritize important aspects
+- Avoid getting stuck
+- Deliver working system
+
+5.2 SOLUTION DESIGN
+--------------------
+- Strong understanding of core concepts
+- Address scaling and performance
+- Well-structured solution
+
+5.3 TECHNICAL EXCELLENCE
+-------------------------
+- Knowledge of modern technologies
+- Current best practices
+- Appropriate patterns
+
+5.4 COMMUNICATION & COLLABORATION
+-----------------------------------
+- Clear explanation of complex concepts
+- Respond to feedback
+- Work with interviewer
+- No defensiveness
+
+================================================================================
+6. JAPAN-SPECIFIC CONSIDERATIONS
+================================================================================
+
+LANGUAGE & LOCALIZATION:
+- Multi-language support (i18n/l10n for JP/EN)
+- UTF-8 encoding for Japanese characters
+- Date/time formats (Japanese calendar)
+
+COMPLIANCE:
+- APPI (Act on Protection of Personal Information)
+- Data residency requirements
+- GDPR if serving EU users
+
+PAYMENT INTEGRATION:
+- Line Pay
+- PayPay
+- Konbini payments
+- Credit cards (common)
+
+USER EXPECTATIONS:
+- High availability (99.99% uptime expected)
+- Low latency (<100ms)
+- Polite, detail-oriented UI/UX
+- Mobile-first design (smartphone usage is high)
+
+INFRASTRUCTURE:
+- AWS Tokyo Region
+- GCP Tokyo Region
+- Azure Japan East
+
+DISASTER RECOVERY (Earthquake Preparedness):
+- Multi-AZ deployment within region (Tokyo has 3+ AZs per provider)
+- Cross-region replication to Osaka (AWS) or other JP regions
+- Read replicas in secondary region for failover
+- Regular DR drills simulating regional outages
+- Data backups with geo-redundancy
+
+LINE INTEGRATION (Beyond Payments):
+- LINE Login SDK (OAuth 2.0 + OpenID Connect)
+- LINE Messaging API for notifications and customer support (bots)
+- LINE Beacon for proximity-based features
+- Webhook event processing at scale (many concurrent webhooks)
+
+JAPAN-SPECIFIC SCALING CONSIDERATIONS:
+- Rakuten Super Sale / Amazon Prime Day-like traffic spikes (10x+ normal load)
+- New Year's (nenga) traffic patterns
+- Golden Week and Obon holiday surges
+- Anime/game limited-time campaign launch patterns
+  - Pre-warm caches before campaign start
+  - Queue high-value operations (orders) during peak
+  - Sliding window rate limiting at API gateway per-user
+- Mobile-first optimization (Japan has ~70% smartphone penetration)
+
+================================================================================
+7. TRADE-OFFS TO KNOW
+================================================================================
+
+| Concern                          | Trade-off                                      |
+|----------------------------------|------------------------------------------------|
+| Latency vs Freshness            | Cached data is fast but may be outdated        |
+| Consistency vs Availability     | Strong consistency = higher latency, less available |
+| Cost vs Scalability             | More replicas = higher infrastructure cost     |
+| Complexity vs Maintainability   | Microservices harder to debug than monoliths   |
+| REST vs gRPC                    | REST is readable; gRPC is faster but needs schema mgmt |
+| SQL vs NoSQL                    | SQL = ACID, structure; NoSQL = flexibility, scale |
+| Sync vs Async                   | Sync = simple but blocking; Async = complex but scalable |
+
+================================================================================
+RESOURCES
+================================================================================
+
+1. System Design Handbook: https://www.systemdesignhandbook.com/guides/system-design-fundamentals/
+2. Roadmap.sh: https://roadmap.sh/system-design
+3. Hello Interview: https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction
+
+================================================================================
+                              GOOD LUCK WITH YOUR INTERVIEW!
+================================================================================
