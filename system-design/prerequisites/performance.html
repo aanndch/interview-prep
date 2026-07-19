@@ -399,7 +399,20 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 650px) {
+      .client-nodes-wrapper { left: 5px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .queue-bar-wrapper { left: 60px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .pool-node { left: 130px !important; transform: translateY(-50%) scale(0.8) !important; width: 110px !important; }
+      .db-node { right: 5px !important; transform: translateY(-50%) scale(0.8) !important; }
+    }
+    @media (max-width: 480px) {
+      .client-nodes-wrapper { left: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .queue-bar-wrapper { left: 45px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .pool-node { left: 95px !important; transform: translateY(-50%) scale(0.65) !important; width: 90px !important; }
+      .db-node { right: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">

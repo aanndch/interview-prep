@@ -386,7 +386,18 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 650px) {
+      .client-node { left: 10px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .circuit-node { left: 110px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .service-node { right: 10px !important; transform: translateY(-50%) scale(0.8) !important; }
+    }
+    @media (max-width: 480px) {
+      .client-node { left: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .circuit-node { left: 80px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .service-node { right: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">

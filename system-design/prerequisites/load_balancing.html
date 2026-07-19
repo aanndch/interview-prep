@@ -339,7 +339,18 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 650px) {
+      .client-wrapper { left: 10px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .lb-node { left: 110px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .servers-wrapper { right: 10px !important; transform: translateY(-50%) scale(0.8) !important; width: 180px !important; }
+    }
+    @media (max-width: 480px) {
+      .client-wrapper { left: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .lb-node { left: 75px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .servers-wrapper { right: 2px !important; transform: translateY(-50%) scale(0.65) !important; width: 140px !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">

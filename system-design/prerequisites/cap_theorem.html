@@ -344,7 +344,22 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 768px) {
+      #node-a { left: 50px !important; transform: scale(0.85) !important; }
+      #node-b { left: 50px !important; transform: scale(0.85) !important; }
+      #node-c { right: 50px !important; transform: scale(0.85) !important; }
+      .partition-wall { left: 240px !important; }
+      .partition-label { left: 180px !important; transform: scale(0.8) !important; }
+    }
+    @media (max-width: 480px) {
+      #node-a { left: 10px !important; transform: scale(0.7) !important; }
+      #node-b { left: 10px !important; transform: scale(0.7) !important; }
+      #node-c { right: 10px !important; transform: scale(0.7) !important; }
+      .partition-wall { left: 150px !important; }
+      .partition-label { left: 90px !important; transform: scale(0.65) !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">

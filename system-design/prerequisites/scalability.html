@@ -368,7 +368,18 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 650px) {
+      .traffic-source { left: 5px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .load-balancer { left: 95px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .servers-wrapper { right: 5px !important; transform: translateY(-50%) scale(0.8) !important; width: 180px !important; }
+    }
+    @media (max-width: 480px) {
+      .traffic-source { left: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .load-balancer { left: 65px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .servers-wrapper { right: 2px !important; transform: translateY(-50%) scale(0.65) !important; width: 140px !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">

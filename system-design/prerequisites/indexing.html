@@ -284,7 +284,16 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 600px) {
+      .linear-array { transform: scale(0.7) !important; transform-origin: center !important; }
+      .tree-wrapper { transform: scale(0.8) !important; transform-origin: center !important; }
+    }
+    @media (max-width: 450px) {
+      .linear-array { transform: scale(0.55) !important; transform-origin: center !important; }
+      .tree-wrapper { transform: scale(0.65) !important; transform-origin: center !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">

@@ -334,7 +334,18 @@
       font-size: 0.9rem;
       color: #c9d1d9;
     }
-  </style>
+  \n
+    @media (max-width: 650px) {
+      .client-node { left: 10px !important; transform: translateY(-50%) scale(0.8) !important; }
+      .cache-node { left: 140px !important; transform: translateY(-50%) scale(0.8) !important; width: 110px !important; }
+      .db-node { right: 10px !important; transform: translateY(-50%) scale(0.8) !important; }
+    }
+    @media (max-width: 480px) {
+      .client-node { left: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+      .cache-node { left: 100px !important; transform: translateY(-50%) scale(0.65) !important; width: 90px !important; }
+      .db-node { right: 2px !important; transform: translateY(-50%) scale(0.65) !important; }
+    }
+    \n</style>
 </head>
 <body>
 <div class="container">
