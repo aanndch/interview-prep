@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Databases</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #56d364);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #56d364;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #56d364;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Comparison Table */
+    .comp-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #161b22;
+    }
+    .comp-table th, .comp-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    .comp-table th {
+      background: #1f242c;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .pro-tag { color: #56d364; background: rgba(86, 211, 100, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .con-tag { color: #ff7b72; background: rgba(255, 123, 114, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.state-locked { color: #ff7b72; }
+    .metric-value.state-active { color: #56d364; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      justify-content: space-around;
+      align-items: stretch;
+    }
+    .arena-side {
+      flex: 1;
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      overflow: hidden;
+    }
+    .arena-side-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #58a6ff;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 4px;
+      text-align: center;
+    }
+    .write-log-area {
+      flex: 1;
+      background: #0d1117;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-line {
+      animation: fadeIn 0.2s ease-out;
+    }
+    .log-line.error { color: #ff7b72; }
+    .log-line.success { color: #56d364; }
+    .log-line.warning { color: #d29922; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Databases: SQL vs. NoSQL</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>Choosing a database paradigm defines data integrity guarantees and system scalability boundaries. **SQL** relational databases prioritize schemas and transaction accuracy via ACID properties, while **NoSQL** databases prioritize elastic horizontal scaling and write ingestion throughput.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. SQL &amp; ACID Transactions</h3>
+      <p>Guarantees database consistency even under hardware crashes or concurrent conflicts:</p>
+      <ul>
+        <li><strong>Atomicity:</strong> All updates in a transaction commit fully, or rollback entirely.</li>
+        <li><strong>Consistency:</strong> Ensures all writes validate database constraints (foreign keys, check rules).</li>
+        <li><strong>Isolation:</strong> Multi-client writes do not interfere. Realized via **Pessimistic Locking** (blocks rows, causes wait states) or **Optimistic Concurrency Control (OCC)** (versions records, aborts writes on race conflicts).</li>
+        <li><strong>Durability:</strong> Once committed, updates survive system failures (written to Write-Ahead Logs - WAL).</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. NoSQL &amp; BASE Properties</h3>
+      <p>Prioritizes Availability and horizontal scale out over strict transactional isolation:</p>
+      <ul>
+        <li><strong>Basically Available:</strong> The database prioritizes accepting writes even during network partitions.</li>
+        <li><strong>Soft State:</strong> Replicas can drift in data state without coordinator locks.</li>
+        <li><strong>Eventual Consistency:</strong> Replicas catch up asynchronously. Readers may temporarily see stale data, but nodes eventually converge on the same state.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. B-Trees vs. LSM-Trees</h3>
+      <p>Low-level storage engines shape read and write performance trade-offs:</p>
+      <ul>
+        <li><strong>B-Tree (InnoDB, MySQL/Postgres):</strong> Keeps index nodes sorted on disk. Excellent for reads and range queries ($O(\log N)$ search steps). Writes require random page I/O, which is slow.</li>
+        <li><strong>LSM-Tree (Cassandra, RocksDB):</strong> Appends writes to an in-memory buffer (MemTable) then flushes sequentially to disk files (SSTables) in background compaction cycles. Extremely fast write speeds; reads require checking multiple SSTables (optimized via Bloom Filters).</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Connection Pooling Pitfalls</h3>
+      <p>Database resources are limited. A thread connection pool (like HikariCP or PgBouncer proxy) is required to shield relational databases:</p>
+      <ul>
+        <li><strong>PgBouncer Session Mode:</strong> Keeps connection mapped to client socket for session lifetime. High overhead.</li>
+        <li><strong>PgBouncer Transaction Mode:</strong> Recycles connections back to pool as soon as individual transactions commit. Drastically decreases connection counts. (Cannot support features like prepared statements or temporary tables).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">SQL vs. NoSQL Comparison</div>
+
+  <!-- Comparison Table -->
+  <div class="comp-table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Relational (SQL)</th>
+          <th>Non-Relational (NoSQL)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Transaction Guarantees</strong></td>
+          <td>Strict ACID guarantees. Strong Consistency.</td>
+          <td>BASE guarantees. Eventual Consistency default.</td>
+        </tr>
+        <tr>
+          <td><strong>Schema Structure</strong></td>
+          <td>Strict schema. Enforces foreign key relationships.</td>
+          <td>Flexible. JSON document model, key-value, or wide-column.</td>
+        </tr>
+        <tr>
+          <td><strong>Horizontal Scaling</strong></td>
+          <td><span class="con-tag">Con</span> Difficult. Requires manual partitioning or sharding.</td>
+          <td><span class="pro-tag">Pro</span> Built-in. Scale out dynamically across rings.</td>
+          
+        </tr>
+        <tr>
+          <td><strong>Read / Write Profile</strong></td>
+          <td>Excellent for complex joins and relational indexing.</td>
+          <td>Optimized for high-throughput single-key lookups.</td>
+        </tr>
+        <tr>
+          <td><strong>Representative Tech</strong></td>
+          <td>PostgreSQL, MySQL, CockroachDB.</td>
+          <td>DynamoDB, Cassandra, MongoDB.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Database Simulator -->
+  <div class="section-title">Interactive Database Concurrency Simulator</div>
+  <p>Trigger concurrent transactions on the **SQL Relational Engine** to watch locks block writes, then contrast it with async bulk ingestion in **NoSQL Document Engine**.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Database Engine Simulator</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-sql-write" onclick="runSqlTx()">Trigger SQL Concurrent Transactions</button>
+        <button class="sim-btn active" id="btn-nosql-write" onclick="runNoSqlIngest()">Ingest 5 Async Docs to NoSQL</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">SQL Lock Status</div>
+        <div class="metric-value state-active" id="val-sql-lock">UNLOCKED</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">SQL Lock Waits</div>
+        <div class="metric-value" id="val-sql-waits">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">NoSQL Buffer Load</div>
+        <div class="metric-value" id="val-nosql-load">0 QPS</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">NoSQL Consistency</div>
+        <div class="metric-value" id="val-nosql-status" style="color:#56d364;">Consistent</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <div class="arena-side">
+        <div class="arena-side-title">PostgreSQL Engine</div>
+        <div class="write-log-area" id="sql-log">
+          <div class="log-line">> Engine started. Listening for connections...</div>
+        </div>
+      </div>
+      
+      <div class="arena-side">
+        <div class="arena-side-title">Cassandra wide-column ring</div>
+        <div class="write-log-area" id="nosql-log">
+          <div class="log-line">> Node ring joined. Status: Active.</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> The SQL engine enforces isolation. If a second query attempts to edit the same row during a transaction, it is blocked (Lock Wait) to prevent race conditions. The NoSQL engine accepts writes instantly, but replicas drift briefly before converging (Eventual Consistency).
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      When selecting a database structure, frame it around transaction isolation requirements and write scaling patterns:
+      <br><br>
+      <em>"For financial books, order ledgers, and core user records, I will choose a relational SQL database like PostgreSQL. Relational engines support strict schemas, complex JOIN operations, and strong ACID guarantees using row-level locking. For analytics logs, IoT event streams, or highly scaling user feeds, I will choose NoSQL wide-column systems like Cassandra or managed document systems like DynamoDB, which use LSM-Tree engines to support massive asynchronous write ingestion."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let sqlState = {
+    isLocked: false,
+    lockWaits: 0,
+    txId: 101
+  };
+
+  let nosqlState = {
+    docId: 501,
+    writesInProgress: 0
+  };
+
+  const sqlLog = document.getElementById('sql-log');
+  const nosqlLog = document.getElementById('nosql-log');
+  const valSqlLock = document.getElementById('val-sql-lock');
+  const valSqlWaits = document.getElementById('val-sql-waits');
+  const valNoSqlLoad = document.getElementById('val-nosql-load');
+  const valNoSqlStatus = document.getElementById('val-nosql-status');
+
+  function addSqlLog(text, type='normal') {
+    let cssClass = type === 'error' ? 'error' : (type === 'success' ? 'success' : (type === 'warning' ? 'warning' : ''));
+    sqlLog.innerHTML += `<div class="log-line ${cssClass}">> ${text}</div>`;
+    sqlLog.scrollTop = sqlLog.scrollHeight;
+  }
+
+  function addNoSqlLog(text, type='normal') {
+    let cssClass = type === 'error' ? 'error' : (type === 'success' ? 'success' : (type === 'warning' ? 'warning' : ''));
+    nosqlLog.innerHTML += `<div class="log-line ${cssClass}">> ${text}</div>`;
+    nosqlLog.scrollTop = nosqlLog.scrollHeight;
+  }
+
+  function runSqlTx() {
+    let currentTx = sqlState.txId++;
+    addSqlLog(`TX ${currentTx} START: Initiating write request on user_balance...`);
+    
+    if (sqlState.isLocked) {
+      sqlState.lockWaits++;
+      valSqlWaits.innerText = sqlState.lockWaits;
+      addSqlLog(`TX ${currentTx} BLOCKED: Exclusive row lock held on user_balance. Waiting...`, 'error');
+      
+      // Retry in 2.2 seconds
+      setTimeout(() => {
+        sqlState.lockWaits = Math.max(0, sqlState.lockWaits - 1);
+        valSqlWaits.innerText = sqlState.lockWaits;
+        addSqlLog(`TX ${currentTx} RESUMING: Row lock acquired.`, 'warning');
+        executeSqlWrite(currentTx);
+      }, 2200);
+    } else {
+      executeSqlWrite(currentTx);
+    }
+  }
+
+  function executeSqlWrite(txId) {
+    sqlState.isLocked = true;
+    valSqlLock.innerText = 'LOCKED';
+    valSqlLock.className = 'metric-value state-locked';
+    addSqlLog(`TX ${txId} ACQUIRED LOCK: Modifying rows (Pessimistic Lock active)...`, 'warning');
+
+    setTimeout(() => {
+      addSqlLog(`TX ${txId} COMMIT: Row updates written to WAL disk file. Lock released.`, 'success');
+      sqlState.isLocked = false;
+      valSqlLock.innerText = 'UNLOCKED';
+      valSqlLock.className = 'metric-value state-active';
+    }, 1800);
+  }
+
+  function runNoSqlIngest() {
+    addSqlLog = addSqlLog; // keep references scope
+    let baseDoc = nosqlState.docId;
+    nosqlState.docId += 5;
+    nosqlState.writesInProgress += 5;
+    
+    valNoSqlLoad.innerText = '50 QPS';
+    valNoSqlLoad.className = 'metric-value warning';
+    valNoSqlStatus.innerText = 'Eventual Syncing';
+    valNoSqlStatus.style.color = '#f0883e';
+
+    addNoSqlLog(`INGEST: Bulk-writing 5 documents directly to MemTable...`, 'warning');
+
+    for (let i = 0; i < 5; i++) {
+      let doc = baseDoc + i;
+      addNoSqlLog(`Doc { _id: ${doc} } appended to LSM-Tree (Fast Write ACK)`, 'normal');
+      
+      // Simulate asynchronous replication drift delay
+      setTimeout(() => {
+        addNoSqlLog(`Replica Node ${Math.floor(Math.random() * 3) + 1} synced doc ${doc}.`, 'success');
+        nosqlState.writesInProgress--;
+        if (nosqlState.writesInProgress === 0) {
+          valNoSqlLoad.innerText = '0 QPS';
+          valNoSqlLoad.className = 'metric-value';
+          valNoSqlStatus.innerText = 'Consistent';
+          valNoSqlStatus.style.color = '#56d364';
+          addNoSqlLog(`Cluster converged. Replication successful across all ring partitions.`, 'success');
+        }
+      }, 1500 + Math.random() * 1000);
+    }
+  }
+
+</script>
+</body>
+</html>

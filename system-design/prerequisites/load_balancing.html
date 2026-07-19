@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Load Balancing</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #d2a8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #58a6ff;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #58a6ff;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    .sim-btn.danger {
+      border-color: #ff7b72;
+      color: #ff7b72;
+    }
+    .sim-btn.danger:hover {
+      background: rgba(255, 123, 114, 0.1);
+    }
+    .sim-btn.danger.active {
+      background: #da3633;
+      border-color: #f85149;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .client-wrapper {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 10;
+    }
+    .client-node {
+      width: 40px;
+      height: 40px;
+      background: #238636;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.75rem;
+      box-shadow: 0 0 10px rgba(35, 134, 54, 0.4);
+    }
+    .lb-node {
+      position: absolute;
+      left: 190px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1f6feb;
+      border: 2px dashed #58a6ff;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(31, 111, 235, 0.3);
+      text-align: center;
+    }
+    .servers-wrapper {
+      position: absolute;
+      right: 40px;
+      height: 100%;
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 15px;
+      z-index: 10;
+    }
+    .sim-server {
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .sim-server.active {
+      border-color: #58a6ff;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.2);
+    }
+    .sim-server.slow {
+      border-color: #d29922;
+      background: #2b221a;
+      box-shadow: 0 0 12px rgba(210, 153, 34, 0.3);
+    }
+    .server-name {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .server-spec {
+      font-size: 0.65rem;
+      color: #8b949e;
+    }
+    .server-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: #0d1117;
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .server-bar {
+      height: 100%;
+      background: #56d364;
+      width: 0%;
+      transition: width 0.3s, background-color 0.3s;
+    }
+
+    /* Particle Animation */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #f0883e;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Load Balancing</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>A **Load Balancer** acts as a reverse proxy, distributing incoming network traffic and user requests across a pool of backend servers to prevent resource saturation, guarantee service availability, and maximize system throughput.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. L4 vs. L7 Load Balancing</h3>
+      <p>Decides the routing layers and intelligence of the proxies:</p>
+      <ul>
+        <li><strong>L4 (Transport Layer):</strong> Routes based on TCP/UDP ports and IP addresses. Bypasses package content inspection. Extremely fast, minimal CPU overhead, but cannot route based on HTTP headers, cookies, or path strings.</li>
+        <li><strong>L7 (Application Layer):</strong> Inspects HTTP request details, URLs, headers, cookies, or payloads. Can terminate SSL handshakes. Enables path-based routing (e.g. <code>/api/users</code> to User-Service) and cookie sticky sessions, but incurs higher CPU overhead.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Session Persistence (Sticky Sessions)</h3>
+      <p>Ensures subsequent requests from a client are routed to the same backend server:</p>
+      <ul>
+        <li><strong>IP Hashing:</strong> Hashes client IP to map to a specific server. Fast, but causes uneven load if a corporate proxy routes thousands of users under a single NAT IP.</li>
+        <li><strong>Cookie-based Stickiness (L7):</strong> The LB injects a cookie identifying the target backend. Highly accurate, but binds client routing state.</li>
+        <li><strong>Best Practice:</strong> Build stateless application servers and externalize sessions to a shared Redis store, rendering session stickiness unnecessary.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Passive vs. Active Health Checks</h3>
+      <p>Ensures traffic is directed only to healthy nodes:</p>
+      <ul>
+        <li><strong>Active Checks:</strong> The LB proactively pings a designated endpoint (e.g. <code>/healthz</code>) at regular intervals (e.g. every 5s). Unhealthy endpoints are immediately taken out of rotation.</li>
+        <li><strong>Passive Checks:</strong> The LB monitors inline connection responses. If a backend drops TCP connections or throws repeated 502/503 errors, it is dynamically flagged.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. GSLB (Global Server Load Balancing)</h3>
+      <p>Routes traffic across multiple geographic data centers or cloud regions:</p>
+      <ul>
+        <li><strong>Mechanism:</strong> Uses DNS queries to return IP addresses based on client location, network latency, or server capacity.</li>
+        <li><strong>Issues:</strong> DNS caching at client browsers or ISPs (TTL delays) slows down failover response times when an entire region goes down.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Load Balancing Simulator -->
+  <div class="section-title">Interactive Load Balancing Simulator</div>
+  <p>Toggle between algorithms: <strong>Round Robin</strong>, <strong>Least Connections</strong>, and <strong>IP Hashing</strong>. Inject a slow server to see how Least Connections routes traffic away from it.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Proxy Routing Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-rr" onclick="setAlgorithm('rr')">Round Robin</button>
+        <button class="sim-btn" id="btn-lc" onclick="setAlgorithm('lc')">Least Connections</button>
+        <button class="sim-btn" id="btn-ip" onclick="setAlgorithm('ip')">IP Hashing</button>
+        <button class="sim-btn danger" id="btn-slow" onclick="toggleSlowServer()">Simulate Slow Server 3: OFF</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Algorithm</div>
+        <div class="metric-value" id="val-alg">Round Robin</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Server 1 Conns</div>
+        <div class="metric-value" id="val-s1">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Server 2 Conns</div>
+        <div class="metric-value" id="val-s2">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Server 3 Conns</div>
+        <div class="metric-value" id="val-s3">0</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Clients -->
+      <div class="client-wrapper">
+        <div class="client-node" id="client-1">C1</div>
+        <div class="client-node" id="client-2">C2</div>
+        <div class="client-node" id="client-3">C3</div>
+      </div>
+
+      <!-- Load Balancer -->
+      <div class="lb-node" id="lb">Load<br>Balancer</div>
+
+      <!-- Servers -->
+      <div class="servers-wrapper" id="servers-container">
+        <!-- Servers will be updated by JS -->
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Round Robin:</strong> Distributes requests sequentially. If Server 3 is slow, Round Robin still routes traffic to it, slowing down a third of all requests. Toggle "Least Connections" to dynamically route requests to faster nodes.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design a load balancing tier for a highly scaling app?"</em>
+      <br><br>
+      Say: 
+      <em>"I will deploy a multi-tiered load balancing architecture. At the DNS level, I will use GSLB (geographic routing) to map users to their closest region. At the edge, I'll deploy L7 load balancers (like Nginx or AWS ALB) to terminate SSL, inspect HTTP headers, and route path-specific resources to target microservice groups. For internal backend communication, I will use L4 balancers or a Service Mesh (like Envoy/Istio) for high-performance TCP routing based on Least Connections, backed by active health checks on <code>/readyz</code> endpoints."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let config = {
+    alg: 'rr', // rr, lc, ip
+    s3Slow: false,
+    connections: [0, 0, 0],
+    rrIndex: 0
+  };
+
+  const valAlg = document.getElementById('val-alg');
+  const valS1 = document.getElementById('val-s1');
+  const valS2 = document.getElementById('val-s2');
+  const valS3 = document.getElementById('val-s3');
+  const serversContainer = document.getElementById('servers-container');
+  const simTip = document.getElementById('sim-tip');
+  const arena = document.getElementById('arena');
+
+  function setAlgorithm(alg) {
+    config.alg = alg;
+    document.getElementById('btn-rr').className = 'sim-btn' + (alg === 'rr' ? ' active' : '');
+    document.getElementById('btn-lc').className = 'sim-btn' + (alg === 'lc' ? ' active' : '');
+    document.getElementById('btn-ip').className = 'sim-btn' + (alg === 'ip' ? ' active' : '');
+
+    valAlg.innerText = alg === 'rr' ? 'Round Robin' : (alg === 'lc' ? 'Least Connections' : 'IP Hashing');
+    
+    if (alg === 'rr') {
+      simTip.innerHTML = `<strong>Round Robin:</strong> Distributes requests sequentially. If Server 3 is slow, Round Robin still routes traffic to it, slowing down a third of all requests.`;
+    } else if (alg === 'lc') {
+      simTip.innerHTML = `<strong>Least Connections:</strong> Evaluates current load. When Server 3 is slow (holds connections longer), the LB detects this and routes incoming packets to Server 1 & 2 instead.`;
+    } else if (alg === 'ip') {
+      simTip.innerHTML = `<strong>IP Hashing:</strong> Hashes client identifiers (C1, C2, C3) to map them to sticky nodes. Requests from C1 will consistently route to Server 1, and C3 to Server 3, regardless of slow states.`;
+    }
+    updateSimulation();
+  }
+
+  function toggleSlowServer() {
+    config.s3Slow = !config.s3Slow;
+    const btn = document.getElementById('btn-slow');
+    if (config.s3Slow) {
+      btn.innerText = "Simulate Slow Server 3: ON";
+      btn.classList.add('active');
+    } else {
+      btn.innerText = "Simulate Slow Server 3: OFF";
+      btn.classList.remove('active');
+    }
+    updateSimulation();
+  }
+
+  function updateSimulation() {
+    let serversHtml = '';
+    for (let i = 0; i < 3; i++) {
+      let conns = config.connections[i];
+      let percent = Math.min((conns / 8) * 100, 100);
+      let isSlowClass = (i === 2 && config.s3Slow) ? 'slow' : '';
+      let activeClass = conns > 0 ? 'active' : '';
+
+      serversHtml += `
+        <div class="sim-server ${activeClass} ${isSlowClass}" id="server-${i}">
+          <div class="server-name">Server Node ${i + 1}</div>
+          <div class="server-spec">${(i === 2 && config.s3Slow) ? 'Latency: 1500ms' : 'Latency: 100ms'} &middot; Active: ${conns}</div>
+          <div class="server-bar-bg">
+            <div class="server-bar" style="width: ${percent}%; background-color: ${conns > 5 ? '#ff7b72' : '#56d364'};"></div>
+          </div>
+        </div>
+      `;
+    }
+    serversContainer.innerHTML = serversHtml;
+
+    valS1.innerText = config.connections[0];
+    valS2.innerText = config.connections[1];
+    valS3.innerText = config.connections[2];
+  }
+
+  // Periodic traffic generation
+  setInterval(() => {
+    triggerTraffic();
+  }, 1200);
+
+  function triggerTraffic() {
+    let clientIndex = Math.floor(Math.random() * 3);
+    
+    // Choose destination server based on algorithm
+    let serverIndex = 0;
+    if (config.alg === 'rr') {
+      serverIndex = config.rrIndex;
+      config.rrIndex = (config.rrIndex + 1) % 3;
+    } else if (config.alg === 'lc') {
+      // Find server with least active connections
+      let minConns = Math.min(...config.connections);
+      serverIndex = config.connections.indexOf(minConns);
+    } else if (config.alg === 'ip') {
+      // Sticky mapping: client 1 -> server 1, client 2 -> server 2, client 3 -> server 3
+      serverIndex = clientIndex;
+    }
+
+    animateRequest(clientIndex + 1, serverIndex);
+  }
+
+  function animateRequest(clientId, serverId) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    arena.appendChild(particle);
+
+    const clientEl = document.getElementById(`client-${clientId}`);
+    const serverEl = document.getElementById(`server-${serverId}`);
+    const lbEl = document.getElementById('lb');
+    const arenaRect = arena.getBoundingClientRect();
+
+    const clientRect = clientEl.getBoundingClientRect();
+    const serverRect = serverEl.getBoundingClientRect();
+    const lbRect = lbEl.getBoundingClientRect();
+
+    let startX = clientRect.left - arenaRect.left + 20;
+    let startY = clientRect.top - arenaRect.top + 20;
+    let lbX = lbRect.left - arenaRect.left + 50;
+    let lbY = lbRect.top - arenaRect.top + 60;
+    let targetX = serverRect.left - arenaRect.left + 10;
+    let targetY = serverRect.top - arenaRect.top + 25;
+
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 1000;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        
+        // Add connection
+        config.connections[serverId]++;
+        updateSimulation();
+
+        // Hold connection based on server speed
+        let holdTime = (serverId === 2 && config.s3Slow) ? 2500 : 500;
+        setTimeout(() => {
+          config.connections[serverId] = Math.max(0, config.connections[serverId] - 1);
+          updateSimulation();
+        }, holdTime);
+
+      } else {
+        let curX, curY;
+        if (progress < 0.4) {
+          // Client -> LB
+          let p1 = progress / 0.4;
+          curX = startX + (lbX - startX) * p1;
+          curY = startY + (lbY - startY) * p1;
+        } else {
+          // LB -> Server
+          let p2 = (progress - 0.4) / 0.6;
+          curX = lbX + (targetX - lbX) * p2;
+          curY = lbY + (targetY - lbY) * p2;
+        }
+
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // Initialize
+  updateSimulation();
+</script>
+</body>
+</html>

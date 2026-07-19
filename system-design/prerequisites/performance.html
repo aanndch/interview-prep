@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Performance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #56d364, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #56d364;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #56d364;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #238636;
+      border-color: #2ea043;
+      color: #ffffff;
+    }
+
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.warning { color: #f0883e; }
+    .metric-value.danger { color: #ff7b72; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .client-nodes-wrapper {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 10;
+    }
+    .client-circle {
+      width: 40px;
+      height: 40px;
+      background: #1f6feb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.75rem;
+      box-shadow: 0 0 8px rgba(31, 111, 235, 0.3);
+    }
+    .pool-node {
+      position: absolute;
+      left: 210px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      text-align: center;
+      width: 140px;
+    }
+    .pool-box {
+      background: #161b22;
+      border: 2px solid #58a6ff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+    }
+    .pool-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .pool-slots {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .slot {
+      width: 12px;
+      height: 12px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 2px;
+      transition: background-color 0.2s;
+    }
+    .slot.active {
+      background: #56d364;
+      border-color: #3fb950;
+      box-shadow: 0 0 4px rgba(86, 211, 100, 0.4);
+    }
+    .db-node {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      text-align: center;
+    }
+    .db-box {
+      width: 90px;
+      height: 100px;
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    /* Cylinder effect for Database */
+    .db-box::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -2px;
+      width: 90px;
+      height: 12px;
+      background: #161b22;
+      border: 2px solid #30363d;
+      border-radius: 50%;
+    }
+    .db-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    /* Queue display */
+    .queue-bar-wrapper {
+      position: absolute;
+      left: 100px;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+    }
+    .queue-label {
+      font-size: 0.6rem;
+      color: #8b949e;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .queue-count {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #f0883e;
+    }
+
+    /* Particle Animation */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #58a6ff;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .particle.returning {
+      background: #56d364;
+    }
+    .particle.timeout {
+      background: #ff7b72;
+    }
+
+    /* Controls Styling */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .slider-group {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider-group label {
+      font-size: 0.8rem;
+      color: #8b949e;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .slider-group input {
+      flex: 1;
+      cursor: pointer;
+    }
+    .slider-val {
+      font-size: 0.85rem;
+      font-weight: bold;
+      width: 50px;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Performance</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p><strong>Performance</strong> in distributed systems is defined by two primary metrics: **Latency** (the time taken to process a single request, e.g., in milliseconds) and **Throughput** (the volume of requests the system handles in a given timeframe, e.g., QPS).</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Tail Latency &amp; Percentiles</h3>
+      <p>Average latency masks issues. We measure performance using percentiles (p50, p95, p99, p99.9):</p>
+      <ul>
+        <li><strong>p50 (Median):</strong> 50% of requests are faster than this. Outlines the "typical" user experience.</li>
+        <li><strong>p99:</strong> 99% of requests are faster. Critical for catching slow edge-case queries, garbage collection pauses, or database lock contentions.</li>
+        <li><strong>Tail at Scale:</strong> In a microservice mesh, a parent request fanned out to 100 parallel services (each with 1% tail delay at p99) has a <code>1 - 0.99<sup>100</sup> ≈ 63%</code> chance of experiencing a slow response.</li>
+        <li><strong>Hedged Requests:</strong> Fire a duplicate request to a replica if the initial request hasn't returned within the 95th percentile window, canceling the slower one once one returns. This limits tail latency with tiny (~5%) traffic overhead.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Little's Law &amp; Queue Sizing</h3>
+      <p>A mathematical law defining concurrency boundaries: <code>L = λ × W</code></p>
+      <ul>
+        <li><strong>L:</strong> Average number of active requests in flight (concurrency).</li>
+        <li><strong>λ (lambda):</strong> Arrival rate of requests (throughput/QPS).</li>
+        <li><strong>W:</strong> Average time a request spends in the system (latency).</li>
+        <li><strong>Database connection pool insight:</strong> If your database pool size is 20 connections ($L = 20$), and each query takes 50ms ($W = 0.05$s), your max throughput is $\lambda = L/W = 20 / 0.05 = 400$ QPS. Any higher rate will cause queueing!</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Amdahl's Law (Parallelism Limits)</h3>
+      <p>Adding more processors or servers does not scale performance linearly. It is limited by the sequential (non-parallelizable) portion of the code: <code>Speedup = 1 / ((1 - P) + P/N)</code>.</p>
+      <ul>
+        <li><strong>P:</strong> Parallelizable proportion.</li>
+        <li><strong>N:</strong> Number of processing units.</li>
+        <li>If 10% of a task is strictly sequential (e.g. database writing, locks), the maximum speedup is <strong>10x</strong>, even with infinite nodes.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Optimization Strategies</h3>
+      <p>Standard architectural patterns to enhance throughput and minimize latency:</p>
+      <ul>
+        <li><strong>Connection Pooling:</strong> Reusing database connections to save TCP handshakes.</li>
+        <li><strong>Database Indexing:</strong> Speeding up searches from $O(N)$ sequential scans to $O(\log N)$ B-tree lookups.</li>
+        <li><strong>Serialization:</strong> Using binary protocols like gRPC (protobuf) over plain REST JSON. JSON has high CPU parsing overhead (converting strings to floats, matching keys), whereas Protobuf uses directly byte-shifted field offsets for extremely fast serialization.</li>
+        <li><strong>Caching:</strong> Offloading database read hits to local/distributed RAM.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Connection Pool Simulator -->
+  <div class="section-title">Interactive Connection Pool Simulator</div>
+  <p>Visualize how <strong>Little's Law</strong> dictates queueing and latency when request rates exceed connection pool capacities.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Database Connection Pool Simulator</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-pool-on" onclick="togglePool(true)">Use Connection Pool</button>
+        <button class="sim-btn" id="btn-pool-off" onclick="togglePool(false)">Direct Connections (No Pool)</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Incoming QPS</div>
+        <div class="metric-value" id="val-qps">20 QPS</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Queue Length</div>
+        <div class="metric-value" id="val-queue">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Average Latency</div>
+        <div class="metric-value" id="val-latency">50 ms</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Failed Requests</div>
+        <div class="metric-value" id="val-failed">0%</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Clients -->
+      <div class="client-nodes-wrapper">
+        <div class="client-circle">App 1</div>
+        <div class="client-circle">App 2</div>
+        <div class="client-circle">App 3</div>
+      </div>
+
+      <!-- Queue Display -->
+      <div class="queue-bar-wrapper">
+        <div class="queue-label">Wait Queue</div>
+        <div class="queue-count" id="arena-queue-count">0</div>
+      </div>
+
+      <!-- Connection Pool -->
+      <div class="pool-node" id="pool-wrapper">
+        <div class="pool-box">
+          <div class="pool-title">Connection Pool</div>
+          <div class="pool-slots" id="slots-container">
+            <!-- Slots will be rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Database -->
+      <div class="db-node">
+        <div class="db-box">
+          <div class="db-title">Database</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive sliders -->
+    <div class="slider-row">
+      <div class="slider-group">
+        <label for="slider-qps">Traffic Load (QPS):</label>
+        <input type="range" id="slider-qps" min="5" max="80" value="20" oninput="updateQps(this.value)">
+        <span class="slider-val" id="val-slider-qps">20</span>
+      </div>
+      
+      <div class="slider-group" id="group-pool-size">
+        <label for="slider-pool">Pool Size:</label>
+        <input type="range" id="slider-pool" min="1" max="12" value="5" oninput="updatePoolSize(this.value)">
+        <span class="slider-val" id="val-slider-pool">5</span>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> With "Use Connection Pool" active, the app limits concurrent database requests to the pool size. If traffic goes above the pool's maximum processing speed, requests queue up safely. Turn "Connection Pool" OFF to watch unlimited concurrent requests overload the database directly, causing connection timeouts (HTTP 500 error drops)!
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      When optimizing a slow page/endpoint, use a structured checklist:
+      <br><br>
+      <em>"First, I would use <code>EXPLAIN ANALYZE</code> to check if the database queries utilize selective indexes or trigger full table scans. Second, I would inspect the application's connection pool limits to ensure we aren't experiencing queue blockages (applying Little's Law). Third, I'd cache read-heavy entities in Redis. Finally, I would minimize network payload sizes by moving from verbose JSON serialization to binary gRPC schemas for internal service communication."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let config = {
+    usePool: true,
+    qps: 20,
+    poolSize: 5,
+    queryDuration: 300, // ms
+    handshakeDuration: 150, // ms overhead for non-pool connections
+    maxDbLoad: 30, // maximum requests the DB can process concurrently without degrading
+    activeConnections: 0,
+    queue: [],
+    totalRequests: 0,
+    failedRequests: 0,
+    latencies: [],
+    slots: []
+  };
+
+  const arena = document.getElementById('arena');
+  const slotsContainer = document.getElementById('slots-container');
+  const valQps = document.getElementById('val-qps');
+  const valQueue = document.getElementById('val-queue');
+  const valLatency = document.getElementById('val-latency');
+  const valFailed = document.getElementById('val-failed');
+  const arenaQueueCount = document.getElementById('arena-queue-count');
+  const groupPoolSize = document.getElementById('group-pool-size');
+  const simTip = document.getElementById('sim-tip');
+
+  function togglePool(on) {
+    config.usePool = on;
+    document.getElementById('btn-pool-on').className = 'sim-btn' + (on ? ' active' : '');
+    document.getElementById('btn-pool-off').className = 'sim-btn' + (!on ? ' active' : '');
+    
+    document.getElementById('pool-wrapper').style.opacity = on ? '1' : '0.15';
+    groupPoolSize.style.opacity = on ? '1' : '0.15';
+    document.getElementById('slider-pool').disabled = !on;
+
+    if (on) {
+      simTip.innerHTML = `<strong>Observation:</strong> With "Use Connection Pool" active, the app limits concurrent database requests to the pool size. If traffic goes above the pool's maximum processing speed, requests queue up safely. Turn "Connection Pool" OFF to watch unlimited concurrent requests overload the database directly, causing connection timeouts (HTTP 500 error drops)!`;
+    } else {
+      simTip.innerHTML = `<strong>Observation:</strong> Direct connection mode creates a new TCP handshake for every request. Without a pool limit, concurrent queries overwhelm the database threads, causing database latency to balloon and queries to time out (red dropouts)!`;
+    }
+
+    // Flush state
+    config.queue = [];
+    config.activeConnections = 0;
+    config.totalRequests = 0;
+    config.failedRequests = 0;
+    config.latencies = [];
+    renderSlots();
+    updateSimulation();
+  }
+
+  function updateQps(val) {
+    config.qps = parseInt(val);
+    document.getElementById('val-slider-qps').innerText = val;
+    valQps.innerText = val + ' QPS';
+  }
+
+  function updatePoolSize(val) {
+    config.poolSize = parseInt(val);
+    document.getElementById('val-slider-pool').innerText = val;
+    renderSlots();
+  }
+
+  function renderSlots() {
+    let html = '';
+    for (let i = 0; i < config.poolSize; i++) {
+      html += `<div class="slot" id="slot-${i}"></div>`;
+    }
+    slotsContainer.innerHTML = html;
+    
+    config.slots = [];
+    for (let i = 0; i < config.poolSize; i++) {
+      config.slots.push({ active: false });
+    }
+  }
+
+  function updateSimulation() {
+    valQueue.innerText = config.queue.length;
+    arenaQueueCount.innerText = config.queue.length;
+
+    // Calculate latency metrics
+    let avgLat = 50;
+    if (config.latencies.length > 0) {
+      let sum = config.latencies.reduce((a, b) => a + b, 0);
+      avgLat = Math.round(sum / config.latencies.length);
+    }
+    valLatency.innerText = avgLat + ' ms';
+    valLatency.className = 'metric-value' + (avgLat > 400 ? ' danger' : (avgLat > 150 ? ' warning' : ''));
+
+    let failRate = 0;
+    if (config.totalRequests > 0) {
+      failRate = Math.round((config.failedRequests / config.totalRequests) * 100);
+    }
+    valFailed.innerText = failRate + '%';
+    valFailed.className = 'metric-value' + (failRate > 0 ? ' danger' : '');
+  }
+
+  // Generate traffic pulses based on QPS
+  setInterval(() => {
+    let pulses = Math.max(1, Math.round(config.qps / 10));
+    for (let i = 0; i < pulses; i++) {
+      triggerRequest();
+    }
+  }, 1000);
+
+  function triggerRequest() {
+    config.totalRequests++;
+    
+    let req = {
+      id: Math.random().toString(36).substring(2, 9),
+      startTime: Date.now(),
+      status: 'queued'
+    };
+
+    if (config.usePool) {
+      if (config.activeConnections < config.poolSize) {
+        // Run immediately
+        executeRequest(req);
+      } else {
+        // Enqueue
+        if (config.queue.length < 15) {
+          config.queue.push(req);
+          updateSimulation();
+        } else {
+          // Queue full -> Drop immediately
+          config.failedRequests++;
+          createParticle(req, 'timeout');
+          updateSimulation();
+        }
+      }
+    } else {
+      // Non-pooled: run immediately, but add overhead and potential database crash
+      executeDirectRequest(req);
+    }
+  }
+
+  function executeRequest(req) {
+    config.activeConnections++;
+    req.status = 'active';
+
+    // Find available slot index
+    let slotIdx = config.slots.findIndex(s => !s.active);
+    if (slotIdx !== -1) {
+      config.slots[slotIdx].active = true;
+      const slotEl = document.getElementById(`slot-${slotIdx}`);
+      if (slotEl) slotEl.classList.add('active');
+    }
+
+    createParticle(req, 'go', slotIdx);
+
+    // Calculate dynamic latency based on DB contention load
+    let baseLatency = config.queryDuration;
+    
+    setTimeout(() => {
+      // Finished
+      config.activeConnections = Math.max(0, config.activeConnections - 1);
+      if (slotIdx !== -1) {
+        config.slots[slotIdx].active = false;
+        const slotEl = document.getElementById(`slot-${slotIdx}`);
+        if (slotEl) slotEl.classList.remove('active');
+      }
+
+      // Record latency
+      let totalTime = Date.now() - req.startTime;
+      config.latencies.push(totalTime);
+      if (config.latencies.length > 50) config.latencies.shift();
+
+      createParticle(req, 'return', slotIdx);
+      updateSimulation();
+
+      // Process next in queue
+      if (config.queue.length > 0) {
+        let nextReq = config.queue.shift();
+        executeRequest(nextReq);
+      }
+    }, baseLatency);
+  }
+
+  function executeDirectRequest(req) {
+    config.activeConnections++;
+    req.status = 'active';
+
+    createParticle(req, 'go-direct');
+
+    // Calculate exponentially increasing database latency when load > maxDbLoad
+    let dbOverloadFactor = 1;
+    if (config.activeConnections > config.maxDbLoad) {
+      dbOverloadFactor = Math.pow(1.3, config.activeConnections - config.maxDbLoad);
+    }
+
+    let handshakeTime = config.handshakeDuration;
+    let baseQueryTime = config.queryDuration * dbOverloadFactor;
+    let totalExpectedTime = handshakeTime + baseQueryTime;
+
+    setTimeout(() => {
+      config.activeConnections = Math.max(0, config.activeConnections - 1);
+      
+      let totalTime = Date.now() - req.startTime;
+      let failed = false;
+      
+      // If DB latency is too high (> 800ms), mark as timed out
+      if (totalTime > 800) {
+        config.failedRequests++;
+        failed = true;
+        createParticle(req, 'timeout');
+      } else {
+        config.latencies.push(totalTime);
+        if (config.latencies.length > 50) config.latencies.shift();
+        createParticle(req, 'return-direct');
+      }
+
+      updateSimulation();
+    }, totalExpectedTime);
+  }
+
+  function createParticle(req, type, slotIdx = 0) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    arena.appendChild(particle);
+
+    let startX, startY, targetX, targetY;
+    
+    // Choose client row randomly
+    let clientY = [60, 125, 190][Math.floor(Math.random() * 3)];
+
+    const arenaRect = arena.getBoundingClientRect();
+
+    if (type === 'go') {
+      startX = 70;
+      startY = clientY;
+      
+      // Target is specific slot in pool
+      const slotEl = document.getElementById(`slot-${slotIdx}`);
+      if (slotEl) {
+        const slotRect = slotEl.getBoundingClientRect();
+        targetX = slotRect.left - arenaRect.left + 6;
+        targetY = slotRect.top - arenaRect.top + 6;
+      } else {
+        targetX = 220;
+        targetY = 125;
+      }
+    } else if (type === 'return') {
+      // From pool to DB, then back to client. We animate from pool to client.
+      const slotEl = document.getElementById(`slot-${slotIdx}`);
+      if (slotEl) {
+        const slotRect = slotEl.getBoundingClientRect();
+        startX = slotRect.left - arenaRect.left + 6;
+        startY = slotRect.top - arenaRect.top + 6;
+      } else {
+        startX = 220;
+        startY = 125;
+      }
+      targetX = 70;
+      targetY = clientY;
+      particle.classList.add('returning');
+    } else if (type === 'go-direct') {
+      startX = 70;
+      startY = clientY;
+      targetX = 810; // directly to DB
+      targetY = 125;
+    } else if (type === 'return-direct') {
+      startX = 810;
+      startY = 125;
+      targetX = 70;
+      targetY = clientY;
+      particle.classList.add('returning');
+    } else if (type === 'timeout') {
+      startX = 200;
+      startY = 125;
+      targetX = 200;
+      targetY = 220; // drop down
+      particle.classList.add('timeout');
+    }
+
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 600;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // Initialize
+  renderSlots();
+  updateSimulation();
+</script>
+</body>
+</html>

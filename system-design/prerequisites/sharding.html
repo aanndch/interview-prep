@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Sharding & Partitioning</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #ff7b72, #f0883e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #ff7b72;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ff7b72;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.danger { color: #ff7b72; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 20px;
+    }
+    .shard-column {
+      width: 100px;
+      height: 100%;
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .shard-header {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-align: center;
+      background: #21262d;
+      padding: 6px 4px;
+      border-bottom: 1px solid #30363d;
+      color: #58a6ff;
+    }
+    .shard-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column-reverse;
+      padding: 4px;
+      gap: 3px;
+      overflow-y: auto;
+    }
+    .data-row {
+      height: 8px;
+      background: #56d364;
+      border-radius: 2px;
+      width: 100%;
+    }
+    .data-row.hot {
+      background: #ff7b72;
+      box-shadow: 0 0 6px #ff7b72;
+    }
+
+    /* Particle */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #ff7b72;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Explanation text below simulator */
+    .sim-explain {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+      line-height: 1.5;
+    }
+    
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Sharding &amp; Partitioning</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>**Sharding** is the horizontal partitioning of database tables, splitting a single large database into smaller, faster physical nodes. Selecting a high-cardinality **Shard Key** is critical to distribute load evenly and avoid processing bottlenecks.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Shard Key Cardinality &amp; Distribution</h3>
+      <p>The field used to determine which database node stores a given record:</p>
+      <ul>
+        <li><strong>High Cardinality:</strong> Keys with millions of unique values (e.g. <code>user_id</code>). Promotes uniform write distribution across node pools.</li>
+        <li><strong>Low Cardinality:</strong> Keys with few states (e.g. <code>is_active</code>, <code>gender</code>). Causes severe data skewing, piling up workload onto a single physical server (hotspotting).</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Logical vs. Physical Sharding</h3>
+      <p>Decouples database routing mapping from direct machine hardware:</p>
+      <ul>
+        <li><strong>Logical Shards:</strong> Dividing table rows into thousands of smaller logical chunks (e.g. logical partition 1 to 1024).</li>
+        <li><strong>Physical Shards:</strong> actual servers running database instances. A central router maps groups of logical shards (e.g. 1-256) to Server A, and 257-512 to Server B. This abstraction makes migrating datasets during scaling simple.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Cross-Shard Joins (Scatter-Gather)</h3>
+      <p>Queries that filter on columns other than the shard key must query every node:</p>
+      <ul>
+        <li><strong>Scatter-Gather Trap:</strong> A router broadcasts the query to all nodes in parallel, waits for all results, aggregates them, and returns to client.</li>
+        <li><strong>Cost:</strong> High latency bounded by the slowest node, network packet congestion, and coordinator CPU exhaustion.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Resharding &amp; Data Migration</h3>
+      <p>What happens when data volume outgrows the capacity of current shards?</p>
+      <ul>
+        <li><strong>Downtime Rebalancing:</strong> Halt writes, re-hash records using new partition counts, and copy data. High operational downtime.</li>
+        <li><strong>Online Migration:</strong> Adding nodes and migrating logical shards in the background using dual-writing (writing to both old and new shards during migration) and CDC (Change Data Capture) pipelines.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Sharding Simulator -->
+  <div class="section-title">Interactive Sharding Key Simulator</div>
+  <p>Select a <strong>Shard Key</strong> to simulate write requests, and observe how key cardinality impacts write distribution and creates hotspots on target partitions.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Shard Ingestion Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-hash" onclick="setKey('hash')">user_id (Uniform Hash)</button>
+        <button class="sim-btn" id="btn-country" onclick="setKey('country')">country (Skewed Locale)</button>
+        <button class="sim-btn" id="btn-status" onclick="setKey('status')">is_active (Low Cardinality)</button>
+        <button class="sim-btn danger" onclick="clearShards()">Clear Nodes</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Key Cardinality</div>
+        <div class="metric-value" id="val-card">High</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Node 1 writes</div>
+        <div class="metric-value" id="val-s1">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Node 2 writes</div>
+        <div class="metric-value" id="val-s2">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Node 3 writes</div>
+        <div class="metric-value" id="val-s3">0</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <div class="shard-column">
+        <div class="shard-header">Node 1 (S1)</div>
+        <div class="shard-body" id="body-0"></div>
+      </div>
+      <div class="shard-column">
+        <div class="shard-header">Node 2 (S2)</div>
+        <div class="shard-body" id="body-1"></div>
+      </div>
+      <div class="shard-column">
+        <div class="shard-header">Node 3 (S3)</div>
+        <div class="shard-body" id="body-2"></div>
+      </div>
+    </div>
+
+    <!-- Trigger -->
+    <div style="margin-top: 1.2rem; text-align: center;">
+      <button class="sim-btn active" style="width: 250px;" onclick="triggerWritesBatch()">Simulate Ingestion Spike (30 Writes)</button>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>User ID (Uniform Hash):</strong> Distributes writes evenly across all 3 nodes. Total database capacity is maximized, and no single node is overloaded.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design a partitioned database for a globally scaling service?"</em>
+      <br><br>
+      Say: 
+      <em>"First, I'll identify a high-cardinality shard key (e.g. <code>user_id</code>) to ensure even partitioning. Second, I will decouple logical shards from physical servers, mapping a large count of logical partitions to active hardware nodes. This allows us to rebalance data easily. Finally, I will structure query rules: queries must supply the shard key to prevent scatter-gather fanouts, while secondary lookup tables or index caches will handle secondary search fields."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let state = {
+    key: 'hash', // hash, country, status
+    writes: [0, 0, 0]
+  };
+
+  const valCard = document.getElementById('val-card');
+  const valS1 = document.getElementById('val-s1');
+  const valS2 = document.getElementById('val-s2');
+  const valS3 = document.getElementById('val-s3');
+  const simTip = document.getElementById('sim-tip');
+  const arena = document.getElementById('arena');
+
+  function setKey(key) {
+    state.key = key;
+    document.getElementById('btn-hash').className = 'sim-btn' + (key === 'hash' ? ' active' : '');
+    document.getElementById('btn-country').className = 'sim-btn' + (key === 'country' ? ' active' : '');
+    document.getElementById('btn-status').className = 'sim-btn' + (key === 'status' ? ' active' : '');
+
+    if (key === 'hash') {
+      valCard.innerText = 'High (user_id)';
+      valCard.className = 'metric-value';
+      simTip.innerHTML = `<strong>User ID (Uniform Hash):</strong> Distributes writes evenly across all 3 nodes. Total database capacity is maximized, and no single node is overloaded.`;
+    } else if (key === 'country') {
+      valCard.innerText = 'Medium (country)';
+      valCard.className = 'metric-value warning';
+      simTip.innerHTML = `<strong>Country (Skewed Locale):</strong> Skews traffic geographically (e.g. US represents 70% of traffic). Shard 1 is highly saturated, while Shards 2 and 3 are underutilized.`;
+    } else if (key === 'status') {
+      valCard.innerText = 'Low (is_active)';
+      valCard.className = 'metric-value danger';
+      simTip.innerHTML = `<strong>Status (Low Cardinality):</strong> Ingests 95% of traffic into a single status ('active'). This creates a massive hotspot on Shard 2 (red alerts), degrading database performance.`;
+    }
+  }
+
+  function clearShards() {
+    state.writes = [0, 0, 0];
+    document.getElementById('body-0').innerHTML = '';
+    document.getElementById('body-1').innerHTML = '';
+    document.getElementById('body-2').innerHTML = '';
+    updateMetrics();
+  }
+
+  function updateMetrics() {
+    valS1.innerText = state.writes[0];
+    valS2.innerText = state.writes[1];
+    valS3.innerText = state.writes[2];
+
+    valS1.className = 'metric-value' + (state.writes[0] > 18 ? ' danger' : '');
+    valS2.className = 'metric-value' + (state.writes[1] > 18 ? ' danger' : '');
+    valS3.className = 'metric-value' + (state.writes[2] > 18 ? ' danger' : '');
+  }
+
+  function triggerWritesBatch() {
+    let count = 0;
+    
+    function sendWrite() {
+      if (count >= 30) return;
+
+      let targetIndex = 0;
+      let isHot = false;
+
+      if (state.key === 'hash') {
+        // Equal distribution
+        targetIndex = Math.floor(Math.random() * 3);
+      } else if (state.key === 'country') {
+        // Skewed traffic (S1: 70%, S2: 20%, S3: 10%)
+        let r = Math.random();
+        if (r < 0.70) targetIndex = 0;
+        else if (r < 0.90) targetIndex = 1;
+        else targetIndex = 2;
+      } else if (state.key === 'status') {
+        // Low cardinality hotspot (S2 gets active traffic = 95%)
+        let r = Math.random();
+        if (r < 0.95) {
+          targetIndex = 1;
+          isHot = true;
+        } else {
+          targetIndex = 0;
+        }
+      }
+
+      animateParticleToShard(targetIndex, isHot);
+      count++;
+      setTimeout(sendWrite, 80);
+    }
+    sendWrite();
+  }
+
+  function animateParticleToShard(targetIndex, isHot) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    arena.appendChild(particle);
+
+    let startX = 450;
+    let startY = 125;
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    const colEl = document.getElementById(`body-${targetIndex}`);
+    const arenaRect = arena.getBoundingClientRect();
+    const colRect = colEl.getBoundingClientRect();
+
+    let targetX = colRect.left - arenaRect.left + (colRect.width / 2);
+    let targetY = colRect.top - arenaRect.top + (colRect.height / 2);
+
+    let startTime = Date.now();
+    let duration = 600;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        state.writes[targetIndex]++;
+        
+        const row = document.createElement('div');
+        row.className = 'data-row' + (isHot ? ' hot' : '');
+        colEl.appendChild(row);
+        updateMetrics();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+</script>
+</body>
+</html>

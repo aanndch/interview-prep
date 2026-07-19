@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Security &amp; Authentication</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #da3633, #f0883e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Box */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #da3633;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #da3633;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Comparison Table */
+    .comp-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #161b22;
+    }
+    .comp-table th, .comp-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    .comp-table th {
+      background: #1f242c;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    .sim-btn.danger {
+      border-color: #ff7b72;
+      color: #ff7b72;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.highlight { color: #56d364; }
+    .metric-value.warning { color: #f0883e; }
+    .metric-value.danger { color: #ff7b72; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      justify-content: space-around;
+      align-items: stretch;
+    }
+    .arena-side {
+      flex: 1;
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      overflow: hidden;
+    }
+    .arena-side-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #58a6ff;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 4px;
+      text-align: center;
+    }
+    .console-log {
+      flex: 1;
+      background: #0d1117;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .console-line {
+      animation: fadeIn 0.2s ease-out;
+    }
+    .console-line.success { color: #56d364; }
+    .console-line.warning { color: #d29922; }
+    .console-line.error { color: #ff7b72; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Security &amp; Authentication</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>**Authentication Systems** verify the identities of clients accessing APIs. Stateful approaches store active **Sessions** in databases like Redis to support instant token revocation, while stateless **JWTs** (JSON Web Tokens) authorize requests offline using cryptographic signatures to bypass database locks.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Stateful Sessions</h3>
+      <p>Authentication where metadata is held on server RAM pools:</p>
+      <ul>
+        <li><strong>Mechanism:</strong> On login, server creates a session record in Redis and returns a random <code>Session-ID</code> cookie to the browser.</li>
+        <li><strong>Pros:</strong> Security control. If a user loses their phone, you delete their record in Redis, instantly revoking their active API access.</li>
+        <li><strong>Cons:</strong> Storage overhead. High traffic requires scaling a distributed Redis cluster to handle session verification read loops.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Stateless JWTs (JSON Web Tokens)</h3>
+      <p>Authorizations encoded as base64 strings containing cryptographic signatures:</p>
+      <ul>
+        <li><strong>Mechanism:</strong> Server encodes permissions (claims) into a token, signs it using a private key, and returns it. Client sends it via HTTP <code>Authorization: Bearer <token></code>.</li>
+        <li><strong>Pros:</strong> Infinite horizontal scaling. Replicas validate signature offline using the public key. Zero DB connection costs.</li>
+        <li><strong>Cons:</strong> Impossible to revoke before the TTL expires, unless you maintain a blacklist (which introduces DB state checks).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. CORS Preflights &amp; Protection</h3>
+      <p>Securing browser-based cross-origin API executions:</p>
+      <ul>
+        <li><strong>Mechanism:</strong> When executing a cross-origin request (e.g. from <code>app.com</code> to <code>api.com</code>), the browser executes an HTTP <code>OPTIONS</code> preflight to verify authorization scopes.</li>
+        <li><strong>Headers:</strong> Server must return correct <code>Access-Control-Allow-Origin</code> whitelist bounds, matching credential parameters to avoid client execution blocks.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. CSRF Attack Mitigations</h3>
+      <p>Preventing attackers from exploiting cached browser session state:</p>
+      <ul>
+        <li><strong>The Vulnerability:</strong> Browsers automatically attach cookies to requests mapping target domains, allowing malicious pages to trigger actions on behalf of users.</li>
+        <li><strong>SameSite Cookies:</strong> Setting cookie attributes to <code>SameSite=Strict</code> or <code>Lax</code> stops browsers from attaching authorization context on cross-site requests.</li>
+        <li><strong>Double-Submit Tokens:</strong> Client injects a random cryptographically secure token into both request body parameters and cookies, forcing the server to assert they match.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Session vs. JWT Comparison</div>
+
+  <!-- Comparison Table -->
+  <div class="comp-table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Stateful Session (Redis)</th>
+          <th>Stateless JWT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Database Lookup</strong></td>
+          <td>Required on every request to fetch user metadata.</td>
+          <td>Zero. Validated offline using cryptography.</td>
+        </tr>
+        <tr>
+          <td><strong>Revocation Speed</strong></td>
+          <td><span style="color:#56d364; font-weight:bold;">Instant</span> (Deleting session terminates access immediately).</td>
+          <td><span style="color:#ff7b72; font-weight:bold;">Delayed</span> (Token stays valid until expiry TTL).</td>
+        </tr>
+        <tr>
+          <td><strong>Storage Overhead</strong></td>
+          <td>High (Memory scales with active user count).</td>
+          <td>Zero (State stored inside token string on client).</td>
+        </tr>
+        <tr>
+          <td><strong>Security Vulnerability</strong></td>
+          <td>Subject to CSRF (cookies sent automatically).</td>
+          <td>Subject to XSS (if stored in localStorage/JS).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Simulator -->
+  <div class="section-title">Interactive Authentication Simulator</div>
+  <p>Trigger logins and revoke user authorization on both **Stateful Sessions** and **Stateless JWTs** to observe the latency and revocation delays.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Token Lifecycle Terminal</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" onclick="loginBoth()">Login (Issue Session &amp; JWT)</button>
+        <button class="sim-btn danger" onclick="revokeBoth()">Trigger Revocation</button>
+        <button class="sim-btn active" style="border-color:#56d364;" onclick="executeRequests()">Send API Request</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Redis DB Lookups</div>
+        <div class="metric-value" id="val-db-looks">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Session Status</div>
+        <div class="metric-value" id="val-session-stat">No Session</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">JWT Validation</div>
+        <div class="metric-value" id="val-jwt-stat">No Token</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Revocation Window</div>
+        <div class="metric-value" id="val-rev-win">N/A</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <div class="arena-side">
+        <div class="arena-side-title">Stateful Session Server (Redis)</div>
+        <div class="console-log" id="session-log">
+          <div class="console-line">> Server active. Waiting for Session-ID cookie...</div>
+        </div>
+      </div>
+
+      <div class="arena-side">
+        <div class="arena-side-title">Stateless API Node (JWT Decode)</div>
+        <div class="console-log" id="jwt-log">
+          <div class="console-line">> Gateway active. Public key cached for signature checks.</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> When you revoke authorization, Stateful Session deletes the session key from Redis instantly, so the very next API request is rejected. Stateless JWT cannot be revoked dynamically—the client request *continues to succeed* because the signature remains cryptographically valid until the TTL expires!
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design a secure, scaling auth architecture for a distributed application?"</em>
+      <br><br>
+      Say: 
+      <em>"I will choose a hybrid auth architecture. We will issue short-lived JWTs (e.g. 15 minutes) containing user scopes, signed using private keys. Microservices can validate the JWT signatures statelessly offline, bypassing database check delays. For refreshing, we'll store a stateful Refresh Token inside HttpOnly, SameSite=Strict cookies. If a user logs out or is banned, we delete the refresh record from our Redis session cluster, preventing subsequent token renewals while the short-lived JWT naturally expires within 15 minutes."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let authState = {
+    isLoggedIn: false,
+    sessionActive: false,
+    jwtActive: false,
+    dbLookups: 0
+  };
+
+  const sessionLog = document.getElementById('session-log');
+  const jwtLog = document.getElementById('jwt-log');
+  const valDbLooks = document.getElementById('val-db-looks');
+  const valSessionStat = document.getElementById('val-session-stat');
+  const valJwtStat = document.getElementById('val-jwt-stat');
+  const valRevWin = document.getElementById('val-rev-win');
+
+  function addSessionLog(text, type='normal') {
+    let css = type === 'success' ? 'success' : (type === 'warning' ? 'warning' : (type === 'error' ? 'error' : ''));
+    sessionLog.innerHTML += `<div class="console-line ${css}">> ${text}</div>`;
+    sessionLog.scrollTop = sessionLog.scrollHeight;
+  }
+
+  function addJwtLog(text, type='normal') {
+    let css = type === 'success' ? 'success' : (type === 'warning' ? 'warning' : (type === 'error' ? 'error' : ''));
+    jwtLog.innerHTML += `<div class="console-line ${css}">> ${text}</div>`;
+    jwtLog.scrollTop = jwtLog.scrollHeight;
+  }
+
+  function loginBoth() {
+    authState.isLoggedIn = true;
+    authState.sessionActive = true;
+    authState.jwtActive = true;
+
+    valSessionStat.innerText = 'Active (Redis)';
+    valSessionStat.className = 'metric-value highlight';
+    valJwtStat.innerText = 'Active (Stateless)';
+    valJwtStat.className = 'metric-value highlight';
+    valRevWin.innerText = 'N/A';
+    valRevWin.className = 'metric-value';
+
+    sessionLog.innerHTML = '';
+    jwtLog.innerHTML = '';
+
+    addSessionLog('LOGIN SUCCESS: Session created in Redis. Issued Session-ID: sess_98d7f', 'success');
+    addJwtLog('LOGIN SUCCESS: Signed JWT payload with HS256 secret. Token sent.', 'success');
+  }
+
+  function revokeBoth() {
+    if (!authState.isLoggedIn) {
+      addSessionLog('REVOKE: No active session.', 'error');
+      addJwtLog('REVOKE: No active token.', 'error');
+      return;
+    }
+
+    authState.sessionActive = false;
+    // JWT remains active in stateless space
+    valSessionStat.innerText = 'Revoked';
+    valSessionStat.className = 'metric-value danger';
+    
+    valJwtStat.innerText = 'Active (Stateless)';
+    valJwtStat.className = 'metric-value warning';
+    
+    valRevWin.innerText = '15 mins (TTL)';
+    valRevWin.className = 'metric-value danger';
+
+    addSessionLog('REVOCATION REQUEST: Redis key "sess_98d7f" DELETED.', 'warning');
+    addJwtLog('REVOCATION REQUEST: Ignored. Server cannot invalidate a signed JWT offline.', 'error');
+  }
+
+  function executeRequests() {
+    if (!authState.isLoggedIn) {
+      addSessionLog('API REQUEST: Denied. No credentials.', 'error');
+      addJwtLog('API REQUEST: Denied. No token.', 'error');
+      return;
+    }
+
+    // Stateful request logic
+    authState.dbLookups++;
+    valDbLooks.innerText = authState.dbLookups;
+    addSessionLog(`API REQUEST: Reading session "sess_98d7f" from Redis...`);
+    
+    if (authState.sessionActive) {
+      addSessionLog(`Redis Match: Session active. User: Alice. HTTP 200 OK`, 'success');
+    } else {
+      addSessionLog(`Redis Miss: Session revoked. HTTP 401 Unauthorized`, 'error');
+    }
+
+    // Stateless request logic
+    addJwtLog(`API REQUEST: Decoding JWT signature using cached public key...`);
+    if (authState.jwtActive) {
+      addJwtLog(`Signature check: OK. Exp: In 12 mins. User: Alice. HTTP 200 OK`, 'success');
+      if (!authState.sessionActive) {
+        addJwtLog(`!!! Security Alert: Request accepted despite revocation request (Stateless delay) !!!`, 'warning');
+      }
+    } else {
+      addJwtLog(`Signature check: Failed. HTTP 401 Unauthorized`, 'error');
+    }
+  }
+
+</script>
+</body>
+</html>

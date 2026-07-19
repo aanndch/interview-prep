@@ -153,10 +153,100 @@
   </div>
 
   <div class="grid">
-    <a class="card" href="fundamentals.html">
-      <div class="card-num">14 CONCEPTS</div>
-      <div class="card-title">Fundamentals</div>
-      <div class="card-desc">Scalability, fault tolerance, circuit breakers, rate limiting, performance, CAP theorem, caching, load balancing, databases, sharding, consistent hashing, replication, indexing, message queues, observability, data pipelines.</div>
+    <a class="card" href="prerequisites/scalability.html">
+      <div class="card-num">CONCEPT 1.1</div>
+      <div class="card-title">Scalability</div>
+      <div class="card-desc">Ability of a system to handle increasing load. Vertical scaling (scale up) vs. horizontal scaling (scale out) and database sharding.</div>
+    </a>
+
+    <a class="card" href="prerequisites/reliability.html">
+      <div class="card-num">CONCEPT 1.2</div>
+      <div class="card-title">Reliability &amp; Fault Tolerance</div>
+      <div class="card-desc">Strategies for handling inevitable failures: replication, retry &amp; backoff, circuit breakers, rate limiting, graceful degradation, and idempotency.</div>
+    </a>
+
+    <a class="card" href="prerequisites/performance.html">
+      <div class="card-num">CONCEPT 1.3</div>
+      <div class="card-title">Performance</div>
+      <div class="card-desc">Optimizing latency and throughput via caching, database indexing, connection pooling, data compression, batching network calls, and gRPC/WebSockets.</div>
+    </a>
+
+    <a class="card" href="prerequisites/cap_theorem.html">
+      <div class="card-num">CONCEPT 1.4</div>
+      <div class="card-title">CAP Theorem</div>
+      <div class="card-desc">The trade-off between Consistency, Availability, and Partition Tolerance in distributed data stores. Choosing between CP and AP systems.</div>
+    </a>
+
+    <a class="card" href="prerequisites/caching.html">
+      <div class="card-num">CONCEPT 1.5</div>
+      <div class="card-title">Caching</div>
+      <div class="card-desc">Storing copies of data in high-speed RAM (Redis/Memcached). Caching strategies (TTL, Write-Through, Write-Behind, Cache-Aside) and eviction policies.</div>
+    </a>
+
+    <a class="card" href="prerequisites/load_balancing.html">
+      <div class="card-num">CONCEPT 1.6</div>
+      <div class="card-title">Load Balancing</div>
+      <div class="card-desc">Distributing incoming traffic evenly across servers. L4 (transport layer) vs. L7 (application layer) routing, round robin, least connections, and IP hashing.</div>
+    </a>
+
+    <a class="card" href="prerequisites/databases.html">
+      <div class="card-num">CONCEPT 1.7</div>
+      <div class="card-title">Databases</div>
+      <div class="card-desc">Comparing Relational (SQL) databases with ACID properties and Non-Relational (NoSQL) databases with the BASE model for different scaling needs.</div>
+    </a>
+
+    <a class="card" href="prerequisites/sharding.html">
+      <div class="card-num">CONCEPT 1.8</div>
+      <div class="card-title">Sharding &amp; Partitioning</div>
+      <div class="card-desc">Horizontal partitioning of database tables. Key sharding strategies (hash-based, range-based, directory-based) and hot spot rebalancing challenges.</div>
+    </a>
+
+    <a class="card" href="prerequisites/consistent_hashing.html">
+      <div class="card-num">CONCEPT 1.9</div>
+      <div class="card-title">Consistent Hashing</div>
+      <div class="card-desc">Minimizing data movement when scaling node pools. Ring-based mapping and virtual nodes used in distributed caches and databases like Cassandra and DynamoDB.</div>
+    </a>
+
+    <a class="card" href="prerequisites/replication.html">
+      <div class="card-num">CONCEPT 1.10</div>
+      <div class="card-title">Replication</div>
+      <div class="card-desc">Copying data across nodes for durability and availability. Primary-Replica vs. Multi-Master architectures, and synchronous vs. asynchronous updates.</div>
+    </a>
+
+    <a class="card" href="prerequisites/indexing.html">
+      <div class="card-num">CONCEPT 1.11</div>
+      <div class="card-title">Indexing</div>
+      <div class="card-desc">Optimizing query performance via B-tree, Hash, Inverted, Trie, and Bitmap indexes. Composite/covering indexes and write performance trade-offs.</div>
+    </a>
+
+    <a class="card" href="prerequisites/message_queues.html">
+      <div class="card-num">CONCEPT 1.12</div>
+      <div class="card-title">Message Queues</div>
+      <div class="card-desc">Decoupling microservices via asynchronous message brokers (RabbitMQ, Kafka, SQS). Delivery semantics (at-least-once) and backpressure management.</div>
+    </a>
+
+    <a class="card" href="prerequisites/observability.html">
+      <div class="card-num">CONCEPT 1.13</div>
+      <div class="card-title">Observability &amp; Monitoring</div>
+      <div class="card-desc">Diagnosing systems using the three pillars: Metrics (Prometheus), Logs (ELK), and Distributed Tracing (Jaeger) along with RED and USE methods.</div>
+    </a>
+
+    <a class="card" href="prerequisites/data_pipelines.html">
+      <div class="card-num">CONCEPT 1.14</div>
+      <div class="card-title">Data Pipelines &amp; Streaming</div>
+      <div class="card-desc">Processing data in batches (Spark/Hadoop) or streams (Kafka/Flink). Lambda vs. Kappa architectures for real-time analytics.</div>
+    </a>
+
+    <a class="card" href="prerequisites/security.html">
+      <div class="card-num">CONCEPT 1.15</div>
+      <div class="card-title">Security &amp; Authentication</div>
+      <div class="card-desc">Securing services and identities. OAuth 2.0/OIDC flows, JWT vs. Session cookies, CORS preflights, CSRF double-submits, and API gateway rules.</div>
+    </a>
+
+    <a class="card" href="prerequisites/client_server_sync.html">
+      <div class="card-num">CONCEPT 1.16</div>
+      <div class="card-title">Client-Server Sync &amp; Fetching</div>
+      <div class="card-desc">Data query paradigms (REST, GraphQL, gRPC) and UI synchronization via optimistic updates, offline store sync, and HTTP caching.</div>
     </a>
   </div>
 

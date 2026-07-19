@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Client-Server Sync &amp; Fetching</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #7ee787);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Box */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #7ee787;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #7ee787;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Comparison Table */
+    .comp-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #161b22;
+    }
+    .comp-table th, .comp-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    .comp-table th {
+      background: #1f242c;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.warning { color: #f0883e; }
+    .metric-value.highlight { color: #56d364; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+    
+    .device-node {
+      background: #161b22;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 14px;
+      width: 100px;
+      text-align: center;
+      z-index: 10;
+    }
+    .device-node.client {
+      border-color: #56d364;
+    }
+    .device-node.server {
+      border-color: #58a6ff;
+    }
+    
+    /* Terminal Console below simulator */
+    .sync-console {
+      margin-top: 1rem;
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      height: 110px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .console-line {
+      animation: fadeIn 0.15s ease-out;
+    }
+    .console-line.req { color: #d2a8ff; }
+    .console-line.res { color: #56d364; }
+
+    /* Particle */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #d2a8ff;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Client-Server Sync &amp; Fetching</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>How mobile and web applications query resources shapes frontend performance. While **REST** requires discrete resource endpoints that cause client-side N+1 latency cascades, **GraphQL** fetches custom nested arrays in a single round-trip, and **gRPC** leverages HTTP/2 multiplexed binary serialization to optimize server-to-server calls.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. REST APIs &amp; Over-fetching</h3>
+      <p>Traditional resource-oriented mapping utilizing HTTP verbs (GET, POST):</p>
+      <ul>
+        <li><strong>N+1 Problem:</strong> To render a user page with posts and comments, the client fetches the user data, then triggers $N$ subsequent calls to fetch the posts, then comments.</li>
+        <li><strong>Over-fetching:</strong> Endpoints return entire database columns (e.g. user address, settings) even if the UI only needs the user's name.</li>
+        <li><strong>Benefit:</strong> Simple, highly cacheable at edge CDNs via static URL requests.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. GraphQL &amp; Under-fetching</h3>
+      <p>A declarative query engine enabling clients to request nested structures:</p>
+      <ul>
+        <li><strong>Single Roundtrip:</strong> Clients submit a schema request listing exact parameters: <code>{ user { name, posts { title } } }</code> in a single HTTP POST.</li>
+        <li><strong>DataLoader Pattern:</strong> Resolves internal N+1 query fanouts in the backend by batching and caching database keys into single SQL queries.</li>
+        <li><strong>Downside:</strong> Very difficult to cache at edge proxies because all requests use HTTP POST.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. gRPC &amp; HTTP/2 Streaming</h3>
+      <p>High-performance remote procedure call framework developed by Google:</p>
+      <ul>
+        <li><strong>Serialization:</strong> Uses binary Protocol Buffers instead of textual JSON, decreasing CPU parsing limits.</li>
+        <li><strong>HTTP/2 Multiplexing:</strong> Runs multiple concurrent requests over a single TCP connection socket. Supports bi-directional streaming.</li>
+        <li><strong>Downside:</strong> Poor native web browser support, primarily used for microservice-to-microservice internal RPC communications.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Client-side Optimistic Updates</h3>
+      <p>Providing the illusion of zero latency on mobile/web connections:</p>
+      <ul>
+        <li><strong>Mechanism:</strong> When a user likes a post, the UI instantly increments the count and shows a filled heart state before the network API request completes.</li>
+        <li><strong>Failures:</strong> The client buffers the original state. If the API throws a 500 error, the client rolls back the UI state and displays a retry banner.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Query Protocol Comparison</div>
+
+  <!-- Comparison Table -->
+  <div class="comp-table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>REST APIs</th>
+          <th>GraphQL</th>
+          <th>gRPC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Data Format</strong></td>
+          <td>JSON / XML (Textual)</td>
+          <td>JSON (Textual schema)</td>
+          <td>Protocol Buffers (Binary)</td>
+        </tr>
+        <tr>
+          <td><strong>Transport Layer</strong></td>
+          <td>HTTP/1.1 or HTTP/2</td>
+          <td>HTTP/1.1 or HTTP/2</td>
+          <td>Strict HTTP/2 multiplexing</td>
+        </tr>
+        <tr>
+          <td><strong>Client Control</strong></td>
+          <td>Fixed server schemas.</td>
+          <td>Client specifies data shape.</td>
+          <td>Strict Proto schema files.</td>
+        </tr>
+        <tr>
+          <td><strong>Caching</strong></td>
+          <td>Excellent (Standard HTTP GET cache)</td>
+          <td>Complex (Relies on POST payloads)</td>
+          <td>Poor (Designed for server RPCs)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Simulator -->
+  <div class="section-title">Interactive Sync Simulator</div>
+  <p>Simulate fetching a User Profile + 3 Posts + Comments. Contrast the **N+1 REST latency cascades** (multiple roundtrips) with the single **GraphQL query roundtrip**.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Protocol Round-Trip Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-rest" onclick="runRest()">Fetch via REST (N+1)</button>
+        <button class="sim-btn" id="btn-gql" onclick="runGql()">Fetch via GraphQL</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Round Trips</div>
+        <div class="metric-value warning" id="val-trips">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Total Time</div>
+        <div class="metric-value" id="val-time">0 ms</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Bytes Transferred</div>
+        <div class="metric-value" id="val-bytes">0 KB</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Client Cacheability</div>
+        <div class="metric-value highlight" id="val-cache">High</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <div class="device-node client" id="client">Mobile Client</div>
+      <div class="device-node server" id="server">API Server</div>
+    </div>
+
+    <!-- Console output -->
+    <div class="sync-console" id="console">
+      <div class="console-line">> Client idle. Select a protocol to initiate fetching...</div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>REST Inefficiencies:</strong> Over high-latency cellular networks, triggering separate HTTP requests sequentially causes latency to compound. Watch how the client is forced to make 5 separate round trips to get user data, posts, and comments.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design a data syncing API layer for mobile clients in poor network conditions?"</em>
+      <br><br>
+      Say: 
+      <em>"To optimize mobile clients, I will avoid N+1 REST endpoints and use a BFF (Backend-for-Frontend) or GraphQL layer to aggregate data. The mobile client submits a single query describing the nested data shape, reducing client-to-server round trips to exactly 1. Inside the backend network, we will run the gRPC protocol using Protocol Buffers over HTTP/2 multiplexed streams to retrieve downstream resources at microsecond limits."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let state = {
+    mode: 'rest', // rest, gql
+    running: false
+  };
+
+  const valTrips = document.getElementById('val-trips');
+  const valTime = document.getElementById('val-time');
+  const valBytes = document.getElementById('val-bytes');
+  const valCache = document.getElementById('val-cache');
+  const term = document.getElementById('console');
+  const simTip = document.getElementById('sim-tip');
+  const arena = document.getElementById('arena');
+
+  function addLog(text, direction='req') {
+    let css = direction === 'req' ? 'req' : 'res';
+    let prefix = direction === 'req' ? '→ Client Request: ' : '← Server Response: ';
+    term.innerHTML += `<div class="console-line ${css}">${prefix}${text}</div>`;
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function setMode(mode) {
+    if (state.running) return;
+    state.mode = mode;
+    document.getElementById('btn-rest').className = 'sim-btn' + (mode === 'rest' ? ' active' : '');
+    document.getElementById('btn-gql').className = 'sim-btn' + (mode === 'gql' ? ' active' : '');
+
+    if (mode === 'rest') {
+      valCache.innerText = 'High';
+      valCache.className = 'metric-value highlight';
+      simTip.innerHTML = `<strong>REST Inefficiencies:</strong> Over high-latency cellular networks, triggering separate HTTP requests sequentially causes latency to compound. Watch how the client is forced to make 5 separate round trips to get user data, posts, and comments.`;
+    } else {
+      valCache.innerText = 'Low (POST)';
+      valCache.className = 'metric-value warning';
+      simTip.innerHTML = `<strong>GraphQL Efficiencies:</strong> Submits a single nested schema request in an HTTP POST body. The server resolves all downstream dependencies internally and returns the exact payload, saving round trips and client bandwidth.`;
+    }
+  }
+
+  function runRest() {
+    if (state.running) return;
+    state.running = true;
+    setMode('rest');
+    term.innerHTML = '';
+    
+    valTrips.innerText = '0';
+    valTime.innerText = '0 ms';
+    valBytes.innerText = '0 KB';
+
+    let trips = 0;
+    let time = 0;
+    
+    // Step 1: User data
+    addLog('GET /api/users/1', 'req');
+    animateNetwork(() => {
+      trips++;
+      time += 400;
+      valTrips.innerText = trips;
+      valTime.innerText = time + ' ms';
+      valBytes.innerText = '15 KB';
+      addLog('200 OK - { id: 1, name: "Alice", address: "Tokyo...", email: "..." }', 'res');
+
+      // Step 2: Posts data
+      setTimeout(() => {
+        addLog('GET /api/users/1/posts', 'req');
+        animateNetwork(() => {
+          trips++;
+          time += 400;
+          valTrips.innerText = trips;
+          valTime.innerText = time + ' ms';
+          valBytes.innerText = '30 KB';
+          addLog('200 OK - Array of 3 Posts [post_1, post_2, post_3]', 'res');
+
+          // Step 3: Comments (N+1 query trigger)
+          setTimeout(() => {
+            addLog('GET /api/posts/1/comments', 'req');
+            animateNetwork(() => {
+              trips++;
+              time += 400;
+              valTrips.innerText = trips;
+              valTime.innerText = time + ' ms';
+              valBytes.innerText = '35 KB';
+              addLog('200 OK - Comments for post_1', 'res');
+
+              setTimeout(() => {
+                addLog('GET /api/posts/2/comments', 'req');
+                animateNetwork(() => {
+                  trips++;
+                  time += 400;
+                  valTrips.innerText = trips;
+                  valTime.innerText = time + ' ms';
+                  valBytes.innerText = '40 KB';
+                  addLog('200 OK - Comments for post_2', 'res');
+
+                  setTimeout(() => {
+                    addLog('GET /api/posts/3/comments', 'req');
+                    animateNetwork(() => {
+                      trips++;
+                      time += 400;
+                      valTrips.innerText = trips;
+                      valTime.innerText = time + ' ms';
+                      valBytes.innerText = '45 KB';
+                      addLog('200 OK - Comments for post_3', 'res');
+                      state.running = false;
+                    });
+                  }, 150);
+                });
+              }, 150);
+            });
+          }, 200);
+        });
+      }, 200);
+    });
+  }
+
+  function runGql() {
+    if (state.running) return;
+    state.running = true;
+    setMode('gql');
+    term.innerHTML = '';
+    
+    valTrips.innerText = '0';
+    valTime.innerText = '0 ms';
+    valBytes.innerText = '0 KB';
+
+    addLog('POST /graphql { user(id:1) { name, posts { title, comments { text } } } }', 'req');
+    animateNetwork(() => {
+      valTrips.innerText = '1';
+      valTime.innerText = '400 ms';
+      valBytes.innerText = '12 KB';
+      addLog('200 OK - { data: { user: { name: "Alice", posts: [...] } } }', 'res');
+      state.running = false;
+    });
+  }
+
+  function animateNetwork(callback) {
+    const pOut = document.createElement('div');
+    pOut.className = 'particle';
+    arena.appendChild(pOut);
+
+    const clientEl = document.getElementById('client');
+    const serverEl = document.getElementById('server');
+    const arenaRect = arena.getBoundingClientRect();
+    const clientRect = clientEl.getBoundingClientRect();
+    const serverRect = serverEl.getBoundingClientRect();
+
+    let startX = clientRect.left - arenaRect.left + 50;
+    let startY = clientRect.top - arenaRect.top + 20;
+    let targetX = serverRect.left - arenaRect.left + 50;
+    let targetY = serverRect.top - arenaRect.top + 20;
+
+    pOut.style.left = startX + 'px';
+    pOut.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 200;
+
+    function outAnimate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        pOut.remove();
+        
+        // Return packet
+        const pIn = document.createElement('div');
+        pIn.className = 'particle';
+        pIn.style.backgroundColor = '#56d364';
+        arena.appendChild(pIn);
+        pIn.style.left = targetX + 'px';
+        pIn.style.top = targetY + 'px';
+
+        let returnStartTime = Date.now();
+        
+        function inAnimate() {
+          let rElapsed = Date.now() - returnStartTime;
+          let rProgress = rElapsed / duration;
+
+          if (rProgress >= 1) {
+            pIn.remove();
+            if (callback) callback();
+          } else {
+            let curX = targetX + (startX - targetX) * rProgress;
+            let curY = targetY + (startY - targetY) * rProgress;
+            pIn.style.left = curX + 'px';
+            pIn.style.top = curY + 'px';
+            requestAnimationFrame(inAnimate);
+          }
+        }
+        requestAnimationFrame(inAnimate);
+
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        pOut.style.left = curX + 'px';
+        pOut.style.top = curY + 'px';
+        requestAnimationFrame(outAnimate);
+      }
+    }
+    requestAnimationFrame(outAnimate);
+  }
+
+</script>
+</body>
+</html>

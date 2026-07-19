@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Reliability & Fault Tolerance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #ff7b72, #d2a8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #d2a8ff;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #d2a8ff;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Availability Table */
+    .nines-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+    .nines-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #161b22;
+    }
+    .nines-table th, .nines-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    .nines-table th {
+      background: #1f242c;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .nines-table tr:last-child td { border-bottom: none; }
+    .nines-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    .nine-2 { background: rgba(240, 136, 62, 0.15); color: #f0883e; }
+    .nine-3 { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+    .nine-4 { background: rgba(86, 211, 100, 0.15); color: #56d364; }
+    .nine-5 { background: rgba(210, 168, 255, 0.15); color: #d2a8ff; }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.danger {
+      border-color: #ff7b72;
+      color: #ff7b72;
+    }
+    .sim-btn.danger:hover {
+      background: rgba(255, 123, 114, 0.1);
+    }
+    .sim-btn.danger.active {
+      background: #da3633;
+      border-color: #f85149;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.state-closed { color: #56d364; }
+    .metric-value.state-open { color: #ff7b72; }
+    .metric-value.state-half { color: #d29922; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .client-node {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      z-index: 10;
+    }
+    .client-circle {
+      width: 45px;
+      height: 45px;
+      background: #238636;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      box-shadow: 0 0 10px rgba(35, 134, 54, 0.4);
+    }
+    .circuit-node {
+      position: absolute;
+      left: 200px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .cb-box {
+      background: #21262d;
+      border: 2px solid #56d364;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(86, 211, 100, 0.2);
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .cb-box.open {
+      border-color: #ff7b72;
+      box-shadow: 0 0 10px rgba(255, 123, 114, 0.3);
+    }
+    .cb-box.half-open {
+      border-color: #d29922;
+      box-shadow: 0 0 10px rgba(210, 153, 34, 0.3);
+    }
+    .service-node {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      text-align: center;
+    }
+    .service-box {
+      width: 130px;
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.1);
+      transition: all 0.3s;
+    }
+    .service-box.failing {
+      border-color: #ff7b72;
+      background: #2d1e1f;
+      animation: shake 0.25s infinite alternate;
+    }
+    .service-box h4 {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+    }
+    .service-status {
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: #56d364;
+    }
+    .service-box.failing .service-status {
+      color: #ff7b72;
+    }
+
+    /* Particle Animation */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #58a6ff;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+      transition: background-color 0.2s;
+    }
+    .particle.failed {
+      background: #ff7b72;
+    }
+    .particle.blocked {
+      background: #8b949e;
+      border: 1px solid #21262d;
+    }
+
+    @keyframes shake {
+      0% { transform: translateY(-1px) translateX(-1px); }
+      100% { transform: translateY(1px) translateX(1px); }
+    }
+
+    /* Explanation text below simulator */
+    .sim-explain {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+      line-height: 1.5;
+    }
+    
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Reliability & Fault Tolerance</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p><strong>Reliability</strong> is the probability that a system will perform its required function under stated conditions for a specified period. **Fault Tolerance** is the architectural ability to maintain service availability despite failures in component hardware or software.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. High Availability (The "Nines")</h3>
+      <p>Availability measures the percentage of uptime. Japanese users and companies hold systems to extreme standards, often requiring at least <strong>four nines</strong> of availability:</p>
+      <ul>
+        <li><strong>99.9% (Three Nines):</strong> ~8.76 hours of downtime per year.</li>
+        <li><strong>99.99% (Four Nines):</strong> ~52.6 minutes of downtime per year. Standard for production APIs.</li>
+        <li><strong>99.999% (Five Nines):</strong> ~5.26 minutes of downtime per year. Reserved for payment systems and critical telecom infrastructure.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Essential Failure Metrics</h3>
+      <p>Distributed systems must track recovery times to meet Service Level Objectives (SLOs):</p>
+      <ul>
+        <li><strong>MTBF (Mean Time Between Failures):</strong> The average time the system runs before a fault occurs. High MTBF indicates high hardware/software stability.</li>
+        <li><strong>MTTR (Mean Time To Recover):</strong> The average time it takes to detect, diagnose, and fix an outage. Lowering MTTR via runbooks, monitors, and auto-failovers is key.</li>
+        <li><strong>Formula:</strong> <code>Availability = MTBF / (MTBF + MTTR)</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Availability Downtime Chart</div>
+  <p>How much downtime is allowed under different SLA tiers?</p>
+
+  <!-- Availability Table -->
+  <div class="nines-table-wrapper">
+    <table class="nines-table">
+      <thead>
+        <tr>
+          <th>Availability Tier</th>
+          <th>Max Downtime (Yearly)</th>
+          <th>Max Downtime (Monthly)</th>
+          <th>Typical Application Profile</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="nines-badge nine-2">99.0% ("Two Nines")</span></td>
+          <td>3.65 days</td>
+          <td>7.2 hours</td>
+          <td>Internal tooling, staging servers.</td>
+        </tr>
+        <tr>
+          <td><span class="nines-badge nine-3">99.9% ("Three Nines")</span></td>
+          <td>8.76 hours</td>
+          <td>43.8 minutes</td>
+          <td>Consumer-facing SaaS platforms, web forums.</td>
+        </tr>
+        <tr>
+          <td><span class="nines-badge nine-4">99.99% ("Four Nines")</span></td>
+          <td>52.6 minutes</td>
+          <td>4.38 minutes</td>
+          <td>API Gateways, core banking engines, high-scale e-commerce.</td>
+        </tr>
+        <tr>
+          <td><span class="nines-badge nine-5">99.999% ("Five Nines")</span></td>
+          <td>5.26 minutes</td>
+          <td>26.3 seconds</td>
+          <td>Disaster-warning systems, cellular backbones, Stripe core.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Fault Tolerance Core Techniques -->
+  <div class="section-title">Core Mitigation Techniques</div>
+  <div class="concept-grid" style="margin-top: 1rem;">
+    <div class="concept-card">
+      <h3>Exponential Backoff with Jitter</h3>
+      <p>When downstream service calls fail, immediately retrying will overload the failing node further (called a <strong>Thundering Herd</strong>). Use exponential delays: <code>Delay = base * 2<sup>attempt</sup></code>.</p>
+      <p>Always add <strong>Jitter</strong> (random noise) to spread out retry bursts and allow the downstream node to recover.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Idempotent APIs & Keys</h3>
+      <p>Retries introduce duplicate requests. <strong>Idempotency</strong> guarantees that processing the same request multiple times yields the same result without double-side-effects (e.g. charging a card twice).</p>
+      <p>Clients send an <code>Idempotency-Key</code> header. The server caches this key in Redis with a TTL. On duplicate detection, it immediately returns the cached response.</p>
+    </div>
+  </div>
+
+  <!-- Circuit Breaker Simulator -->
+  <div class="section-title">Interactive Circuit Breaker Simulator</div>
+  <p>Learn how the <strong>Circuit Breaker Pattern</strong> protects upstream services from cascading failures by failing fast during outages.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Circuit Breaker Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn" id="btn-fire" onclick="sendRequest()">Send Test Request</button>
+        <button class="sim-btn danger" id="btn-inject" onclick="toggleFailure()">Inject Payment Failures: OFF</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">CB State</div>
+        <div class="metric-value state-closed" id="val-state">CLOSED</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Consecutive Failures</div>
+        <div class="metric-value" id="val-failures">0 / 3</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Total Requests</div>
+        <div class="metric-value" id="val-total">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Success Rate</div>
+        <div class="metric-value" id="val-success">100%</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Client -->
+      <div class="client-node">
+        <div class="client-circle">API</div>
+      </div>
+
+      <!-- Circuit Breaker -->
+      <div class="circuit-node">
+        <div class="cb-box" id="cb-node">CIRCUIT BREAKER: CLOSED</div>
+        <div style="font-size: 0.6rem; color: #8b949e; text-align: center;" id="cb-timer"></div>
+      </div>
+
+      <!-- Payment Service -->
+      <div class="service-node">
+        <div class="service-box" id="srv-node">
+          <h4>Payment API</h4>
+          <span class="service-status" id="srv-status">HEALTHY</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>How to play:</strong> Click "Send Test Request" to watch packets traverse the Circuit Breaker. Turn on "Inject Payment Failures" to simulate an outage. Once 3 consecutive requests fail, the circuit will trip to <strong>OPEN</strong> and immediately block subsequent requests to protect the network. After 8 seconds, it will enter <strong>HALF-OPEN</strong> to test the server's health with a probe.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If an interviewer asks: <em>"How do you handle down dependencies in a highly concurrent API?"</em>
+      <br><br>
+      Frame your response: 
+      <em>"First, I'd implement a <strong>Circuit Breaker</strong> at our API Gateway layer to fail fast and prevent thread pool exhaustion. Second, we'll design <strong>retry policies with exponential backoff and random jitter</strong>. Finally, to ensure transaction safety during payment retries, I will enforce <strong>Idempotency-Keys</strong> generated by clients and tracked via Redis unique keys, returning the same response for identical tokens."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let state = {
+    cbState: 'CLOSED', // CLOSED, OPEN, HALF_OPEN
+    consecutiveFailures: 0,
+    threshold: 3,
+    failureInjected: false,
+    totalRequests: 0,
+    successfulRequests: 0,
+    resetTimeout: 8000, // 8 seconds
+    cooldownTimer: null,
+    cooldownTimeRemaining: 0
+  };
+
+  const valState = document.getElementById('val-state');
+  const valFailures = document.getElementById('val-failures');
+  const valTotal = document.getElementById('val-total');
+  const valSuccess = document.getElementById('val-success');
+  const cbNode = document.getElementById('cb-node');
+  const cbTimer = document.getElementById('cb-timer');
+  const srvNode = document.getElementById('srv-node');
+  const srvStatus = document.getElementById('srv-status');
+  const arena = document.getElementById('arena');
+
+  function toggleFailure() {
+    state.failureInjected = !state.failureInjected;
+    const btn = document.getElementById('btn-inject');
+    if (state.failureInjected) {
+      btn.innerText = "Inject Payment Failures: ON";
+      btn.classList.add('active');
+      srvNode.classList.add('failing');
+      srvStatus.innerText = "OUTAGE (500 Error)";
+    } else {
+      btn.innerText = "Inject Payment Failures: OFF";
+      btn.classList.remove('active');
+      srvNode.classList.remove('failing');
+      srvStatus.innerText = "HEALTHY";
+    }
+  }
+
+  function sendRequest() {
+    state.totalRequests++;
+    valTotal.innerText = state.totalRequests;
+
+    createRequestParticle();
+  }
+
+  function createRequestParticle() {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    arena.appendChild(particle);
+
+    let startX = 75;
+    let startY = 125;
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 1200;
+
+    let targetX = 200;
+    let targetY = 125;
+
+    let destinationX = 730;
+    let destinationY = 125;
+
+    let isBlocked = state.cbState === 'OPEN';
+    let isFailing = state.failureInjected;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        
+        // Handle request result when it finishes
+        if (isBlocked) {
+          handleRequestResult('blocked');
+        } else if (isFailing) {
+          handleRequestResult('failed');
+        } else {
+          handleRequestResult('success');
+        }
+      } else {
+        let curX, curY;
+
+        if (progress < 0.4) {
+          // Segment 1: Client -> Circuit Breaker
+          let p1 = progress / 0.4;
+          curX = startX + (targetX - startX) * p1;
+          curY = startY + (targetY - startY) * p1;
+        } else {
+          // Segment 2: Circuit Breaker -> Service or Blocked
+          let p2 = (progress - 0.4) / 0.6;
+          if (isBlocked) {
+            // Blocked: visual drops downward or turns grey
+            curX = targetX + 15 * p2;
+            curY = targetY + 60 * Math.sin(p2 * Math.PI / 2);
+            particle.classList.add('blocked');
+          } else {
+            curX = targetX + (destinationX - targetX) * p2;
+            curY = targetY + (destinationY - targetY) * p2;
+            if (isFailing) {
+              particle.classList.add('failed');
+            }
+          }
+        }
+
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function handleRequestResult(result) {
+    if (result === 'blocked') {
+      // Immediate 503 response from Gateway
+      updateSuccessRate(false);
+    } else if (result === 'failed') {
+      state.consecutiveFailures++;
+      updateSuccessRate(false);
+
+      if (state.cbState === 'CLOSED' && state.consecutiveFailures >= state.threshold) {
+        tripCircuitOpen();
+      } else if (state.cbState === 'HALF_OPEN') {
+        tripCircuitOpen(); // Probe failed, back to open
+      }
+    } else {
+      // Success
+      state.consecutiveFailures = 0;
+      state.successfulRequests++;
+      updateSuccessRate(true);
+
+      if (state.cbState === 'HALF_OPEN') {
+        resetCircuitClosed();
+      }
+    }
+
+    updateMetricsDisplay();
+  }
+
+  function tripCircuitOpen() {
+    state.cbState = 'OPEN';
+    cbNode.className = 'cb-box open';
+    cbNode.innerText = 'CIRCUIT BREAKER: OPEN';
+    
+    valState.innerText = 'OPEN (Short-Circuit)';
+    valState.className = 'metric-value state-open';
+
+    // Start cooldown timer
+    state.cooldownTimeRemaining = state.resetTimeout / 1000;
+    if (state.cooldownTimer) clearInterval(state.cooldownTimer);
+    
+    cbTimer.innerText = `Testing health in: ${state.cooldownTimeRemaining}s`;
+
+    state.cooldownTimer = setInterval(() => {
+      state.cooldownTimeRemaining--;
+      if (state.cooldownTimeRemaining <= 0) {
+        clearInterval(state.cooldownTimer);
+        setHalfOpen();
+      } else {
+        cbTimer.innerText = `Testing health in: ${state.cooldownTimeRemaining}s`;
+      }
+    }, 1000);
+  }
+
+  function setHalfOpen() {
+    state.cbState = 'HALF_OPEN';
+    cbNode.className = 'cb-box half-open';
+    cbNode.innerText = 'CIRCUIT BREAKER: HALF-OPEN';
+    cbTimer.innerText = 'Probe requests enabled';
+    
+    valState.innerText = 'HALF-OPEN (Probe)';
+    valState.className = 'metric-value state-half';
+  }
+
+  function resetCircuitClosed() {
+    state.cbState = 'CLOSED';
+    state.consecutiveFailures = 0;
+    cbNode.className = 'cb-box';
+    cbNode.innerText = 'CIRCUIT BREAKER: CLOSED';
+    cbTimer.innerText = '';
+
+    valState.innerText = 'CLOSED';
+    valState.className = 'metric-value state-closed';
+  }
+
+  function updateSuccessRate(isSuccess) {
+    let rate = Math.round((state.successfulRequests / state.totalRequests) * 100);
+    valSuccess.innerText = rate + '%';
+    valSuccess.className = 'metric-value' + (rate < 80 ? ' danger' : (rate < 95 ? ' warning' : ''));
+  }
+
+  function updateMetricsDisplay() {
+    valFailures.innerText = `${Math.min(state.consecutiveFailures, state.threshold)} / ${state.threshold}`;
+  }
+
+  // Automatic requests pulse occasionally to make the system look alive
+  setInterval(() => {
+    if (Math.random() > 0.4) {
+      sendRequest();
+    }
+  }, 2200);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Data Pipelines &amp; Streaming</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #7ee787, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Box */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #7ee787;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #7ee787;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Comparison Table */
+    .comp-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #161b22;
+    }
+    .comp-table th, .comp-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    .comp-table th {
+      background: #1f242c;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.highlight { color: #56d364; }
+    .metric-value.warning { color: #f0883e; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+    
+    .sim-node {
+      background: #161b22;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      z-index: 10;
+      text-align: center;
+      width: 90px;
+    }
+    .sim-node.engine {
+      border-color: #58a6ff;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.2);
+    }
+    .bucket-wrapper {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      background: #161b22;
+      border: 2px dashed #d29922;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column-reverse;
+      padding: 4px;
+      gap: 3px;
+      overflow: hidden;
+    }
+    .bucket-fill {
+      height: 6px;
+      background: #d29922;
+      border-radius: 1px;
+      width: 100%;
+    }
+
+    /* Event Particle */
+    .event-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #56d364;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .event-dot.big-batch {
+      width: 36px;
+      height: 36px;
+      background: #d29922;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-size: 0.65rem;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(210, 153, 34, 0.4);
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Data Pipelines: Batch vs. Stream</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>**Batch Processing** maps static datasets at scheduled intervals to maximize CPU resource efficiency, while **Stream Processing** aggregates infinite, real-time events message-by-message to guarantee sub-second delivery latencies.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Batch Processing &amp; MapReduce</h3>
+      <p>Processes bounded historical logs in bulk workloads:</p>
+      <ul>
+        <li><strong>Tooling:</strong> Apache Spark, Apache Hadoop, AWS EMR, scheduled via Airflow DAGs.</li>
+        <li><strong>Properties:</strong> High throughput, optimized disk utilization. The data is bounded (already fully written).</li>
+        <li><strong>Downside:</strong> High data latency. Reports run daily or hourly, meaning decisions rely on historical states.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Stream Processing &amp; Aggregations</h3>
+      <p>Processes unbounded events as they occur in real time:</p>
+      <ul>
+        <li><strong>Tooling:</strong> Apache Flink, Spark Streaming, Kafka Streams.</li>
+        <li><strong>Properties:</strong> Sub-second latency. Data is processed event-by-event.</li>
+        <li><strong>Out-of-Order Events:</strong> Network drops force packets to arrive late. Stream engines use **Watermarks** (logical timestamps) to determine when to close time windows and execute aggregations.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Lambda vs. Kappa Architectures</h3>
+      <p>Architectural patterns for syncing real-time and batch results:</p>
+      <ul>
+        <li><strong>Lambda:</strong> Dual-track processing. A *Speed Layer* (Flink) provides fast, approximate real-time outputs, while a *Batch Layer* (Spark) runs nightly to generate correct historical data. The client merges both in the database.</li>
+        <li><strong>Kappa:</strong> Single-track processing. Removes the batch layer entirely. Everything is a stream. To reprocess history, you re-read messages from a persistent Kafka broker log from offset zero.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Streaming Window Types</h3>
+      <p>How unbounded records are grouped to execute aggregations:</p>
+      <ul>
+        <li><strong>Tumbling Window:</strong> Fixed-size, non-overlapping intervals (e.g. aggregate orders every 5 minutes: 12:00-12:05, 12:05-12:10).</li>
+        <li><strong>Sliding Window:</strong> Fixed-size, overlapping intervals (e.g. calculate sum of last 10 minutes, updated every 1 minute).</li>
+        <li><strong>Session Window:</strong> Dynamic windows triggered by periods of user inactivity.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Batch vs. Stream Comparison</div>
+
+  <!-- Comparison Table -->
+  <div class="comp-table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Batch Processing</th>
+          <th>Stream Processing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Data Bounds</strong></td>
+          <td>Bounded (Static historical files).</td>
+          <td>Unbounded (Infinite real-time flow).</td>
+        </tr>
+        <tr>
+          <td><strong>Ingestion Latency</strong></td>
+          <td>Hours to Days.</td>
+          <td>Milliseconds to Seconds.</td>
+        </tr>
+        <tr>
+          <td><strong>Data Completeness</strong></td>
+          <td>High (Handles historical correction easily).</td>
+          <td>Subject to late-arriving packet drift.</td>
+        </tr>
+        <tr>
+          <td><strong>Computation Style</strong></td>
+          <td>Full dataset re-scans. MapReduce.</td>
+          <td>Stateful, incremental event updates.</td>
+        </tr>
+        <tr>
+          <td><strong>Primary Use Case</strong></td>
+          <td>Financial ledger auditing, ML training.</td>
+          <td>Real-time fraud alerts, system telemetry.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pipeline Simulator -->
+  <div class="section-title">Interactive Data Processing Simulator</div>
+  <p>Toggle between **Stream Mode** and **Batch Mode** to watch how events travel from data source to analytics storage sink.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Pipeline Ingestion Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-stream" onclick="setMode('stream')">Stream (Real-time)</button>
+        <button class="sim-btn" id="btn-batch" onclick="setMode('batch')">Batch (Periodic)</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Pipeline Latency</div>
+        <div class="metric-value success" id="val-latency">~30 ms</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Throughput /sec</div>
+        <div class="metric-value" id="val-throughput">12 events</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Compute Cost</div>
+        <div class="metric-value warning" id="val-cost">Continuous CPU</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Window Accrual</div>
+        <div class="metric-value" id="val-accrual">0 events</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <div class="sim-node" id="source">Data Source</div>
+      
+      <!-- Middle stage: Flink Engine vs Spark Bucket -->
+      <div class="bucket-wrapper" id="batch-bucket" style="display: none;">
+        <!-- Filled dynamic lines representing batch accrual -->
+      </div>
+      <div class="sim-node engine" id="stream-engine">Flink Engine</div>
+
+      <div class="sim-node" id="sink">Data Warehouse</div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Stream Processing:</strong> Flink processes event dots instantly as they arrive. Latency is extremely low (~30ms), allowing live dashboards to update.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design an analytical processing tier for a scaling e-commerce app?"</em>
+      <br><br>
+      Say: 
+      <em>"I will structure a Kappa architecture to decouple streaming telemetry. We will write clickstream logs to Kafka partitions. Real-time metrics (like active user carts or promo spikes) will be processed by Apache Flink using tumbling windows. For deep analytics and historical business auditing, we will read the log records asynchronously into an S3 data lake, executing scheduled Apache Spark batch processing jobs to optimize resource cost limits."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let config = {
+    mode: 'stream', // stream, batch
+    running: true,
+    batchQueue: [],
+    accumulatedCount: 0
+  };
+
+  const valLatency = document.getElementById('val-latency');
+  const valThroughput = document.getElementById('val-throughput');
+  const valCost = document.getElementById('val-cost');
+  const valAccrual = document.getElementById('val-accrual');
+  const streamEngine = document.getElementById('stream-engine');
+  const batchBucket = document.getElementById('batch-bucket');
+  const simTip = document.getElementById('sim-tip');
+  const arena = document.getElementById('arena');
+
+  function setMode(mode) {
+    config.mode = mode;
+    document.getElementById('btn-stream').className = 'sim-btn' + (mode === 'stream' ? ' active' : '');
+    document.getElementById('btn-batch').className = 'sim-btn' + (mode === 'batch' ? ' active' : '');
+
+    if (mode === 'stream') {
+      streamEngine.style.display = 'block';
+      batchBucket.style.display = 'none';
+      valLatency.innerText = '~30 ms';
+      valLatency.className = 'metric-value success';
+      valThroughput.innerText = '12 events';
+      valCost.innerText = 'Continuous CPU';
+      valCost.className = 'metric-value warning';
+      valAccrual.innerText = '0 events';
+      simTip.innerHTML = `<strong>Stream Processing:</strong> Flink processes event dots instantly as they arrive. Latency is extremely low (~30ms), allowing live dashboards to update.`;
+    } else {
+      streamEngine.style.display = 'none';
+      batchBucket.style.display = 'flex';
+      valLatency.innerText = 'Hourly / Daily';
+      valLatency.className = 'metric-value warning';
+      valThroughput.innerText = '3000 events';
+      valCost.innerText = 'Scheduled Batch';
+      valCost.className = 'metric-value success';
+      simTip.innerHTML = `<strong>Batch Processing:</strong> Events accumulate in an S3 data bucket. Every 5 seconds, Spark kicks off a batch processing job (simulated), flushing aggregated block data to the warehouse.`;
+    }
+    config.accumulatedCount = 0;
+    batchBucket.innerHTML = '';
+    updateAccrual();
+  }
+
+  function updateAccrual() {
+    valAccrual.innerText = `${config.accumulatedCount} events`;
+  }
+
+  // Periodic traffic generation
+  setInterval(() => {
+    if (!config.running) return;
+    if (config.mode === 'stream') {
+      // Continuous fast dots
+      animateEventDot();
+    } else {
+      // Accumulate
+      animateEventToBucket();
+    }
+  }, 400);
+
+  // Batch trigger loop
+  setInterval(() => {
+    if (config.mode === 'batch' && config.accumulatedCount > 0) {
+      triggerBatchFlush();
+    }
+  }, 5000);
+
+  function animateEventDot() {
+    const dot = document.createElement('div');
+    dot.className = 'event-dot';
+    arena.appendChild(dot);
+
+    let startX = 140;
+    let startY = 125;
+    let engineX = 450;
+    let engineY = 125;
+    let targetX = 760;
+    let targetY = 125;
+
+    dot.style.left = startX + 'px';
+    dot.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 800;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        dot.remove();
+      } else {
+        let curX, curY;
+        if (progress < 0.5) {
+          let p1 = progress / 0.5;
+          curX = startX + (engineX - startX) * p1;
+          curY = startY + (engineY - startY) * p1;
+        } else {
+          let p2 = (progress - 0.5) / 0.5;
+          curX = engineX + (targetX - engineX) * p2;
+          curY = engineY + (targetY - engineY) * p2;
+        }
+        dot.style.left = curX + 'px';
+        dot.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function animateEventToBucket() {
+    if (config.accumulatedCount >= 10) return; // Full bucket limit for visual
+
+    const dot = document.createElement('div');
+    dot.className = 'event-dot';
+    arena.appendChild(dot);
+
+    let startX = 140;
+    let startY = 125;
+    let targetX = 450;
+    let targetY = 125;
+
+    dot.style.left = startX + 'px';
+    dot.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 400;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        dot.remove();
+        config.accumulatedCount++;
+        updateAccrual();
+        
+        const fill = document.createElement('div');
+        fill.className = 'bucket-fill';
+        batchBucket.appendChild(fill);
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        dot.style.left = curX + 'px';
+        dot.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function triggerBatchFlush() {
+    let activeFlushingCount = config.accumulatedCount;
+    config.accumulatedCount = 0;
+    updateAccrual();
+    batchBucket.innerHTML = '';
+
+    const batchBlock = document.createElement('div');
+    batchBlock.className = 'event-dot big-batch';
+    batchBlock.innerText = `${activeFlushingCount} Event Block`;
+    arena.appendChild(batchBlock);
+
+    let startX = 450;
+    let startY = 125;
+    let targetX = 760;
+    let targetY = 125;
+
+    batchBlock.style.left = startX - 18 + 'px'; // Center offset
+    batchBlock.style.top = startY - 18 + 'px';
+
+    let startTime = Date.now();
+    let duration = 800;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        batchBlock.remove();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        batchBlock.style.left = curX - 18 + 'px';
+        batchBlock.style.top = curY - 18 + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Scalability</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #f0883e, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #f0883e;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #f0883e;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Comparison Table */
+    .comp-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #161b22;
+    }
+    .comp-table th, .comp-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    .comp-table th {
+      background: #1f242c;
+      color: #58a6ff;
+      font-weight: 600;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table td strong { color: #f0883e; }
+    .pro-tag { color: #56d364; background: rgba(86, 211, 100, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .con-tag { color: #ff7b72; background: rgba(255, 123, 114, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.warning { color: #f0883e; }
+    .metric-value.danger { color: #ff7b72; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .traffic-source {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      z-index: 10;
+    }
+    .source-node {
+      width: 45px;
+      height: 45px;
+      background: #238636;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      box-shadow: 0 0 10px rgba(35, 134, 54, 0.4);
+    }
+    .load-balancer {
+      position: absolute;
+      left: 180px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1f6feb;
+      border: 1px solid #58a6ff;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(31, 111, 235, 0.3);
+      display: none;
+    }
+    .servers-wrapper {
+      position: absolute;
+      right: 40px;
+      height: 100%;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 15px;
+      z-index: 10;
+    }
+    .sim-server {
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .sim-server.active {
+      border-color: #58a6ff;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.2);
+    }
+    .sim-server.overloaded {
+      border-color: #ff7b72;
+      background: #2d1e1f;
+      box-shadow: 0 0 15px rgba(255, 123, 114, 0.4);
+      animation: shake 0.2s infinite alternate;
+    }
+    .server-name {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .server-spec {
+      font-size: 0.65rem;
+      color: #8b949e;
+    }
+    .server-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: #0d1117;
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .server-bar {
+      height: 100%;
+      background: #56d364;
+      width: 0%;
+      transition: width 0.3s, background-color 0.3s;
+    }
+
+    /* Particle Animation */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #f0883e;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    @keyframes shake {
+      0% { transform: translateY(-1px) translateX(-1px); }
+      100% { transform: translateY(1px) translateX(1px); }
+    }
+
+    /* Explanation text below simulator */
+    .sim-explain {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+      line-height: 1.5;
+    }
+    
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Scalability</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p><strong>Scalability</strong> is the ability of a system to handle increasing load by adding resources without compromising performance or stability.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. What is "Load"?</h3>
+      <p>Before scaling, you must measure what kind of stress the system is experiencing. Load is multidimensional:</p>
+      <ul>
+        <li><strong>QPS (Queries Per Second):</strong> The rate of requests entering the system.</li>
+        <li><strong>Concurrent Users:</strong> Active connections kept open simultaneously.</li>
+        <li><strong>Read/Write Ratio:</strong> Read-heavy systems (e.g., Twitter, blogs) scale differently than write-heavy systems (e.g., IoT logs).</li>
+        <li><strong>Data Volume:</strong> The storage growth rate. Storing TBs of media requires specialized blob storage (like S3) instead of databases.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Stateless vs. Stateful Tiers</h3>
+      <p>The architecture layer determines the ease of scaling:</p>
+      <ul>
+        <li><strong>Stateless Tier (App Servers, APIs):</strong> Servers do not store session state or user data locally. Any server can handle any request. Scaled easily by adding nodes behind a Load Balancer.</li>
+        <li><strong>Stateful Tier (Databases, Caches):</strong> Servers persist data. Scaling requires distributed consensus, sharding, or replication, making it significantly more complex.</li>
+        <li><strong>Best Practice:</strong> Keep app tiers stateless. Offload session data to distributed caches like Redis.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Scaling Types: Vertical vs. Horizontal</div>
+  <p>In interviews, you must weigh the tradeoffs of how you choose to scale your systems. Below is a breakdown of the two paradigms.</p>
+
+  <!-- Comparison Table -->
+  <div class="comp-table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Vertical Scaling (Scale Up)</th>
+          <th>Horizontal Scaling (Scale Out)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Mechanism</strong></td>
+          <td>Adding CPU, RAM, or storage to a single server.</td>
+          <td>Adding more server nodes to share the load.</td>
+        </tr>
+        <tr>
+          <td><strong>Implementation</strong></td>
+          <td><span class="pro-tag">Pro</span> No code or architecture changes needed.</td>
+          <td><span class="con-tag">Con</span> Requires Load Balancers and stateless code.</td>
+        </tr>
+        <tr>
+          <td><strong>Capacity Limit</strong></td>
+          <td><span class="con-tag">Con</span> Hard hardware limits. Cannot scale infinitely.</td>
+          <td><span class="pro-tag">Pro</span> Virtual infinite scale by adding nodes.</td>
+        </tr>
+        <tr>
+          <td><strong>Redundancy</strong></td>
+          <td><span class="con-tag">Con</span> Single Point of Failure (SPOF).</td>
+          <td><span class="pro-tag">Pro</span> High availability. One node failure won't down the app.</td>
+        </tr>
+        <tr>
+          <td><strong>Database scaling</strong></td>
+          <td>Easy. Default for relational DBs (PostgreSQL, MySQL).</td>
+          <td>Complex. Requires sharding, consistent hashing, or NoSQL.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Interactive scaling simulator -->
+  <div class="section-title">Interactive Scaling Simulator</div>
+  <p>Experiment with traffic load and watch how vertical scaling vs. horizontal scaling handles traffic in real time.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Scaling Strategy Simulator</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-none" onclick="setScaling('none')">No Scaling</button>
+        <button class="sim-btn" id="btn-vertical" onclick="setScaling('vertical')">Scale Vertically</button>
+        <button class="sim-btn" id="btn-horizontal" onclick="setScaling('horizontal')">Scale Horizontally</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Incoming Load</div>
+        <div class="metric-value" id="val-load">50 QPS</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Active Servers</div>
+        <div class="metric-value" id="val-servers">1</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">CPU Utilization</div>
+        <div class="metric-value" id="val-cpu">50%</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Dropped Requests</div>
+        <div class="metric-value" id="val-dropped">0%</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Traffic Source -->
+      <div class="traffic-source">
+        <div class="source-node">Client</div>
+      </div>
+
+      <!-- Load Balancer (Hidden by default, shown during Horizontal) -->
+      <div class="load-balancer" id="lb-node">Load Balancer</div>
+
+      <!-- Server Instances -->
+      <div class="servers-wrapper" id="servers-container">
+        <!-- Servers will be dynamically rendered and updated -->
+      </div>
+    </div>
+
+    <!-- Interactive sliders -->
+    <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+      <label for="load-slider" style="font-size: 0.85rem; color: #8b949e; font-weight: 600;">Simulate Request Rate (QPS):</label>
+      <input type="range" id="load-slider" min="10" max="250" value="50" style="flex: 1; min-width: 150px; cursor: pointer;" oninput="updateLoad(this.value)">
+      <span id="slider-output" style="font-size: 0.9rem; font-weight: bold; width: 60px;">50 QPS</span>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> With "No Scaling", the single server handles up to 100 QPS. Push the slider past 100 QPS to watch the server saturate and drop incoming requests!
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      Always start by assessing the <strong>load requirements</strong> (e.g., read vs. write heavy, peak traffic profiles). For stateless tiers, state: 
+      <em>"I will scale the application layer horizontally behind a load balancer so we can scale out linearly. For stateful database nodes, I will rely on vertical scaling initially, then plan for horizontal scaling via read-replicas, caching layers, and database sharding when we hit capacity limits."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let config = {
+    strategy: 'none', // none, vertical, horizontal
+    qps: 50,
+    serverLimit: 100, // max QPS a basic server can handle
+    servers: []
+  };
+
+  const arena = document.getElementById('arena');
+  const lbNode = document.getElementById('lb-node');
+  const serversContainer = document.getElementById('servers-container');
+
+  const valLoad = document.getElementById('val-load');
+  const valServers = document.getElementById('val-servers');
+  const valCpu = document.getElementById('val-cpu');
+  const valDropped = document.getElementById('val-dropped');
+  const simTip = document.getElementById('sim-tip');
+
+  function updateLoad(val) {
+    config.qps = parseInt(val);
+    document.getElementById('slider-output').innerText = val + ' QPS';
+    valLoad.innerText = val + ' QPS';
+    updateSimulation();
+  }
+
+  function setScaling(type) {
+    config.strategy = type;
+    
+    // Toggle active classes on buttons
+    document.getElementById('btn-none').classList.remove('active');
+    document.getElementById('btn-vertical').classList.remove('active');
+    document.getElementById('btn-horizontal').classList.remove('active');
+
+    document.getElementById(`btn-${type}`).classList.add('active');
+
+    // Update hints
+    if (type === 'none') {
+      simTip.innerHTML = `<strong>Observation:</strong> With "No Scaling", the single server handles up to 100 QPS. Push the slider past 100 QPS to watch the server saturate, turn red, and drop incoming requests.`;
+    } else if (type === 'vertical') {
+      simTip.innerHTML = `<strong>Observation:</strong> "Vertical Scaling" upgrades the hardware. The single server now has a capacity of 250 QPS. It handles the peak load smoothly, but it is still a Single Point of Failure (SPOF) and will hit hardware boundaries eventually.`;
+    } else if (type === 'horizontal') {
+      simTip.innerHTML = `<strong>Observation:</strong> "Horizontal Scaling" introduces a Load Balancer to distribute traffic across 3 servers (each 100 QPS capacity). Total cluster capacity is 300 QPS. Requests are split evenly, resulting in low CPU usage and zero drop rates even at peak load.`;
+    }
+
+    updateSimulation();
+  }
+
+  function updateSimulation() {
+    let serversHtml = '';
+    let serverCount = 1;
+    let maxCapacity = config.serverLimit;
+    let loadPerServer = config.qps;
+    let activeStrategy = config.strategy;
+
+    if (activeStrategy === 'vertical') {
+      serverCount = 1;
+      maxCapacity = 250; // Increased limit
+      loadPerServer = config.qps;
+      lbNode.style.display = 'none';
+    } else if (activeStrategy === 'horizontal') {
+      serverCount = 3;
+      maxCapacity = 100;
+      loadPerServer = Math.round(config.qps / 3);
+      lbNode.style.display = 'block';
+    } else {
+      // none
+      serverCount = 1;
+      maxCapacity = 100;
+      loadPerServer = config.qps;
+      lbNode.style.display = 'none';
+    }
+
+    // Render servers
+    config.servers = [];
+    for (let i = 0; i < serverCount; i++) {
+      let cpu = Math.min(Math.round((loadPerServer / maxCapacity) * 100), 100);
+      let isOverloaded = loadPerServer > maxCapacity;
+      let serverName = activeStrategy === 'vertical' ? 'Server (8 Core, 32GB)' : `Server Node ${i + 1} (2 Core, 8GB)`;
+      let specLabel = activeStrategy === 'vertical' ? 'Cap: 250 QPS' : 'Cap: 100 QPS';
+      
+      config.servers.push({
+        id: i,
+        cpu: cpu,
+        overloaded: isOverloaded,
+        name: serverName
+      });
+
+      let overloadClass = isOverloaded ? 'overloaded' : '';
+      let barColor = cpu > 85 ? '#ff7b72' : (cpu > 60 ? '#d29922' : '#56d364');
+
+      serversHtml += `
+        <div class="sim-server active ${overloadClass}" id="server-${i}">
+          <div class="server-name">${serverName}</div>
+          <div class="server-spec">${specLabel} &middot; Load: ${loadPerServer} QPS</div>
+          <div class="server-bar-bg">
+            <div class="server-bar" style="width: ${cpu}%; background-color: ${barColor};"></div>
+          </div>
+        </div>
+      `;
+    }
+    serversContainer.innerHTML = serversHtml;
+
+    // Calculate aggregated metrics
+    let totalCapacity = serverCount * maxCapacity;
+    let droppedPercentage = 0;
+    if (config.qps > totalCapacity) {
+      let droppedQps = config.qps - totalCapacity;
+      droppedPercentage = Math.round((droppedQps / config.qps) * 100);
+    }
+
+    let avgCpu = 0;
+    config.servers.forEach(s => avgCpu += s.cpu);
+    avgCpu = Math.round(avgCpu / serverCount);
+
+    valServers.innerText = serverCount;
+    valCpu.innerText = avgCpu + '%';
+    valDropped.innerText = droppedPercentage + '%';
+
+    // Update metric styles based on severity
+    valCpu.className = 'metric-value' + (avgCpu > 85 ? ' danger' : (avgCpu > 60 ? ' warning' : ''));
+    valDropped.className = 'metric-value' + (droppedPercentage > 0 ? ' danger' : '');
+  }
+
+  // Animation Loop for Traffic Particles
+  setInterval(() => {
+    // Generate traffic pulses based on QPS
+    // Scale particles based on QPS
+    let particleCount = Math.max(1, Math.min(Math.round(config.qps / 25), 10));
+    
+    for (let i = 0; i < particleCount; i++) {
+      createTrafficParticle();
+    }
+  }, 600);
+
+  function createTrafficParticle() {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    arena.appendChild(particle);
+
+    // Initial position at Client node
+    let startX = 65;
+    let startY = 125 + (Math.random() * 20 - 10);
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let duration = 1200; // ms
+    let startTime = Date.now();
+
+    // Determine target server index
+    let serverIndex = 0;
+    if (config.strategy === 'horizontal') {
+      serverIndex = Math.floor(Math.random() * 3);
+    }
+
+    const serverEl = document.getElementById(`server-${serverIndex}`);
+    if (!serverEl) {
+      particle.remove();
+      return;
+    }
+
+    const arenaRect = arena.getBoundingClientRect();
+    const serverRect = serverEl.getBoundingClientRect();
+
+    let targetX = serverRect.left - arenaRect.left + 15;
+    let targetY = serverRect.top - arenaRect.top + (serverRect.height / 2);
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        
+        // Flash server slightly on packet receipt
+        let serverObj = config.servers[serverIndex];
+        if (serverObj && serverObj.overloaded) {
+          // Packet dropped visual (e.g. red ripple or disappear without hit)
+        }
+      } else {
+        let curX, curY;
+
+        if (config.strategy === 'horizontal') {
+          // Path goes Client -> Load Balancer -> Server
+          let lbX = 220;
+          let lbY = 125;
+          if (progress < 0.4) {
+            // Segment 1: Client -> LB
+            let p1 = progress / 0.4;
+            curX = startX + (lbX - startX) * p1;
+            curY = startY + (lbY - startY) * p1;
+          } else {
+            // Segment 2: LB -> Server
+            let p2 = (progress - 0.4) / 0.6;
+            curX = lbX + (targetX - lbX) * p2;
+            curY = lbY + (targetY - lbY) * p2;
+          }
+        } else {
+          // Straight line Client -> Server
+          curX = startX + (targetX - startX) * progress;
+          curY = startY + (targetY - startY) * progress;
+        }
+
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // Initialize
+  updateSimulation();
+</script>
+</body>
+</html>

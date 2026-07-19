@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Indexing</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #7ee787, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #7ee787;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #7ee787;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.highlight { color: #56d364; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    
+    .linear-array {
+      display: flex;
+      gap: 4px;
+    }
+    .array-item {
+      width: 32px;
+      height: 32px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      transition: all 0.25s;
+    }
+    .array-item.checked {
+      background: #f0883e;
+      border-color: #f2c744;
+      color: #0f1117;
+    }
+    .array-item.found {
+      background: #56d364;
+      border-color: #3fb950;
+      color: #0f1117;
+      transform: scale(1.1);
+    }
+    
+    .tree-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .tree-level {
+      display: flex;
+      gap: 40px;
+    }
+    .tree-node {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-align: center;
+      transition: all 0.25s;
+    }
+    .tree-node.checked {
+      background: #f0883e;
+      border-color: #f2c744;
+      color: #0f1117;
+    }
+    .tree-node.found {
+      background: #56d364;
+      border-color: #3fb950;
+      color: #0f1117;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Indexing</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>An **Index** is a specialized data structure (typically a B-Tree or LSM-Tree) that speeds up data retrieval operations on a database table at the cost of additional write overhead, storage space, and memory memory buffers.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Composite Indexes &amp; Leftmost Prefix Rule</h3>
+      <p>An index created on multiple columns: <code>INDEX(city, status, date)</code>.</p>
+      <ul>
+        <li><strong>Leftmost Prefix Rule:</strong> The database can only use this index if the query filters by the leftmost columns in order. Queries filtering on <code>city</code>, <code>city + status</code>, or <code>city + status + date</code> will use the index.</li>
+        <li><strong>Traps:</strong> Queries filtering on <code>status</code> or <code>date</code> alone, or <code>status + date</code>, cannot use this index and trigger slow sequential scans.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Covering Indexes (Index-Only Scans)</h3>
+      <p>An index that contains all the columns requested by a query.</p>
+      <ul>
+        <li><strong>Mechanism:</strong> If you execute <code>SELECT name, age FROM users WHERE age > 30</code> and have <code>INDEX(age, name)</code>, the database reads values directly from the index nodes in memory, bypassing the table files on disk (no table heap lookup).</li>
+        <li><strong>Benefit:</strong> Extremely fast reads. Promoted as "Index-Only Scan" in PostgreSQL explain logs.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Index Selectivity</h3>
+      <p>The ratio of unique values to the total number of records: <code>Selectivity = Unique / Count</code>.</p>
+      <ul>
+        <li>High selectivity columns (e.g. <code>user_email</code>, <code>uuid</code>) are highly effective index filters.</li>
+        <li>Low selectivity columns (e.g. <code>is_active</code>, <code>gender</code>) are ineffective. The query engine will ignore the index and run a full table scan because random disk seeks on B-trees are slower than sequential disk reads.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Write Overhead Penalties</h3>
+      <p>Indexes are not free. Every write, update, or deletion must also maintain and rebalance the tree structures on disk.</p>
+      <ul>
+        <li>A table with 5 indexes will execute writes roughly 5 times slower than an unindexed table.</li>
+        <li>Over-indexing must be avoided. Keep indexes aligned strictly to actual querying metrics.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Indexing Simulator -->
+  <div class="section-title">Interactive Index Search Simulator</div>
+  <p>Compare how a <strong>Sequential Table Scan</strong> ($O(N)$) compares to a <strong>B-Tree Index Search</strong> ($O(\log N)$) when querying a target key.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Search Algorithm Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-scan" onclick="setSearchMode('scan')">Sequential Scan</button>
+        <button class="sim-btn" id="btn-tree" onclick="setSearchMode('tree')">B-Tree Index Search</button>
+        <button class="sim-btn active" onclick="startSearch()">Search for Key: 14</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Search Target</div>
+        <div class="metric-value">14</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Steps Executed</div>
+        <div class="metric-value highlight" id="val-steps">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Estimated IO Cost</div>
+        <div class="metric-value" id="val-cost">0 IO Ops</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Dynamic Visualizer content goes here -->
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      Select an algorithm and click "Search for Key" to watch the scan. B-Tree traverses down root and branch ranges logically, while a Sequential Scan is forced to read every record from left to right.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"A SQL query on a production database is running slowly. How do you address it?"</em>
+      <br><br>
+      Say: 
+      <em>"I will first run <code>EXPLAIN ANALYZE</code> on the slow query to check if it triggers a sequential scan instead of an index scan. Next, I will check the selectivity of the columns filtered. If filtering on multiple columns, I will verify if a composite index matches the leftmost prefix rule, or create a covering index to enable an index-only scan, avoiding table heap searches entirely."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let config = {
+    mode: 'scan', // scan, tree
+    running: false,
+    steps: 0,
+    target: 14,
+    array: [1, 3, 4, 6, 7, 9, 10, 12, 13, 14, 16, 18, 19, 21, 23, 25]
+  };
+
+  const arena = document.getElementById('arena');
+  const valSteps = document.getElementById('val-steps');
+  const valCost = document.getElementById('val-cost');
+  const simTip = document.getElementById('sim-tip');
+
+  function setSearchMode(mode) {
+    if (config.running) return;
+    config.mode = mode;
+    document.getElementById('btn-scan').className = 'sim-btn' + (mode === 'scan' ? ' active' : '');
+    document.getElementById('btn-tree').className = 'sim-btn' + (mode === 'tree' ? ' active' : '');
+    renderArena();
+  }
+
+  function renderArena() {
+    config.steps = 0;
+    valSteps.innerText = "0";
+    valCost.innerText = "0 IO Ops";
+
+    if (config.mode === 'scan') {
+      let html = '<div class="linear-array">';
+      config.array.forEach((val, i) => {
+        html += `<div class="array-item" id="item-${i}">${val}</div>`;
+      });
+      html += '</div>';
+      arena.innerHTML = html;
+      simTip.innerText = "Sequential Scan: Steps through each index one-by-one. In worst case, takes O(N) steps.";
+    } else {
+      // Render simple 3-level tree visual
+      arena.innerHTML = `
+        <div class="tree-wrapper">
+          <div class="tree-level">
+            <div class="tree-node" id="node-root">Root (Keys: [12])</div>
+          </div>
+          <div class="tree-level">
+            <div class="tree-node" id="node-left">Branch (Keys: [4, 7])</div>
+            <div class="tree-node" id="node-right">Branch (Keys: [18, 21])</div>
+          </div>
+          <div class="tree-level">
+            <div class="tree-node" id="node-leaf-0">Leaf: 1..3</div>
+            <div class="tree-node" id="node-leaf-1">Leaf: 6</div>
+            <div class="tree-node" id="node-leaf-2">Leaf: 9..10</div>
+            <div class="tree-node" id="node-leaf-3">Leaf: 13..14</div>
+            <div class="tree-node" id="node-leaf-4">Leaf: 16</div>
+            <div class="tree-node" id="node-leaf-5">Leaf: 19</div>
+            <div class="tree-node" id="node-leaf-6">Leaf: 23..25</div>
+          </div>
+        </div>
+      `;
+      simTip.innerText = "B-Tree Search: Traverses nodes based on ranges. Searches take logarithmic O(log N) steps.";
+    }
+  }
+
+  function startSearch() {
+    if (config.running) return;
+    config.running = true;
+    renderArena();
+
+    if (config.mode === 'scan') {
+      runSequentialScan();
+    } else {
+      runBTreeSearch();
+    }
+  }
+
+  function runSequentialScan() {
+    let idx = 0;
+    
+    function step() {
+      if (idx >= config.array.length) {
+        config.running = false;
+        return;
+      }
+
+      config.steps++;
+      valSteps.innerText = config.steps;
+      valCost.innerText = `${config.steps} IO Ops`;
+
+      let item = document.getElementById(`item-${idx}`);
+      
+      if (config.array[idx] === config.target) {
+        item.classList.add('found');
+        config.running = false;
+      } else {
+        item.classList.add('checked');
+        idx++;
+        setTimeout(step, 200);
+      }
+    }
+    step();
+  }
+
+  function runBTreeSearch() {
+    // Simulated steps: 1. check root, 2. check right branch, 3. check leaf 3.
+    let steps = [
+      { id: 'node-root', delay: 400, text: 'Check Root: 14 > 12 -> Go Right Branch' },
+      { id: 'node-right', delay: 800, text: 'Check Branch: 14 is between 12 and 18 -> Go Leaf 3' },
+      { id: 'node-leaf-3', delay: 1200, text: 'Check Leaf Node: Key 14 matches! (Success)' }
+    ];
+
+    steps.forEach(s => {
+      setTimeout(() => {
+        config.steps++;
+        valSteps.innerText = config.steps;
+        valCost.innerText = `${config.steps} IO Ops`;
+
+        let node = document.getElementById(s.id);
+        if (s.id === 'node-leaf-3') {
+          node.className = 'tree-node found';
+          config.running = false;
+        } else {
+          node.className = 'tree-node checked';
+        }
+        simTip.innerText = s.text;
+      }, s.delay);
+    });
+  }
+
+  // Initialize
+  renderArena();
+</script>
+</body>
+</html>

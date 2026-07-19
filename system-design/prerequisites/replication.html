@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Replication</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #58a6ff, #d2a8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Box */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #58a6ff;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #58a6ff;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.danger { color: #ff7b72; }
+    .metric-value.success { color: #56d364; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 20px;
+    }
+    .db-box {
+      background: #161b22;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 15px;
+      width: 130px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      z-index: 10;
+      transition: border-color 0.3s;
+    }
+    .db-box.primary {
+      border-color: #58a6ff;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+    }
+    .db-box.replica {
+      border-color: #8b949e;
+    }
+    .db-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #58a6ff;
+      margin-bottom: 6px;
+    }
+    .db-title.rep { color: #8b949e; }
+    .db-data {
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #56d364;
+    }
+    .db-status {
+      font-size: 0.65rem;
+      color: #8b949e;
+      margin-top: 4px;
+    }
+
+    /* Client Box */
+    .client-box {
+      background: #238636;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(35,134,54,0.3);
+      z-index: 10;
+    }
+
+    /* Particle */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #f0883e;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .particle.rep-flow {
+      background: #58a6ff;
+    }
+
+    /* Slider styling */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .slider-group {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider-group label {
+      font-size: 0.8rem;
+      color: #8b949e;
+      font-weight: 600;
+    }
+    .slider-group input {
+      flex: 1;
+      cursor: pointer;
+    }
+    .slider-val {
+      font-size: 0.85rem;
+      font-weight: bold;
+      width: 50px;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Database Replication</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>**Replication** is the mechanism of copying data across multiple physical servers to guarantee durability, optimize read capacity, and survive machine crashes. The core trade-off centers on synchronous consistency vs. asynchronous replication lag.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Sync vs. Async Replication</h3>
+      <p>Decides when client writes are acknowledged as successful:</p>
+      <ul>
+        <li><strong>Synchronous:</strong> The primary write blocks until all replicas acknowledge the update. Guarantees zero stale reads, but makes write latency compound ($O(\text{slowest replica})$). If a replica crashes, the cluster rejects writes.</li>
+        <li><strong>Asynchronous:</strong> Primary writes commit immediately and replicate in the background. Extremely fast, but exposes a data loss window if the primary crashes before background flushes execute.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Replication Lag &amp; Stale Reads</h3>
+      <p>Occurs when read requests hit replicas that are behind the primary:</p>
+      <ul>
+        <li>In asynchronous systems, network congestion or high node CPU loads slow down replication synchronization.</li>
+        <li>If a user performs a write and immediately triggers a read, they may pull from a lagging replica, causing **stale read anomalies** (the update appears to have vanished).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Read-Your-Writes Consistency</h3>
+      <p>A guarantee that a client will always see updates they submitted themselves:</p>
+      <ul>
+        <li><strong>Session Stickiness:</strong> Route the client's reads directly to the primary node for a specific time window (e.g. 5 seconds) following a write operation.</li>
+        <li><strong>Lag Tracking:</strong> The client stores its last transaction logical timestamp. It queries replicas but rejects reads unless the replica version meets or exceeds that timestamp.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Monotonic &amp; Consistent Prefix Reads</h3>
+      <p>Ensures user read continuity over distributed systems:</p>
+      <ul>
+        <li><strong>Monotonic Reads:</strong> Guarantees that if a user sees a specific state, they will never see an older, stale version on subsequent queries (prevents reading from Repl 1, then hitting lagging Repl 2).</li>
+        <li><strong>Consistent Prefix Reads:</strong> Guarantees that readers see updates in the exact order they occurred at the primary, avoiding causal out-of-order anomalies.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Replication Simulator -->
+  <div class="section-title">Interactive Replication Lag Simulator</div>
+  <p>Perform writes and trigger reads. Adjust the **Replication Lag Slider** to observe stale reads. Toggle **Read-Your-Writes Consistency** to watch reads route to the Primary after updating.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Replication Lag Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" onclick="triggerWrite()">Write New Value (Set X = X + 1)</button>
+        <button class="sim-btn active" style="border-color:#56d364;" onclick="triggerRead()">Read Value</button>
+        <button class="sim-btn" id="btn-ryw" onclick="toggleRyw()">Read-Your-Writes: OFF</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Client Reads</div>
+        <div class="metric-value" id="val-client-view">X = 0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Read Status</div>
+        <div class="metric-value success" id="val-status">Clean</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Sync Lag</div>
+        <div class="metric-value" id="val-lag-text">1.5s</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Replication Mode</div>
+        <div class="metric-value" style="color:#58a6ff;">Asynchronous</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <div class="client-box" id="client">Client</div>
+
+      <div class="db-box primary" id="db-primary">
+        <div class="db-title">Primary Database</div>
+        <div class="db-data" id="data-primary">0</div>
+        <div class="db-status">Active (Writes)</div>
+      </div>
+
+      <div class="db-box replica" id="db-replica">
+        <div class="db-title rep">Replica Node</div>
+        <div class="db-data" id="data-replica" style="color:#8b949e;">0</div>
+        <div class="db-status">Read Only</div>
+      </div>
+    </div>
+
+    <!-- Lag Slider -->
+    <div class="slider-row">
+      <div class="slider-group">
+        <label for="slider-lag">Simulated Network Sync Lag (ms):</label>
+        <input type="range" id="slider-lag" min="0" max="4000" step="250" value="1500" oninput="updateLag(this.value)">
+        <span class="slider-val" id="val-slider-lag">1500ms</span>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> With RYW disabled, writing increments the value on the primary database instantly. However, background replication takes 1500ms. If you click "Read Value" immediately after writing, you query the replica and fetch the stale value (0). Enable RYW to bypass this lag!
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If an interviewer asks: <em>"How do you design a replication architecture to support global scaling?"</em>
+      <br><br>
+      Say: 
+      <em>"I will set up active-passive primary replication, routing write operations to a primary instance and offloading read queries to a pool of horizontal read replicas. Because asynchronous replication introduces lag, I will mitigate stale reads for users viewing their own updates by implementing Read-Your-Writes consistency: routing a client's reads directly to the primary node for a brief period (e.g., 5 seconds) immediately after they execute a write."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let state = {
+    primaryVal: 0,
+    replicaVal: 0,
+    lagMs: 1500,
+    rywEnabled: false,
+    lastWriteTime: 0
+  };
+
+  const valClientView = document.getElementById('val-client-view');
+  const valStatus = document.getElementById('val-status');
+  const valLagText = document.getElementById('val-lag-text');
+  const dataPrimary = document.getElementById('data-primary');
+  const dataReplica = document.getElementById('data-replica');
+  const btnRyw = document.getElementById('btn-ryw');
+  const arena = document.getElementById('arena');
+  const valSliderLag = document.getElementById('val-slider-lag');
+
+  function updateLag(val) {
+    state.lagMs = parseInt(val);
+    valSliderLag.innerText = val + 'ms';
+    valLagText.innerText = (state.lagMs / 1000).toFixed(2) + 's';
+  }
+
+  function toggleRyw() {
+    state.rywEnabled = !state.rywEnabled;
+    if (state.rywEnabled) {
+      btnRyw.innerText = 'Read-Your-Writes: ON';
+      btnRyw.classList.add('active');
+    } else {
+      btnRyw.innerText = 'Read-Your-Writes: OFF';
+      btnRyw.classList.remove('active');
+    }
+  }
+
+  function triggerWrite() {
+    state.primaryVal++;
+    dataPrimary.innerText = state.primaryVal;
+    state.lastWriteTime = Date.now();
+
+    animateWriteFlow(state.primaryVal);
+  }
+
+  function animateWriteFlow(valToSync) {
+    // Client to Primary
+    animateParticle('client', 'db-primary', '#f0883e', () => {
+      // Cascade Primary to Replica with Lag
+      setTimeout(() => {
+        animateParticle('db-primary', 'db-replica', '#58a6ff', () => {
+          state.replicaVal = valToSync;
+          dataReplica.innerText = state.replicaVal;
+          dataReplica.style.color = '#56d364';
+          setTimeout(() => {
+            dataReplica.style.color = '#8b949e';
+          }, 800);
+        });
+      }, state.lagMs);
+    });
+  }
+
+  function triggerRead() {
+    let now = Date.now();
+    let readFromPrimary = false;
+
+    if (state.rywEnabled && (now - state.lastWriteTime) < 5000) {
+      readFromPrimary = true;
+    }
+
+    let targetNodeId = readFromPrimary ? 'db-primary' : 'db-replica';
+    
+    animateParticle('client', targetNodeId, '#56d364', () => {
+      let readVal = readFromPrimary ? state.primaryVal : state.replicaVal;
+      valClientView.innerText = `X = ${readVal}`;
+
+      if (readVal < state.primaryVal) {
+        valStatus.innerText = 'STALE READ ANOMALY';
+        valStatus.className = 'metric-value danger';
+      } else {
+        valStatus.innerText = readFromPrimary ? 'Fresh (Primary RYW)' : 'Fresh (Replica)';
+        valStatus.className = 'metric-value success';
+      }
+    });
+  }
+
+  function animateParticle(sourceId, targetId, color, callback) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.backgroundColor = color;
+    arena.appendChild(particle);
+
+    const srcEl = document.getElementById(sourceId);
+    const destEl = document.getElementById(targetId);
+    const arenaRect = arena.getBoundingClientRect();
+
+    const srcRect = srcEl.getBoundingClientRect();
+    const destRect = destEl.getBoundingClientRect();
+
+    let startX = srcRect.left - arenaRect.left + (srcRect.width / 2);
+    let startY = srcRect.top - arenaRect.top + (srcRect.height / 2);
+    let targetX = destRect.left - arenaRect.left + (destRect.width / 2);
+    let targetY = destRect.top - arenaRect.top + (destRect.height / 2);
+
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 500;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        if (callback) callback();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+</script>
+</body>
+</html>

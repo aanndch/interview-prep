@@ -245,6 +245,37 @@ Practical Tracing Example (debugging a slow request):
 - Stream Processing: Real-time events (Kafka, Flink)
 - Lambda Architecture: Combines batch + stream layers
 
+1.15 SECURITY & AUTHENTICATION
+-------------------------------
+Securing services, user identities, and data transit.
+
+Core Concepts:
+- OAuth 2.0 & OIDC:
+  - Authorization Code Flow with PKCE: Standard for Single Page Apps (SPAs) and mobile apps.
+  - Client Credentials Flow: For machine-to-machine backend communication.
+- Authentication State:
+  - Stateful Session Cookies: Server-side sessions. Secure (HttpOnly, Secure, SameSite flags) and easy to revoke, but harder to scale (requires sticky sessions or shared store like Redis).
+  - Stateless JWTs (JSON Web Tokens): Signed tokens containing claims. Scales easily but hard to revoke before expiry.
+    - Revocation strategies: Blacklisting/denylisting token IDs in Redis (negates stateless advantage for check operations), or short TTL + sliding expiration with Refresh Tokens.
+- API Security:
+  - CORS (Cross-Origin Resource Sharing): Browser safety mechanism restricting resource sharing across origins. Uses preflight (OPTIONS) requests.
+  - CSRF (Cross-Site Request Forgery): Prevented using SameSite cookie attributes, Anti-CSRF double-submit cookies, or requiring custom headers.
+  - Gateway security: Rate-limiting, WAF (Web Application Firewall), and payload validation.
+
+1.16 CLIENT-SERVER DATA FETCHING & SYNCHRONIZATION
+--------------------------------------------------
+Optimizing query boundaries and UI consistency between frontend and backend.
+
+Data Fetching Paradigms:
+- REST APIs: Resource-centric endpoints. Simple and browser-cacheable, but prone to over-fetching (getting fields you don't need) or under-fetching (requiring N+1 network requests).
+- GraphQL: Graph-centric single endpoint. Client queries exactly what it needs. Solves over-fetching and under-fetching, but introduces complex backend caching (requires persisted queries or dataloader pattern to prevent database N+1s) and security risks (unbound query depth).
+- gRPC: Contract-first binary RPC (HTTP/2). Highly efficient, proto schemas. Great for server-to-server microservices; needs proxy (Envoy) for browser clients.
+
+State Sync & Performance:
+- HTTP Caching: Cache-Control headers. `stale-while-revalidate` serves stale cache immediately while background fetching updates.
+- Optimistic Updates: UI immediately renders success state before server response completes (e.g., chat message sent, post liked). Rollback on server failure.
+- Offline State Sync: Store transactions in IndexedDB/SQLite on client. Sync with server when connection is restored using timestamp/vector clock reconciliation.
+
 ================================================================================
 2. KEY TECHNOLOGIES
 ================================================================================
@@ -293,11 +324,20 @@ COORDINATION:
 - Version Vectors
 - Compare-and-Swap (CAS)
 
-3.3 MULTI-STEP PROCESSES
--------------------------
-- Saga Pattern: Distributed transactions
-- Choreography vs Orchestration
-- Compensating Transactions
+3.3 MULTI-STEP PROCESSES (DISTRIBUTED TRANSACTIONS)
+----------------------------------------------------
+Handling data consistency across multiple microservices without locking resources.
+
+Strategies:
+- Two-Phase Commit (2PC):
+  - Coordinator prompts all participants to prepare, then commit.
+  - Strong consistency, but blocking (if coordinator fails, resources remain locked) and high latency. Not recommended for high-scale microservices.
+- Saga Pattern:
+  - A sequence of local transactions. Each transaction updates database and publishes an event. If a step fails, Saga executes compensating (rollback) transactions in reverse order.
+  - Eventual consistency and non-blocking.
+  - Two Implementation Types:
+    - Choreography: Decentralized. Services react to events from other services. Simple for small workflows, but hard to trace and debug as complexity grows (spaghetti events).
+    - Orchestration: Centralized. A dedicated orchestrator class/service manages transaction states and explicitly tells participants what to execute. Easier to define, test, and monitor, but creates a central coordinator dependency.
 
 3.4 SCALING READS
 ------------------
@@ -424,6 +464,9 @@ JAPAN-SPECIFIC SCALING CONSIDERATIONS:
 | REST vs gRPC                    | REST is readable; gRPC is faster but needs schema mgmt |
 | SQL vs NoSQL                    | SQL = ACID, structure; NoSQL = flexibility, scale |
 | Sync vs Async                   | Sync = simple but blocking; Async = complex but scalable |
+| JWT vs Stateful Session          | JWT scales easily; Session is secure and immediately revocable |
+| REST vs GraphQL                  | REST is simple, cacheable; GraphQL solves over-fetching but backend caching is complex |
+| 2PC vs Saga                      | 2PC has strong consistency but blocks; Saga is eventual consistency, non-blocking |
 
 ================================================================================
 RESOURCES

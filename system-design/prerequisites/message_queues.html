@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Message Queues</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #d2a8ff, #ff7b72);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #d2a8ff;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #d2a8ff;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.warning { color: #f0883e; }
+    .metric-value.danger { color: #ff7b72; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .producer-box {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      z-index: 10;
+    }
+    .producer-circle {
+      width: 45px;
+      height: 45px;
+      background: #1f6feb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+
+    .queue-log-box {
+      position: absolute;
+      left: 170px;
+      width: 250px;
+      background: #161b22;
+      border: 2px solid #58a6ff;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      z-index: 10;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .queue-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .queue-slots {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+    }
+    .queue-slot {
+      width: 16px;
+      height: 24px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 2px;
+      transition: background-color 0.2s;
+    }
+    .queue-slot.active {
+      background: #d2a8ff;
+      border-color: #a371f7;
+    }
+
+    .consumers-wrapper {
+      position: absolute;
+      right: 40px;
+      height: 100%;
+      width: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      z-index: 10;
+    }
+    .consumer-node {
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .consumer-node.active {
+      border-color: #56d364;
+      box-shadow: 0 0 6px rgba(86, 211, 100, 0.2);
+    }
+    .consumer-node.busy {
+      border-color: #d29922;
+      background: #2b221a;
+    }
+
+    .dlq-box {
+      position: absolute;
+      bottom: 10px;
+      left: 230px;
+      width: 130px;
+      background: #2d1e1f;
+      border: 1px dashed #ff7b72;
+      border-radius: 6px;
+      padding: 4px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: #ff7b72;
+      text-align: center;
+      z-index: 10;
+    }
+
+    /* Particle Animation */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #d2a8ff;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .particle.processed {
+      background: #56d364;
+    }
+    .particle.dlq {
+      background: #ff7b72;
+    }
+
+    /* Controls */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .slider-group {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider-group label {
+      font-size: 0.8rem;
+      color: #8b949e;
+      font-weight: 600;
+    }
+    .slider-group input {
+      flex: 1;
+      cursor: pointer;
+    }
+    .slider-val {
+      font-size: 0.85rem;
+      font-weight: bold;
+      width: 40px;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Message Queues</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>A **Message Queue** is an asynchronous communication broker used to decouple services, buffer spikes in load, and execute background transactions. Examples include broker-oriented structures (RabbitMQ) and persistent event logs (Apache Kafka).</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Delivery Semantics</h3>
+      <p>How many times will a message reach the consumer node? Choose based on consistency requirements:</p>
+      <ul>
+        <li><strong>At-Least-Once (Most Common):</strong> Message retried until acknowledged. No data loss, but duplicate processing is possible. **Requires consumer idempotency** (e.g. checking transaction keys in DB).</li>
+        <li><strong>At-Most-Once:</strong> Message sent once. Rejects retries if failures happen. Prevents duplicate logs, but tolerates packet loss.</li>
+        <li><strong>Exactly-Once:</strong> Relies on transactional API commits (coordinator/Kafka transactions). High complexity and performance overhead.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Kafka (Log) vs. RabbitMQ (Broker)</h3>
+      <p>Deciding between queues dictates system scale limitations:</p>
+      <ul>
+        <li><strong>Apache Kafka:</strong> Persistent append-only disk log. Messages are not deleted on read. Consumers keep pointer offsets and can "replay" historic streams. Outstanding throughput, great for analytics/pipelines.</li>
+        <li><strong>RabbitMQ:</strong> Smart broker routing. Messages are deleted as soon as consumer acknowledges them. Advanced routing capabilities, great for simple task queues.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Backpressure &amp; Overload Mitigations</h3>
+      <p>What happens when downstream consumers cannot keep up with producer ingestion rates?</p>
+      <ul>
+        <li><strong>Scale Consumer Nodes:</strong> Automatically spin up more workers (horizontal scaling) to match lambda rates.</li>
+        <li><strong>Rate Limiting Producers:</strong> Force producers to slow down (throw HTTP 429) to prevent queue exhaustion.</li>
+        <li><strong>Buffer Storage expansion:</strong> Let queue size grow (Kafka retention), accepting processing latency degradation.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Poison Pills &amp; Dead Letter Queues</h3>
+      <p>A "poison pill" is a corrupted message that repeatedly crashes the consumer worker code.</p>
+      <ul>
+        <li><strong>Dead Letter Queue (DLQ):</strong> If a message fails validation or processing after maximum retries (e.g. 5 times), the broker routes it to a designated DLQ.</li>
+        <li><strong>Benefit:</strong> Prevents corrupted records from blocking the entire pipeline queue while alerting developers to debug issues.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Queue Simulator -->
+  <div class="section-title">Interactive Producer-Consumer Simulator</div>
+  <p>Modify the <strong>Producer rate</strong> vs. <strong>Consumer capacity</strong>. Watch the log queue fill up, trigger backpressure warnings, or overflow poison pill packets to the <strong>Dead Letter Queue (DLQ)</strong>.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Queue Backlog Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-scale" onclick="scaleConsumers()">Scale Consumer Workers (+1)</button>
+        <button class="sim-btn warning" onclick="injectPoisonPill()">Inject Poison Pill Packet</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Queue Length</div>
+        <div class="metric-value" id="val-q-len">0 / 10</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Workers Active</div>
+        <div class="metric-value" id="val-workers">2</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Backpressure warning</div>
+        <div class="metric-value" id="val-warning" style="color: #56d364;">OK</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">DLQ Counter</div>
+        <div class="metric-value" id="val-dlq" style="color: #ff7b72;">0</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Producer -->
+      <div class="producer-box">
+        <div class="producer-circle">Prod</div>
+      </div>
+
+      <!-- Queue Log -->
+      <div class="queue-log-box">
+        <div class="queue-title">Kafka Log Buffer</div>
+        <div class="queue-slots" id="log-slots-container">
+          <!-- 10 slots -->
+        </div>
+      </div>
+
+      <!-- Consumers -->
+      <div class="consumers-wrapper" id="workers-container">
+        <!-- Consumer Nodes -->
+      </div>
+
+      <!-- DLQ -->
+      <div class="dlq-box" id="dlq-node">DLQ (Dead Letter Queue)</div>
+    </div>
+
+    <!-- Interactive sliders -->
+    <div class="slider-row">
+      <div class="slider-group">
+        <label for="slider-prod">Producer Rate (QPS):</label>
+        <input type="range" id="slider-prod" min="5" max="60" value="15" oninput="updateProducerQps(this.value)">
+        <span class="slider-val" id="val-slider-prod">15</span>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> If QPS is higher than what active workers can process, the queue log slots fill up. Once full, backpressure flags trigger. If you "Inject Poison Pill Packet", it fails processing repeatedly and is routed to the DLQ.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design an order processing system that can handle huge traffic spikes?"</em>
+      <br><br>
+      Say: 
+      <em>"I will put a message broker (like Apache Kafka) between the order API and payment/fulfillment workers. The API acts as a producer, immediately writing orders to the log and returning Success, shielding the DB from sudden spikes. The payment workers act as consumers, pulling messages from Kafka partitions at their own pace. If a spike occurs, Kafka buffers the tasks (backpressure). If a payment transaction fails repeatedly (poison pill), we route it to a Dead Letter Queue (DLQ) after retries to prevent clogging the pipeline."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let state = {
+    producerQps: 15,
+    workers: 2,
+    queue: [],
+    maxQueueLen: 10,
+    dlqCount: 0,
+    totalProcessed: 0,
+    workerProcessingTime: 1200, // ms
+    slots: []
+  };
+
+  const logSlotsContainer = document.getElementById('log-slots-container');
+  const workersContainer = document.getElementById('workers-container');
+  const valQLen = document.getElementById('val-q-len');
+  const valWorkers = document.getElementById('val-workers');
+  const valWarning = document.getElementById('val-warning');
+  const valDlq = document.getElementById('val-dlq');
+  const arena = document.getElementById('arena');
+  const valSliderProd = document.getElementById('val-slider-prod');
+
+  function renderSlots() {
+    let html = '';
+    for (let i = 0; i < state.maxQueueLen; i++) {
+      html += `<div class="queue-slot" id="q-slot-${i}"></div>`;
+    }
+    logSlotsContainer.innerHTML = html;
+  }
+
+  function renderWorkers() {
+    let html = '';
+    for (let i = 0; i < state.workers; i++) {
+      html += `<div class="consumer-node" id="worker-${i}">Worker Node ${i+1}</div>`;
+    }
+    workersContainer.innerHTML = html;
+    
+    state.slots = [];
+    for (let i = 0; i < state.workers; i++) {
+      state.slots.push({ active: false });
+    }
+  }
+
+  function updateProducerQps(val) {
+    state.producerQps = parseInt(val);
+    valSliderProd.innerText = val;
+  }
+
+  function scaleConsumers() {
+    if (state.workers >= 5) return;
+    state.workers++;
+    valWorkers.innerText = state.workers;
+    renderWorkers();
+    updateSimulation();
+  }
+
+  function injectPoisonPill() {
+    let packet = {
+      id: Math.random().toString(36).substring(2, 9),
+      type: 'poison',
+      retries: 0
+    };
+    enqueue(packet);
+  }
+
+  function enqueue(packet) {
+    if (state.queue.length < state.maxQueueLen) {
+      state.queue.push(packet);
+      animateParticle(75, 125, 170, 125, 'queued');
+      updateSimulation();
+    } else {
+      // Drop packet / buffer overflow
+      state.dlqCount++;
+      valDlq.innerText = state.dlqCount;
+      animateParticle(75, 125, 290, 220, 'dlq');
+      updateSimulation();
+    }
+  }
+
+  function updateSimulation() {
+    valQLen.innerText = `${state.queue.length} / ${state.maxQueueLen}`;
+    
+    // Sync slots visualization
+    for (let i = 0; i < state.maxQueueLen; i++) {
+      let slotEl = document.getElementById(`q-slot-${i}`);
+      if (slotEl) {
+        if (i < state.queue.length) {
+          slotEl.classList.add('active');
+        } else {
+          slotEl.classList.remove('active');
+        }
+      }
+    }
+
+    // Warning state
+    if (state.queue.length >= 8) {
+      valWarning.innerText = "CRITICAL (Scale Workers!)";
+      valWarning.className = "metric-value danger";
+    } else if (state.queue.length >= 4) {
+      valWarning.innerText = "WARNING (Queue Building)";
+      valWarning.className = "metric-value warning";
+    } else {
+      valWarning.innerText = "OK";
+      valWarning.className = "metric-value";
+      valWarning.style.color = "#56d364";
+    }
+  }
+
+  // Periodic production
+  setInterval(() => {
+    let pulses = Math.max(1, Math.round(state.producerQps / 10));
+    for (let i = 0; i < pulses; i++) {
+      let packet = {
+        id: Math.random().toString(36).substring(2, 9),
+        type: 'normal'
+      };
+      enqueue(packet);
+    }
+  }, 1000);
+
+  // Background consumer processing scheduler
+  setInterval(() => {
+    if (state.queue.length === 0) return;
+
+    // Find available worker slot
+    let workerIdx = state.slots.findIndex(w => !w.active);
+    if (workerIdx === -1) return; // All workers are busy
+
+    state.slots[workerIdx].active = true;
+    let workerEl = document.getElementById(`worker-${workerIdx}`);
+    if (workerEl) workerEl.className = 'consumer-node active';
+
+    let packet = state.queue.shift();
+    updateSimulation();
+
+    // Animate packet from queue to consumer
+    let arenaRect = arena.getBoundingClientRect();
+    let workerRect = workerEl.getBoundingClientRect();
+
+    let targetX = workerRect.left - arenaRect.left + 10;
+    let targetY = workerRect.top - arenaRect.top + 20;
+
+    animateParticle(290, 125, targetX, targetY, 'normal', () => {
+      // Worker processing delay
+      setTimeout(() => {
+        state.slots[workerIdx].active = false;
+        if (workerEl) workerEl.className = 'consumer-node';
+
+        if (packet.type === 'poison') {
+          // Route to DLQ
+          state.dlqCount++;
+          valDlq.innerText = state.dlqCount;
+          animateParticle(targetX, targetY, 290, 220, 'dlq');
+        } else {
+          // Success
+          animateParticle(targetX, targetY, 810, 125, 'processed');
+        }
+        updateSimulation();
+      }, state.workerProcessingTime);
+    });
+  }, 200);
+
+  function animateParticle(startX, startY, targetX, targetY, type, callback) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    if (type === 'processed') particle.classList.add('processed');
+    if (type === 'dlq') particle.classList.add('dlq');
+    arena.appendChild(particle);
+
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 600;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        if (callback) callback();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // Initialize
+  renderSlots();
+  renderWorkers();
+  updateSimulation();
+</script>
+</body>
+</html>

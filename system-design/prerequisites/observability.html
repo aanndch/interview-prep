@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Observability & Monitoring</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #d2a8ff, #ff7b72);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Box */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #d2a8ff;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #d2a8ff;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    .sim-btn.danger {
+      border-color: #ff7b72;
+      color: #ff7b72;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.danger { color: #ff7b72; }
+    .metric-value.success { color: #56d364; }
+
+    /* Visual Arena: Gantt Trace chart */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 240px;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+    }
+    .gantt-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .gantt-label {
+      width: 130px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #8b949e;
+    }
+    .gantt-track {
+      flex: 1;
+      height: 22px;
+      background: #161b22;
+      border-radius: 4px;
+      position: relative;
+    }
+    .gantt-span {
+      position: absolute;
+      height: 100%;
+      background: #58a6ff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: white;
+      transition: all 0.5s ease-out;
+      box-shadow: 0 0 6px rgba(88, 166, 255, 0.3);
+    }
+    .gantt-span.auth { background: #d29922; box-shadow: 0 0 6px rgba(210, 153, 34, 0.3); }
+    .gantt-span.product { background: #8e15eb; box-shadow: 0 0 6px rgba(142, 21, 235, 0.3); }
+    .gantt-span.db { background: #ff7b72; box-shadow: 0 0 6px rgba(255, 123, 114, 0.3); }
+    
+    /* State updates */
+    .gantt-span.fast { background: #56d364 !important; box-shadow: 0 0 8px #56d364 !important; }
+    .gantt-span.error { background: #da3633 !important; box-shadow: 0 0 10px #f85149 !important; }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Observability &amp; Monitoring</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>**Observability** is the degree to which you can infer the internal states of a distributed microservices network based solely on its external outputs (Metrics, Logs, and Traces), enabling real-time bottleneck detection and debugging.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Three Pillars of Observability</h3>
+      <p>The structured signals used to analyze system health and failures:</p>
+      <ul>
+        <li><strong>Metrics (Aggregations):</strong> Numerical, structured time-series data (e.g. Prometheus counters/gauges). Highly efficient for dashboards and triggering alert thresholds.</li>
+        <li><strong>Logs (Discrete Events):</strong> Line-by-line event outputs containing rich debug details (JSON logs sent to ELK/Loki). Expensive to index but vital for debugging root causes.</li>
+        <li><strong>Traces (Lifecycle Graph):</strong> DAG showing request propagation path through networks. Essential for diagnosing microservice cascading delays.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Context Propagation &amp; Tracing</h3>
+      <p>How distributed tracing engines stitch together service logs:</p>
+      <ul>
+        <li><strong>Metadata Injection:</strong> API Gateway generates a unique <code>Trace-ID</code> and injects it into client request HTTP headers (e.g. W3C <code>traceparent</code>).</li>
+        <li><strong>Span Propagation:</strong> Every downstream microservice reads the parent headers, executes its sub-operations (creating a child <code>Span-ID</code>), and forwards correlation identifiers to databases.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. RED &amp; USE Frameworks</h3>
+      <p>Standard architectural rules to categorize alerting alerts:</p>
+      <ul>
+        <li><strong>RED Method (For Services):</strong> <strong>R</strong>ate (requests/sec), <strong>E</strong>rrors (failed HTTP/gRPC count), and <strong>D</strong>uration (latency percentiles).</li>
+        <li><strong>USE Method (For Infrastructure):</strong> <strong>U</strong>tilization (percentage busy, e.g. CPU), <strong>S</strong>aturation (work backlog, e.g. disk queue lengths), and <strong>E</strong>rrors (hardware level anomalies).</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Sampling &amp; Ingestion Costs</h3>
+      <p>Storing 100% of telemetry at high traffic is financially impossible:</p>
+      <ul>
+        <li><strong>Head Sampling:</strong> Randomly drop traces at ingestion (e.g. keep only 5% of requests). Saves bandwidth but might miss rare 1-in-a-million errors.</li>
+        <li><strong>Tail Sampling:</strong> Buffer active traces in memory. If a trace experiences an HTTP 500 error or slow tail latency, ingest it; otherwise, discard healthy traces.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Observability Simulator -->
+  <div class="section-title">Interactive Distributed Tracing Simulator</div>
+  <p>Analyze the Gantt chart distributed trace below. Observe how the DB Query span dominates latency. Try **Adding a Cache** to decrease latency, or **Simulating a DB Timeout** to watch the trace error badge trigger.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Distributed Trace Gantt Chart</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-cache" onclick="applyCache()">Add Redis Cache</button>
+        <button class="sim-btn danger" id="btn-timeout" onclick="applyTimeout()">Simulate DB Timeout</button>
+        <button class="sim-btn active" onclick="resetTrace()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Total Duration</div>
+        <div class="metric-value highlight" id="val-dur">950 ms</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">API Status</div>
+        <div class="metric-value success" id="val-status">HTTP 200 OK</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Active Spans</div>
+        <div class="metric-value" id="val-spans">4 Spans</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Telemetry Ingest</div>
+        <div class="metric-value" style="color:#d2a8ff;">100% tail-sampled</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- API Gateway -->
+      <div class="gantt-row">
+        <div class="gantt-label">API-Gateway</div>
+        <div class="gantt-track">
+          <div class="gantt-span" id="span-gateway" style="left: 0%; width: 95%;">950ms</div>
+        </div>
+      </div>
+
+      <!-- Auth Service -->
+      <div class="gantt-row">
+        <div class="gantt-label">Auth-Service</div>
+        <div class="gantt-track">
+          <div class="gantt-span auth" id="span-auth" style="left: 5%; width: 15%;">150ms</div>
+        </div>
+      </div>
+
+      <!-- Product Service -->
+      <div class="gantt-row">
+        <div class="gantt-label">Product-Service</div>
+        <div class="gantt-track">
+          <div class="gantt-span product" id="span-product" style="left: 20%; width: 75%;">750ms</div>
+        </div>
+      </div>
+
+      <!-- DB Query -->
+      <div class="gantt-row">
+        <div class="gantt-label">PostgreSQL Query</div>
+        <div class="gantt-track">
+          <div class="gantt-span db" id="span-db" style="left: 25%; width: 65%;">650ms</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> The parent span (API Gateway) duration is bounded by the slowest downstream child span (PostgreSQL query). By applying a Cache, we reduce the child duration, instantly shrinking the overall API response time.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design an alerting and observability pipeline for a microservice mesh?"</em>
+      <br><br>
+      Say: 
+      <em>"I will configure OpenTelemetry across our stack to collect metrics, logs, and traces. For service-level monitoring, I will alert on RED metrics (Rate, Errors, Duration) and use Jaeger to analyze nested trace spans. We will implement head-sampling on healthy paths and tail-sampling for errors or high-latency traces. To prevent logging disk write limits from bottlenecking the system, logs will be formatted as structured JSON and buffered via Kafka before ingestion to ElasticSearch."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  const valDur = document.getElementById('val-dur');
+  const valStatus = document.getElementById('val-status');
+  const valSpans = document.getElementById('val-spans');
+  const spanGateway = document.getElementById('span-gateway');
+  const spanAuth = document.getElementById('span-auth');
+  const spanProduct = document.getElementById('span-product');
+  const spanDb = document.getElementById('span-db');
+  const simTip = document.getElementById('sim-tip');
+
+  function applyCache() {
+    spanDb.style.left = '25%';
+    spanDb.style.width = '3%';
+    spanDb.className = 'gantt-span db fast';
+    spanDb.innerText = '20ms';
+
+    spanProduct.style.width = '15%';
+    spanProduct.className = 'gantt-span product';
+    spanProduct.innerText = '130ms';
+
+    spanGateway.style.width = '35%';
+    spanGateway.className = 'gantt-span';
+    spanGateway.innerText = '300ms';
+
+    valDur.innerText = '300 ms';
+    valDur.className = 'metric-value success';
+    valStatus.innerText = 'HTTP 200 OK';
+    valStatus.className = 'metric-value success';
+    simTip.innerHTML = `<strong>Cache Added:</strong> The database span dropped from 650ms to 20ms. The parent spans (Product Service and API Gateway) shrank proportionally, decreasing the overall latency by over 60%.`;
+  }
+
+  function applyTimeout() {
+    spanDb.style.left = '25%';
+    spanDb.style.width = '75%';
+    spanDb.className = 'gantt-span db error';
+    spanDb.innerText = 'Timeout (1500ms)';
+
+    spanProduct.style.width = '80%';
+    spanProduct.className = 'gantt-span product error';
+    spanProduct.innerText = 'Error (800ms)';
+
+    spanGateway.style.width = '100%';
+    spanGateway.className = 'gantt-span error';
+    spanGateway.innerText = 'HTTP 504 Gateway Timeout';
+
+    valDur.innerText = '1500 ms';
+    valDur.className = 'metric-value danger';
+    valStatus.innerText = 'HTTP 504 Gateway Timeout';
+    valStatus.className = 'metric-value danger';
+    simTip.innerHTML = `<strong>Database Timeout:</strong> The database failed to respond within limits. Spans propagated the error state upwards, causing the parent services to throw HTTP 504 Gateway Timeout errors.`;
+  }
+
+  function resetTrace() {
+    spanDb.style.left = '25%';
+    spanDb.style.width = '65%';
+    spanDb.className = 'gantt-span db';
+    spanDb.innerText = '650ms';
+
+    spanProduct.style.width = '75%';
+    spanProduct.className = 'gantt-span product';
+    spanProduct.innerText = '750ms';
+
+    spanGateway.style.width = '95%';
+    spanGateway.className = 'gantt-span';
+    spanGateway.innerText = '950ms';
+
+    valDur.innerText = '950 ms';
+    valDur.className = 'metric-value';
+    valStatus.innerText = 'HTTP 200 OK';
+    valStatus.className = 'metric-value success';
+    simTip.innerHTML = `<strong>Reset:</strong> Trace spans returned to baseline database query delays.`;
+  }
+
+</script>
+</body>
+</html>

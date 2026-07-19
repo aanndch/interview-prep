@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — Caching</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #f0883e, #d2a8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #f0883e;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #f0883e;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+    .metric-value.hit { color: #56d364; }
+    .metric-value.miss { color: #f0883e; }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 250px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .client-node {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      z-index: 10;
+    }
+    .client-circle {
+      width: 45px;
+      height: 45px;
+      background: #238636;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      box-shadow: 0 0 10px rgba(35, 134, 54, 0.4);
+    }
+    
+    .cache-node {
+      position: absolute;
+      left: 230px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      text-align: center;
+    }
+    .cache-box {
+      width: 140px;
+      background: #21262d;
+      border: 2px solid #58a6ff;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+    }
+    .cache-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #58a6ff;
+      margin-bottom: 4px;
+    }
+    .cache-contents {
+      font-size: 0.7rem;
+      color: #8b949e;
+      background: #0d1117;
+      padding: 4px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    
+    .db-node {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      text-align: center;
+    }
+    .db-box {
+      width: 130px;
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.1);
+    }
+    .db-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .db-contents {
+      font-size: 0.7rem;
+      color: #8b949e;
+      background: #0d1117;
+      padding: 4px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    /* Particle Animation */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #58a6ff;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .particle.write {
+      background: #d2a8ff;
+    }
+    .particle.async-write {
+      background: #f0883e;
+      animation: pulse 1s infinite;
+    }
+    .particle.hit {
+      background: #56d364;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>Caching</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>A **Cache** is a high-speed, temporary storage layer that keeps copies of frequently requested data in volatile memory (RAM, e.g., Redis, Memcached) to reduce database load, minimize network latencies, and speed up client response times.</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Caching Strategies</h3>
+      <p>How data is synchronized between the client, cache, and database defines the strategy:</p>
+      <ul>
+        <li><strong>Cache-Aside (Lazy Load):</strong> App queries cache. On miss, it queries database, updates cache, and returns. Simple, but tolerates stale cache data until TTL expires.</li>
+        <li><strong>Write-Through:</strong> App writes to cache, which synchronously updates the DB before completing. High consistency, but adds write latency.</li>
+        <li><strong>Write-Behind (Write-Back):</strong> App writes to cache, acknowledging immediately (~2ms). Cache writes to DB asynchronously in batches. Highly scalable, but carries data loss risk if the cache node crashes. Mitigations include Write-Ahead Logs (WAL) on the cache, or using Kafka as a durable write buffer.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Cache Eviction Policies</h3>
+      <p>Since RAM is expensive and limited, caches must evict old entries when full:</p>
+      <ul>
+        <li><strong>LRU (Least Recently Used):</strong> Discards the item that hasn't been accessed for the longest time. Best for general workloads.</li>
+        <li><strong>LFU (Least Frequently Used):</strong> Discards the item accessed the fewest number of times. Prevents one-hit-wonders from occupying memory.</li>
+        <li><strong>TTL (Time-to-Live):</strong> Key automatically expires after a specified epoch window.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. Cache Stampede (Thundering Herd)</h3>
+      <p>Occurs when a highly popular cache key expires, causing thousands of concurrent read requests to miss the cache and hit the database simultaneously, causing a DB meltdown.</p>
+      <ul>
+        <li><strong>Mutex Locks:</strong> Only the first thread on a cache miss acquires a lock (e.g. Redis <code>SETNX</code>) to query the DB and update cache; other threads block, retry, or serve stale data.</li>
+        <li><strong>XFetch Algorithm:</strong> A probabilistic early expiration algorithm. As keys approach their expiration threshold, read requests probabilistically trigger a background recompute before the key is deleted, avoiding synchronous misses.</li>
+        <li><strong>TTL Jitter:</strong> Adding random noise to expiration times so keys do not expire simultaneously.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Edge Caching &amp; CDNs</h3>
+      <p>Caching static files (images, JS, CSS) at edge servers geographically close to the user (Points of Presence - PoPs) to bypass hit delays to the main origin region.</p>
+      <ul>
+        <li><strong>Origin Pull:</strong> CDN fetches assets from origin on first miss.</li>
+        <li><strong>Origin Push:</strong> Uploading assets directly to the CDN in advance.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Cache Strategy Simulator -->
+  <div class="section-title">Interactive Caching Strategy Simulator</div>
+  <p>Select a <strong>Caching Strategy</strong>, trigger reads and writes, and watch how network packets flow and latency metrics change.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Cache-DB Interaction Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-aside" onclick="setStrategy('aside')">Cache-Aside</button>
+        <button class="sim-btn" id="btn-through" onclick="setStrategy('through')">Write-Through</button>
+        <button class="sim-btn" id="btn-behind" onclick="setStrategy('behind')">Write-Behind</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Cache State</div>
+        <div class="metric-value" id="val-cache-state" style="color: #8b949e;">Empty</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Last Operation Latency</div>
+        <div class="metric-value" id="val-latency">0 ms</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Cache Hits</div>
+        <div class="metric-value hit" id="val-hits">0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Cache Misses</div>
+        <div class="metric-value miss" id="val-misses">0</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Client -->
+      <div class="client-node">
+        <div class="client-circle">Client</div>
+      </div>
+
+      <!-- Cache -->
+      <div class="cache-node">
+        <div class="cache-box" id="cache-box-el">
+          <div class="cache-title">Cache (Redis)</div>
+          <div class="cache-contents" id="cache-contents-el">Empty</div>
+        </div>
+      </div>
+
+      <!-- Database -->
+      <div class="db-node">
+        <div class="db-box" id="db-box-el">
+          <div class="db-title">Database (SQL)</div>
+          <div class="db-contents" id="db-contents-el">X = 5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <button class="sim-btn active" onclick="triggerRead()">Trigger Read (Get X)</button>
+      <button class="sim-btn active" onclick="triggerWrite()">Trigger Write (Set X = 20)</button>
+      <button class="sim-btn warning" onclick="clearCache()">Invalidate/Evict Cache</button>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Cache-Aside:</strong> Read queries hit the cache first. If empty (Cache Miss), the app queries the database, writes the value back to the cache, and returns. Try trigger a Read, then trigger subsequent reads (Cache Hit).
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you design caching in a high-concurrency architecture?"</em>
+      <br><br>
+      Say: 
+      <em>"I would deploy a distributed Redis Cluster using the <strong>Cache-Aside</strong> pattern for read-heavy operations, invalidating cached entries on write events. To handle cache stampedes on hot keys, I would implement <strong>Mutex locking</strong> at the app layer or pre-warm keys prior to campaigns. For write-heavy analytics tracking, I would use the <strong>Write-Behind (Write-Back)</strong> pattern to batch and queue writes, shielding our primary relational database from ingestion spikes."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let state = {
+    strategy: 'aside', // aside, through, behind
+    cacheValue: null,
+    dbValue: 5,
+    hits: 0,
+    misses: 0,
+    latency: 0
+  };
+
+  const cacheContentsEl = document.getElementById('cache-contents-el');
+  const cacheBoxEl = document.getElementById('cache-box-el');
+  const dbContentsEl = document.getElementById('db-contents-el');
+  const valCacheState = document.getElementById('val-cache-state');
+  const valLatency = document.getElementById('val-latency');
+  const valHits = document.getElementById('val-hits');
+  const valMisses = document.getElementById('val-misses');
+  const simTip = document.getElementById('sim-tip');
+  const arena = document.getElementById('arena');
+
+  function setStrategy(strategy) {
+    state.strategy = strategy;
+    document.getElementById('btn-aside').classList.remove('active');
+    document.getElementById('btn-through').classList.remove('active');
+    document.getElementById('btn-behind').classList.remove('active');
+
+    document.getElementById(`btn-${strategy}`).classList.add('active');
+
+    if (strategy === 'aside') {
+      simTip.innerHTML = `<strong>Cache-Aside:</strong> Read queries check cache first. Misses query DB and update cache. Writes update DB directly and evict cache. Normal read hit latency: ~2ms. Write latency: ~100ms.`;
+    } else if (strategy === 'through') {
+      simTip.innerHTML = `<strong>Write-Through:</strong> App writes to Cache, which updates DB synchronously before completing. Cache and DB are always consistent. Write latency: ~110ms.`;
+    } else if (strategy === 'behind') {
+      simTip.innerHTML = `<strong>Write-Behind:</strong> App writes to Cache, acknowledging instantly (~2ms). A background task writes to DB asynchronously. Write latency: ~2ms. Warning: Risk of data loss if cache crashes before sync completes!`;
+    }
+
+    clearCache();
+  }
+
+  function clearCache() {
+    state.cacheValue = null;
+    cacheContentsEl.innerText = "Empty";
+    valCacheState.innerText = "Empty";
+    valCacheState.style.color = "#8b949e";
+    cacheBoxEl.style.borderColor = "#58a6ff";
+  }
+
+  function triggerRead() {
+    let isHit = state.cacheValue !== null;
+
+    if (isHit) {
+      state.hits++;
+      valHits.innerText = state.hits;
+      state.latency = 2; // Fast read hit
+      valLatency.innerText = `${state.latency} ms`;
+
+      // Animate: Client -> Cache -> Client (Hit)
+      animateParticle(75, 125, 230, 125, 'hit', () => {
+        animateParticle(230, 125, 75, 125, 'hit');
+      });
+    } else {
+      state.misses++;
+      valMisses.innerText = state.misses;
+      state.latency = 120; // Cache miss requires DB read
+      valLatency.innerText = `${state.latency} ms`;
+
+      // Animate: Client -> Cache (miss) -> DB -> Cache (update) -> Client
+      animateParticle(75, 125, 230, 125, 'normal', () => {
+        animateParticle(230, 125, 730, 125, 'normal', () => {
+          state.cacheValue = state.dbValue;
+          cacheContentsEl.innerText = `X = ${state.cacheValue}`;
+          valCacheState.innerText = "Populated";
+          valCacheState.style.color = "#56d364";
+          
+          animateParticle(730, 125, 230, 125, 'hit', () => {
+            animateParticle(230, 125, 75, 125, 'hit');
+          });
+        });
+      });
+    }
+  }
+
+  function triggerWrite() {
+    let newVal = Math.floor(Math.random() * 90) + 10; // random 10-99
+
+    if (state.strategy === 'aside') {
+      state.latency = 100;
+      valLatency.innerText = `${state.latency} ms`;
+
+      // Client writes to DB, evicts Cache
+      animateParticle(75, 125, 730, 125, 'write', () => {
+        state.dbValue = newVal;
+        dbContentsEl.innerText = `X = ${newVal}`;
+        clearCache();
+        animateParticle(730, 125, 75, 125, 'write');
+      });
+    } else if (state.strategy === 'through') {
+      state.latency = 110;
+      valLatency.innerText = `${state.latency} ms`;
+
+      // Client writes Cache, Cache updates DB synchronously
+      animateParticle(75, 125, 230, 125, 'write', () => {
+        state.cacheValue = newVal;
+        cacheContentsEl.innerText = `X = ${newVal}`;
+        valCacheState.innerText = "Populated";
+        valCacheState.style.color = "#56d364";
+        
+        animateParticle(230, 125, 730, 125, 'write', () => {
+          state.dbValue = newVal;
+          dbContentsEl.innerText = `X = ${newVal}`;
+          animateParticle(730, 125, 75, 125, 'write');
+        });
+      });
+    } else if (state.strategy === 'behind') {
+      state.latency = 2; // instant acknowledgment
+      valLatency.innerText = `${state.latency} ms`;
+
+      // Client writes Cache, acknowledged instantly
+      animateParticle(75, 125, 230, 125, 'write', () => {
+        state.cacheValue = newVal;
+        cacheContentsEl.innerText = `X = ${newVal}`;
+        valCacheState.innerText = "Dirty (Pending DB sync)";
+        valCacheState.style.color = "#f0883e";
+        cacheBoxEl.style.borderColor = "#f0883e";
+        
+        animateParticle(230, 125, 75, 125, 'write');
+
+        // Delayed background DB update (simulation)
+        setTimeout(() => {
+          animateParticle(230, 125, 730, 125, 'async-write', () => {
+            state.dbValue = newVal;
+            dbContentsEl.innerText = `X = ${newVal}`;
+            
+            if (state.cacheValue === newVal) {
+              valCacheState.innerText = "Populated (In Sync)";
+              valCacheState.style.color = "#56d364";
+              cacheBoxEl.style.borderColor = "#58a6ff";
+            }
+          });
+        }, 2200);
+      });
+    }
+  }
+
+  function animateParticle(startX, startY, targetX, targetY, type, callback) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    if (type === 'write') particle.classList.add('write');
+    if (type === 'async-write') particle.classList.add('async-write');
+    if (type === 'hit') particle.classList.add('hit');
+    arena.appendChild(particle);
+
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 500;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        if (callback) callback();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+</script>
+</body>
+</html>

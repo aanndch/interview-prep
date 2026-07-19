@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design — CAP Theorem</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      line-height: 1.7;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 900px; width: 100%; }
+    
+    /* Navigation */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #58a6ff; }
+
+    /* Header */
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #d2a8ff, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Core Section Title */
+    .section-title {
+      font-size: 1.2rem;
+      color: #58a6ff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Definition Callout */
+    .definition-box {
+      background: #161b22;
+      border-left: 4px solid #d2a8ff;
+      border-radius: 0 10px 10px 0;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .definition-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #d2a8ff;
+      margin-bottom: 0.4rem;
+    }
+    .definition-box p {
+      font-size: 1.05rem;
+      color: #c9d1d9;
+    }
+
+    /* Grid Layout for Concepts */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 500px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .concept-card h3 {
+      font-size: 1.1rem;
+      color: #e1e4ea;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    .concept-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+    .concept-card li {
+      margin-bottom: 0.5rem;
+    }
+    .concept-card strong {
+      color: #58a6ff;
+    }
+
+    /* Interactive Simulator */
+    .simulator-container {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e1e4ea;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .sim-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .sim-btn.active {
+      background: #1f6feb;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    .sim-btn.warning {
+      border-color: #d29922;
+      color: #d29922;
+    }
+    .sim-btn.warning:hover {
+      background: rgba(210, 153, 34, 0.1);
+    }
+    .sim-btn.warning.active {
+      background: #d29922;
+      color: #0f1117;
+      border-color: #f2c744;
+    }
+
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #21262d;
+    }
+    @media (max-width: 550px) {
+      .sim-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-box {
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9d1d9;
+    }
+
+    /* Visual Arena */
+    .visual-arena {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      height: 280px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Replicated Nodes */
+    .db-node {
+      position: absolute;
+      width: 100px;
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      transition: all 0.3s;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.1);
+    }
+    .db-node.active {
+      border-color: #58a6ff;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+    }
+    .db-node.error {
+      border-color: #ff7b72;
+      background: #2d1e1f;
+      box-shadow: 0 0 10px rgba(255, 123, 114, 0.3);
+    }
+    .db-node-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #58a6ff;
+    }
+    .db-value-display {
+      font-size: 1.05rem;
+      font-weight: 800;
+      background: #0d1117;
+      padding: 4px;
+      border-radius: 4px;
+      color: #e1e4ea;
+    }
+    .node-action-btn {
+      margin-top: 6px;
+      font-size: 0.65rem;
+      background: #30363d;
+      border: 1px solid #444c56;
+      color: #c9d1d9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .node-action-btn:hover { background: #444c56; }
+
+    /* Node positions (triangle) */
+    #node-a {
+      left: 150px;
+      top: 40px;
+    }
+    #node-b {
+      left: 150px;
+      bottom: 40px;
+    }
+    #node-c {
+      right: 150px;
+      top: 90px;
+    }
+
+    /* Partition Wall (animated red line) */
+    .partition-wall {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #ff7b72;
+      left: 450px;
+      box-shadow: 0 0 15px #ff7b72;
+      z-index: 8;
+      display: none;
+      animation: flash 1s infinite alternate;
+    }
+    @keyframes flash {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* Partition Label */
+    .partition-label {
+      position: absolute;
+      top: 10px;
+      left: 460px;
+      font-size: 0.65rem;
+      background: rgba(255, 123, 114, 0.2);
+      color: #ff7b72;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      border: 1px solid rgba(255, 123, 114, 0.4);
+      display: none;
+      z-index: 10;
+    }
+
+    /* Particles */
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #d2a8ff;
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .particle.error {
+      background: #ff7b72;
+      box-shadow: 0 0 6px #ff7b72;
+    }
+
+    .interview-box {
+      background: #1b222c;
+      border: 1px dashed #388bfd;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2.5rem 0 1rem 0;
+    }
+    .interview-box h3 {
+      color: #58a6ff;
+      font-size: 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interview-box p {
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Breadcrumb Navigation -->
+  <a href="../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 01-1.06 0L4.47 8.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L6.06 8l3.72 3.72a.75.75 0 010 1.06z"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <h1>CAP Theorem</h1>
+  <p class="subtitle">Prerequisites / Concepts — Distributed Systems Foundations</p>
+
+  <!-- Core Definition -->
+  <div class="definition-box">
+    <h3>Core Concept</h3>
+    <p>The **CAP Theorem** states that a distributed data store can simultaneously provide at most two of three guarantees: **Consistency** (every read receives the most recent write or an error), **Availability** (every non-failing node returns a non-error response), and **Partition Tolerance** (the system continues to operate despite network partitions).</p>
+  </div>
+
+  <!-- Detailed Concepts -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3>1. Partition Tolerance is Mandatory</h3>
+      <p>In distributed physical architectures, network drops, packet latency, and server crashes are inevitable. Therefore, you **cannot** opt out of Partition Tolerance (P).</p>
+      <p>The core trade-off during a partition is: <strong>CP (Consistency/Partition Tolerance)</strong> vs. <strong>AP (Availability/Partition Tolerance)</strong>.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. PACELC Theorem (The Extension)</h3>
+      <p>CAP only dictates system behavior *during a partition*. <strong>PACELC</strong> defines normal state tradeoffs:</p>
+      <ul>
+        <li>If there is a <strong>P</strong>artition, trade-off <strong>A</strong>vailability vs. <strong>C</strong>onsistency;</li>
+        <li><strong>E</strong>lse (normal state), trade-off <strong>L</strong>atency vs. <strong>C</strong>onsistency.</li>
+        <li><strong>Example:</strong> MongoDB defaults to CP (Consistency over Availability on partition). Normally, it enforces strong consistency, sacrificing Latency to confirm writes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-grid" style="margin-top: -1rem;">
+    <div class="concept-card">
+      <h3>3. CP Systems (Strong Consistency)</h3>
+      <p>Prioritizes data correctness. If network partitions prevent nodes from agreeing on updates, the system rejects writes and reads to avoid returning stale data.</p>
+      <ul>
+        <li><strong>Quorum Math:</strong> Requires write quorum ($W$) and read quorum ($R$) to satisfy <code>W + R > N</code>. Replicas in the minority partition cannot form a majority (<code>Q = ⌊N/2⌋ + 1</code>) and halt.</li>
+        <li><strong>Odd Node Counts:</strong> We use odd node sizes (3, 5) because a 4-node cluster still requires 3 nodes for a quorum majority, meaning it has the same partition tolerance as a 3-node cluster while adding consensus overhead.</li>
+        <li><strong>Best for:</strong> Financial transactions, inventory counts, banking APIs.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. AP Systems (High Availability)</h3>
+      <p>Prioritizes accessibility. Isolated partitions accept writes independently. Data is reconciled later when the network heals, leading to eventual consistency.</p>
+      <ul>
+        <li><strong>Last-Write-Wins (LWW):</strong> Resolves conflicts using physical wall-clock timestamps. It is prone to clock drift (e.g. NTP sync delay), which can silently overwrite newer writes with older ones.</li>
+        <li><strong>Vector Clocks:</strong> Tracks logical causal history by keeping counters of modifications across nodes <code>[Node_A: 1, Node_B: 3]</code>, detecting write conflicts reliably without relying on server clocks.</li>
+        <li><strong>Best for:</strong> Social feeds, recommendation engines, shopping carts, search indexes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CAP Simulator -->
+  <div class="section-title">Interactive Distributed Partition Simulator</div>
+  <p>Toggle between <strong>CP Mode</strong> and <strong>AP Mode</strong>, trigger a network partition to isolate Node C, write data, and witness the tradeoffs.</p>
+
+  <div class="simulator-container">
+    <div class="sim-header">
+      <div class="sim-title">Distributed Replication Visualizer</div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btn-mode-cp" onclick="setMode('CP')">CP Mode (Consistency)</button>
+        <button class="sim-btn" id="btn-mode-ap" onclick="setMode('AP')">AP Mode (Availability)</button>
+        <button class="sim-btn warning" id="btn-partition" onclick="togglePartition()">Trigger Partition</button>
+      </div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="sim-metrics">
+      <div class="metric-box">
+        <div class="metric-label">Cluster Mode</div>
+        <div class="metric-value" id="val-mode" style="color: #d2a8ff;">CP (Consistency)</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Network Status</div>
+        <div class="metric-value" id="val-net" style="color: #56d364;">HEALTHY (Connected)</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">State Status</div>
+        <div class="metric-value" id="val-state" style="color: #56d364;">Consistent</div>
+      </div>
+    </div>
+
+    <!-- Simulator Visual Arena -->
+    <div class="visual-arena" id="arena">
+      <!-- Partition divider -->
+      <div class="partition-wall" id="wall"></div>
+      <div class="partition-label" id="wall-label">NETWORK PARTITION ACTIVE</div>
+
+      <!-- Node A -->
+      <div class="db-node active" id="node-a">
+        <div class="db-node-title">Node A</div>
+        <div class="db-value-display" id="val-node-a">X = 0</div>
+        <button class="node-action-btn" onclick="writeToNode('a')">Write X=5</button>
+      </div>
+
+      <!-- Node B -->
+      <div class="db-node active" id="node-b">
+        <div class="db-node-title">Node B</div>
+        <div class="db-value-display" id="val-node-b">X = 0</div>
+        <button class="node-action-btn" onclick="writeToNode('b')">Write X=5</button>
+      </div>
+
+      <!-- Node C -->
+      <div class="db-node active" id="node-c">
+        <div class="db-node-title">Node C</div>
+        <div class="db-value-display" id="val-node-c">X = 0</div>
+        <button class="node-action-btn" onclick="writeToNode('c')">Write X=10</button>
+      </div>
+    </div>
+
+    <p class="sim-explain" id="sim-tip">
+      <strong>Observation:</strong> When the network is healthy, a write to any node replicates immediately. Trigger a partition to split Node C off, then try writing to it in both CP and AP modes to observe the difference.
+    </p>
+  </div>
+
+  <!-- Interview Tips & Framing -->
+  <div class="interview-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+        <path fill-rule="evenodd" d="M1.38 8.01a14.04 14.04 0 0113.24 0 .75.75 0 01-.02 1.33 14.04 14.04 0 01-13.2 0 .75.75 0 01-.02-1.33zM8 4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/>
+      </svg>
+      How to Answer in an Interview
+    </h3>
+    <p>
+      If asked: <em>"How do you decide between a relational database and a NoSQL database for scaling?"</em>
+      <br><br>
+      Say: 
+      <em>"It comes down to CAP. For transactional domains (e.g., checkout pages or ledgers), consistency is non-negotiable. I will choose a CP model (like PostgreSQL replication with synchronous quorum commits) to prevent double-spending, even if network partitions drop client availability. For metadata, social feeds, or logs, availability is key. I will use an AP system (like DynamoDB or Cassandra) where replication is asynchronous and nodes resolve split state eventually."</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let config = {
+    mode: 'CP', // CP, AP
+    partition: false,
+    values: { a: 0, b: 0, c: 0 },
+    nodeStates: { a: 'active', b: 'active', c: 'active' }
+  };
+
+  const wall = document.getElementById('wall');
+  const wallLabel = document.getElementById('wall-label');
+  const valMode = document.getElementById('val-mode');
+  const valNet = document.getElementById('val-net');
+  const valState = document.getElementById('val-state');
+  const simTip = document.getElementById('sim-tip');
+
+  function setMode(mode) {
+    config.mode = mode;
+    document.getElementById('btn-mode-cp').className = 'sim-btn' + (mode === 'CP' ? ' active' : '');
+    document.getElementById('btn-mode-ap').className = 'sim-btn' + (mode === 'AP' ? ' active' : '');
+
+    valMode.innerText = mode === 'CP' ? 'CP (Consistency)' : 'AP (Availability)';
+    updateSimulation();
+  }
+
+  function togglePartition() {
+    config.partition = !config.partition;
+    const btn = document.getElementById('btn-partition');
+
+    if (config.partition) {
+      btn.innerText = "Heal Partition";
+      btn.classList.add('active');
+      wall.style.display = 'block';
+      wallLabel.style.display = 'block';
+      valNet.innerText = "PARTITION ACTIVE";
+      valNet.style.color = '#ff7b72';
+    } else {
+      btn.innerText = "Trigger Partition";
+      btn.classList.remove('active');
+      wall.style.display = 'none';
+      wallLabel.style.display = 'none';
+      valNet.innerText = "HEALTHY (Connected)";
+      valNet.style.color = '#56d364';
+
+      // Heal partition: sync states (eventual consistency)
+      let highestVal = Math.max(config.values.a, config.values.b, config.values.c);
+      config.values.a = highestVal;
+      config.values.b = highestVal;
+      config.values.c = highestVal;
+
+      animateReplication('a', 'c', highestVal);
+    }
+    updateSimulation();
+  }
+
+  function writeToNode(nodeId) {
+    let newVal = nodeId === 'c' ? 10 : 5;
+
+    if (config.partition) {
+      if (config.mode === 'CP') {
+        if (nodeId === 'c') {
+          // Node C is isolated (minority side). CP rejects write.
+          flashNodeError('c');
+          alertNodeText('c', 'Error: No Quorum');
+          return;
+        } else {
+          // A and B can form a majority (2 out of 3)
+          config.values[nodeId] = newVal;
+          let target = nodeId === 'a' ? 'b' : 'a';
+          config.values[target] = newVal;
+          animateReplication(nodeId, target, newVal);
+        }
+      } else {
+        // AP accepts writes on both sides!
+        config.values[nodeId] = newVal;
+        if (nodeId === 'a') {
+          config.values.b = newVal;
+          animateReplication('a', 'b', newVal);
+        } else if (nodeId === 'b') {
+          config.values.a = newVal;
+          animateReplication('b', 'a', newVal);
+        }
+      }
+    } else {
+      // Normal state: write to any node replicates to all
+      config.values[nodeId] = newVal;
+      ['a', 'b', 'c'].forEach(target => {
+        if (target !== nodeId) {
+          config.values[target] = newVal;
+          animateReplication(nodeId, target, newVal);
+        }
+      });
+    }
+
+    updateSimulation();
+  }
+
+  function flashNodeError(nodeId) {
+    const el = document.getElementById(`node-${nodeId}`);
+    el.classList.add('error');
+    setTimeout(() => el.classList.remove('error'), 800);
+  }
+
+  function alertNodeText(nodeId, text) {
+    const el = document.getElementById(`val-node-${nodeId}`);
+    const original = el.innerText;
+    el.innerText = text;
+    el.style.color = '#ff7b72';
+    setTimeout(() => {
+      el.innerText = original;
+      el.style.color = '#e1e4ea';
+    }, 1200);
+  }
+
+  function animateReplication(fromId, toId, value) {
+    if (config.partition && ((fromId === 'c' && (toId === 'a' || toId === 'b')) || ((fromId === 'a' || fromId === 'b') && toId === 'c'))) {
+      // Blocked by partition
+      createReplicationParticle(fromId, toId, true);
+      return;
+    }
+
+    createReplicationParticle(fromId, toId, false, () => {
+      document.getElementById(`val-node-${toId}`).innerText = `X = ${value}`;
+    });
+  }
+
+  function createReplicationParticle(fromId, toId, isBlocked, callback) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    const arenaEl = document.getElementById('arena');
+    arenaEl.appendChild(particle);
+
+    const fromEl = document.getElementById(`node-${fromId}`);
+    const toEl = document.getElementById(`node-${toId}`);
+
+    const arenaRect = arenaEl.getBoundingClientRect();
+    const fromRect = fromEl.getBoundingClientRect();
+    const toRect = toEl.getBoundingClientRect();
+
+    let startX = fromRect.left - arenaRect.left + 50;
+    let startY = fromRect.top - arenaRect.top + 30;
+
+    let targetX = toRect.left - arenaRect.left + 50;
+    let targetY = toRect.top - arenaRect.top + 30;
+
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+
+    let startTime = Date.now();
+    let duration = 800;
+
+    function animate() {
+      let elapsed = Date.now() - startTime;
+      let progress = elapsed / duration;
+
+      if (progress >= 1) {
+        particle.remove();
+        if (!isBlocked && callback) callback();
+      } else {
+        let curX = startX + (targetX - startX) * progress;
+        let curY = startY + (targetY - startY) * progress;
+        
+        // Check collision with partition wall (x = 450)
+        if (isBlocked && curX >= 445 && startX < 450) {
+          particle.classList.add('error');
+          particle.remove();
+          return;
+        }
+
+        particle.style.left = curX + 'px';
+        particle.style.top = curY + 'px';
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function updateSimulation() {
+    // Sync node text values
+    document.getElementById('val-node-a').innerText = `X = ${config.values.a}`;
+    document.getElementById('val-node-b').innerText = `X = ${config.values.b}`;
+    document.getElementById('val-node-c').innerText = `X = ${config.values.c}`;
+
+    // Consistency calculations
+    let consistent = config.values.a === config.values.b && config.values.b === config.values.c;
+    valState.innerText = consistent ? "Consistent" : "DIVERGED (Stale)";
+    valState.style.color = consistent ? "#56d364" : "#ff7b72";
+
+    // Text tips
+    if (config.partition) {
+      if (config.mode === 'CP') {
+        simTip.innerHTML = `<strong>CP Partition:</strong> Write to A/B succeeds (quorum is active). Writing to C fails immediately with an error (no quorum). This preserves Consistency across the network, but sacrifices Node C's Availability.`;
+      } else {
+        simTip.innerHTML = `<strong>AP Partition:</strong> Write to A/B succeeds with 'X = 5'. Write to C succeeds with 'X = 10'. The nodes diverge, sacrificing Consistency to remain Available. Click 'Heal Partition' to resolve conflicts with eventual consistency.`;
+      }
+    } else {
+      simTip.innerHTML = `<strong>Healthy Network:</strong> Click "Trigger Partition" to cut Node C off from Node A and B. Then try writing 'X = 10' to Node C to see how your selected mode (CP vs AP) resolves the conflict.`;
+    }
+  }
+
+  // Initialize
+  updateSimulation();
+</script>
+</body>
+</html>
