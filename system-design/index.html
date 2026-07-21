@@ -250,135 +250,40 @@
     </a>
   </div>
 
-  <!-- ============ STAGE 1 ============ -->
+  <!-- ============ MASTER INTERVIEW ARCHETYPES ============ -->
   <div class="section-title">
-    <span class="level-tag stage-s1">S1</span>
-    Foundations — no dependencies
+    <span class="level-tag stage-s1" style="background:#58a6ff;">S1</span>
+    Master Interview Archetypes (High-Yield Prep)
   </div>
-  <p class="stage-desc">Simplest designs that introduce core patterns (read-heavy caching, key generation, rate limit algorithms) used by every later problem. Do these first.</p>
+  <p class="stage-desc">Rather than memorizing 20+ niche system designs, master these 4 core archetypes that cover 90% of all fullstack system design questions for the Japan market.</p>
   <div class="grid">
 
     <a class="card" href="design_problems/01_url_shortener_v2.html">
-      <div class="card-num">PROBLEM 01</div>
-      <div class="card-title">URL Shortener</div>
-      <div class="card-desc">Hashing, key generation, redirect (301 vs 302), read-heavy caching, analytics tracking.</div>
-    </a>
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 02</div>
-      <div class="card-title">Rate Limiter</div>
-      <div class="card-desc">Token bucket, sliding window, distributed rate limiting with Redis clusters.</div>
-      <div class="badge-row"><span class="status status-co">Mercari</span><span class="status status-co">Indeed</span></div>
-    </a>
-
-  </div>
-
-  <!-- ============ STAGE 2 ============ -->
-  <div class="section-title">
-    <span class="level-tag stage-s2">S2</span>
-    Core Infrastructure Patterns
-  </div>
-  <p class="stage-desc">Distributed systems fundamentals — consistent hashing, replication, quorum, fan-out. These concepts reappear in every large-scale design.</p>
-  <div class="grid">
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 03</div>
-      <div class="card-title">Distributed Key-Value Store</div>
-      <div class="card-desc">Consistent hashing, replication, quorum reads/writes, gossip protocol, hinted handoff. Connects to your Redis work.</div>
-      <div class="badge-row"><span class="status status-med">Core pattern</span></div>
-    </a>
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 04</div>
-      <div class="card-title">News Feed (Twitter / Instagram)</div>
-      <div class="card-desc">Fan-out (push vs pull vs hybrid), timeline generation, caching hot feeds. Builds on K-V store &amp; rate limiter.</div>
-      <div class="badge-row"><span class="status status-med">Core pattern</span></div>
-    </a>
-
-  </div>
-
-  <!-- ============ STAGE 3 ============ -->
-  <div class="section-title">
-    <span class="level-tag stage-s3">S3</span>
-    Real-Time &amp; Communication
-  </div>
-  <p class="stage-desc">Builds on MQ, WebSocket, and caching concepts. Most directly relevant to your experience — these are your strongest interview topics.</p>
-  <div class="grid">
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 05</div>
-      <div class="card-title">Notification System</div>
-      <div class="card-desc">Multi-channel (push, email, SMS, in-app), template engine, delivery retry, rate limiting, batching.</div>
-      <div class="badge-row"><span class="status status-high">Strong match</span><span class="status status-co">Mercari</span></div>
+      <div class="card-num">ARCHETYPE 01</div>
+      <div class="card-title">Read-Heavy Key Lookup (URL Shortener)</div>
+      <div class="card-desc">Base62 mapping, unique ID generation (Snowflake), Cache-Aside scaling, Bloom filters, and dynamic storage estimation logic.</div>
+      <div class="badge-row"><span class="status status-med">Maps to Cache &amp; Autocomplete</span></div>
     </a>
 
     <a class="card" href="design_problems/06_realtime_chat.html">
-      <div class="card-num">PROBLEM 06</div>
-      <div class="card-title">Real-Time Chat / Messaging</div>
-      <div class="card-desc">WebSocket management, message ordering, delivery guarantees, offline messages, group chat, read receipts.</div>
-      <div class="badge-row"><span class="status status-high">Strong match</span></div>
+      <div class="card-num">ARCHETYPE 02</div>
+      <div class="card-title">Stateful Connection &amp; Event Flow (Chat)</div>
+      <div class="card-desc">WebSocket gateways, user presence state syncing, Cassandra LSM timeline logs, and offline push notifications synchronization.</div>
+      <div class="badge-row"><span class="status status-high">LINE / Yahoo Target</span></div>
     </a>
 
     <a class="card" href="#">
-      <div class="card-num">PROBLEM 07</div>
-      <div class="card-title">Real-Time Analytics Dashboard</div>
-      <div class="card-desc">Data pipeline (producer → stream processor → OLAP store → API), time-series DB, WebSocket push.</div>
-      <div class="badge-row"><span class="status status-high">Strong match</span></div>
-    </a>
-
-  </div>
-
-  <!-- ============ STAGE 4 ============ -->
-  <div class="section-title">
-    <span class="level-tag stage-s4">S4</span>
-    Transactional &amp; Data Systems
-  </div>
-  <p class="stage-desc">Stateful, data-centric designs. SQL vs NoSQL trade-offs, idempotency, timezone handling — nuanced problems that test your breadth.</p>
-  <div class="grid">
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 08</div>
-      <div class="card-title">E-Commerce Platform</div>
-      <div class="card-desc">Product catalog, inventory, shopping cart, checkout flow, payment processing, order management, idempotency.</div>
-      <div class="badge-row"><span class="status status-med">Resume match</span><span class="status status-co">Mercari</span></div>
+      <div class="card-num">ARCHETYPE 03</div>
+      <div class="card-title">Write Protection &amp; Limiting (Rate Limiter)</div>
+      <div class="card-desc">Token Bucket vs. Sliding Window algorithms, atomic Redis Lua scripts, Redis Hash memory layouts, and API Gateway caching limits.</div>
+      <div class="badge-row"><span class="status status-med">Indeed / Mercari Target</span></div>
     </a>
 
     <a class="card" href="#">
-      <div class="card-num">PROBLEM 09</div>
-      <div class="card-title">Calendar / Scheduling System</div>
-      <div class="card-desc">Recurring events (RRULE), conflict detection, timezone handling, shared calendars, availability queries.</div>
-      <div class="badge-row"><span class="status status-med">Resume match</span></div>
-    </a>
-
-  </div>
-
-  <!-- ============ STAGE 5 ============ -->
-  <div class="section-title">
-    <span class="level-tag stage-s5">S5</span>
-    Specialized &amp; Company-Specific
-  </div>
-  <p class="stage-desc">Niche but high-signal if you're interviewing at the target company. These introduce new domains (search relevance, video encoding, CDN).</p>
-  <div class="grid">
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 10</div>
-      <div class="card-title">Job Recommendation System</div>
-      <div class="card-desc">Candidate-job matching, inverted index, relevance scoring, real-time updates when new jobs appear.</div>
-      <div class="badge-row"><span class="status status-co">Indeed</span></div>
-    </a>
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 11</div>
-      <div class="card-title">Marketplace Search &amp; Filtering</div>
-      <div class="card-desc">Elasticsearch, faceted search, autocomplete, relevance ranking, inventory-aware results.</div>
-      <div class="badge-row"><span class="status status-co">Mercari</span></div>
-    </a>
-
-    <a class="card" href="#">
-      <div class="card-num">PROBLEM 12</div>
-      <div class="card-title">YouTube / Video Streaming</div>
-      <div class="card-desc">CDN, video transcoding, adaptive bitrate (HLS/DASH), metadata &amp; search.</div>
-      <div class="badge-row"><span class="status status-low">Fill gap</span></div>
+      <div class="card-num">ARCHETYPE 04</div>
+      <div class="card-title">Transactional Booking &amp; Ledgers (Booking/Pay)</div>
+      <div class="card-desc">Double-booking prevention, OCC vs. Pessimistic locking, distributed locks, Transactional Outbox pattern, and idempotency guarantees.</div>
+      <div class="badge-row"><span class="status status-high">PayPay / Rakuten Target</span></div>
     </a>
 
   </div>

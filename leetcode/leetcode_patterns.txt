@@ -150,16 +150,40 @@ LEETCODE EASY/MEDIUM PATTERNS - INTERVIEW PREP
       - #238  Product of Array Except Self
       - #523  Continuous Subarray Sum
 
+13. HEAPS / PRIORITY QUEUES
+    Easy:
+      - #703  Kth Largest Element in a Stream
+    Medium:
+      - #347  Top K Frequent Elements
+      - #973  K Closest Points to Origin
+      - #215  Kth Largest Element in an Array
+
+14. TRIES (PREFIX TREES)
+    Medium:
+      - #208  Implement Trie (Prefix Tree)
+      - #211  Design Add and Search Words Data Structure
+
+15. DATA STRUCTURE DESIGN (LLD)
+    Medium:
+      - #146  LRU Cache
+      - #380  Insert Delete GetRandom O(1)
+
+16. BIT MANIPULATION (Warm-up)
+    Easy:
+      - #136  Single Number
+      - #191  Number of 1 Bits
+
 ================================================
-SUGGESTED STUDY ORDER (6-7 weeks)
+SUGGESTED STUDY ORDER (7-8 weeks)
 ================================================
 
-Week 1: Two Pointers + Sliding Window     (8-10 problems)
-Week 2: Hash Map + Binary Search          (8-10 problems)
-Week 3: Stack + Linked List               (8-10 problems)
-Week 4: Trees (DFS/BFS)                  (8-10 problems)
-Week 5: Backtracking + Greedy            (8-10 problems)
-Week 6: DP (1D) + Prefix Sum             (8-10 problems)
-Week 7: DP (2D) + Graphs                 (8-10 problems)
+Week 1: Two Pointers + Sliding Window             (8-10 problems)
+Week 2: Hash Map + Binary Search                  (8-10 problems)
+Week 3: Stack + Linked List                       (8-10 problems)
+Week 4: Trees (DFS/BFS)                           (8-10 problems)
+Week 5: Backtracking + Greedy                     (8-10 problems)
+Week 6: DP (1D) + Prefix Sum                      (8-10 problems)
+Week 7: Graphs + Heaps                            (8-10 problems)
+Week 8: Tries, LLD (Design) & Bit Manipulation    (8-10 problems)
 
-Total: ~75 problems covers 90% of easy/medium interview questions.
+Total: ~85 problems covers 90%+ of Tier 2 & 3 technical questions.

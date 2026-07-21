@@ -3,87 +3,404 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pattern 1: Two Pointers</title>
+  <title>Pattern 01: Two Pointers</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #121620;
+      --bg-tertiary: #1a202c;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #58a6ff;
+      --accent-gradient: linear-gradient(135deg, #58a6ff, #8250df);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --code-bg: #07090e;
+      --success: #4ade80;
+      --success-bg: rgba(74, 222, 128, 0.1);
+      --warning: #facc15;
+      --danger: #f87171;
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #0f1117;
-      color: #e1e4ea;
-      line-height: 1.7;
-      padding: 2rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 2rem 1rem;
     }
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    header {
+      margin-bottom: 3rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 2rem;
     }
     h1 {
-      font-size: 2.4rem;
-      background: linear-gradient(135deg, #58a6ff, #8250df);
+      font-size: 2.8rem;
+      background: var(--accent-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 0.5rem;
+      font-weight: 800;
     }
-    h2 {
-      font-size: 1.6rem;
-      color: #58a6ff;
-      margin-top: 2.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 0.4rem;
-      border-bottom: 2px solid #21262d;
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
     }
-    h3 {
-      font-size: 1.2rem;
-      color: #d2a8ff;
-      margin-top: 1.8rem;
-      margin-bottom: 0.6rem;
-    }
-    h4 {
-      color: #7ee787;
-      margin-top: 1.2rem;
-      margin-bottom: 0.4rem;
-    }
-    p, li {
-      color: #b1bac4;
-    }
-    a { color: #58a6ff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
 
-    /* Cards */
-    .card {
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 10px;
-      padding: 1.4rem;
-      margin-bottom: 1rem;
+    /* Sandbox visualizer styling */
+    .sandbox-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    .card h3 { margin-top: 0; }
-
-    .tag {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      margin-right: 4px;
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
     }
-    .tag-easy { background: #1b3a2b; color: #7ee787; }
-    .tag-medium { background: #3a2b1b; color: #d29922; }
-
-    /* Code blocks */
-    pre {
-      background: #0d1117;
-      border: 1px solid #30363d;
+    .sandbox-header h2 {
+      font-size: 1.4rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .problem-selector select {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
       border-radius: 8px;
-      padding: 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .sandbox-inputs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    .input-group input {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 8px;
+      outline: none;
+      font-family: monospace;
+    }
+    .input-group input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .sandbox-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--text-secondary);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: #238636;
+      border-color: #2ea44f;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #2ea44f;
+    }
+
+    .sandbox-screen {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      justify-content: center;
+      position: relative;
+    }
+
+    .array-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+    }
+    .cell {
+      width: 55px;
+      height: 55px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .cell-sub {
+      position: absolute;
+      bottom: 2px;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+    .cell.left-ptr {
+      border-color: var(--danger);
+      background: rgba(248, 113, 113, 0.15);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.4);
+    }
+    .cell.right-ptr {
+      border-color: var(--success);
+      background: var(--success-bg);
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+    }
+    .cell.both-ptr {
+      border-color: var(--warning);
+      background: rgba(250, 204, 21, 0.15);
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+    }
+    .cell.matched {
+      opacity: 0.6;
+      background: #111;
+      border-color: #333;
+    }
+
+    /* Water Container Visualization */
+    .water-vis-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      height: 150px;
+      margin: 10px 0;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 5px;
+    }
+    .water-bar {
+      width: 25px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      color: #8b949e;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 4px 4px 0 0;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .water-bar.active-L {
+      border-color: var(--danger);
+      background: rgba(248, 113, 113, 0.2);
+    }
+    .water-bar.active-R {
+      border-color: var(--success);
+      background: rgba(74, 222, 128, 0.2);
+    }
+    .water-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(88, 166, 255, 0.3);
+      border-top: 1px dashed var(--accent-color);
+      transition: height 0.3s;
+      pointer-events: none;
+    }
+
+    .sandbox-status {
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 4px solid var(--accent-color);
+      padding: 12px;
+      font-size: 0.95rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .sandbox-status.complete {
+      border-left-color: var(--success);
+      background: var(--success-bg);
+    }
+
+    /* Problem cards and Tabs */
+    .problem-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 2.5rem;
+    }
+    .problem-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .problem-title-bar h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .problem-description {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255, 255, 255, 0.01);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-color);
+    }
+
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.2rem;
+      gap: 4px;
       overflow-x: auto;
-      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-      font-size: 0.88rem;
-      line-height: 1.5;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    .tab-btn.active {
+      color: var(--accent-color);
+      border-bottom-color: var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .intuition-content p {
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .intuition-content ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .intuition-content li {
+      margin-bottom: 0.4rem;
+      color: var(--text-secondary);
+    }
+
+    .key-shift {
+      background: var(--bg-tertiary);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .key-shift h4 {
+      color: var(--accent-color);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .visual-explanation {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .code-wrapper {
+      position: relative;
+    }
+    .code-lang-label {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    pre {
+      background: var(--code-bg) !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
       margin: 0.8rem 0;
     }
     code { font-family: inherit; }
@@ -94,894 +411,1126 @@
     .num { color: #79c0ff; }
     .op { color: #ffa657; }
 
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1rem 0;
-      font-size: 0.92rem;
-    }
-    th, td {
-      padding: 10px 14px;
-      text-align: left;
-      border-bottom: 1px solid #21262d;
-    }
-    th {
-      background: #161b22;
-      color: #58a6ff;
-      font-weight: 600;
-    }
-    tr:hover td { background: #1c2128; }
-
-    /* Visual array blocks */
-    .array-visual {
+    .complexity-badges {
       display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
-      margin: 0.8rem 0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-    }
-    .array-item {
-      width: 44px;
-      min-height: 52px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #21262d;
-      border: 2px solid #30363d;
-      border-radius: 6px;
-      font-weight: 600;
-      padding: 2px 0;
-      line-height: 1.2;
-      gap: 1px;
-    }
-    .array-item.l-pointer {
-      border-color: #58a6ff;
-      background: #1a3655;
-    }
-    .array-item.r-pointer {
-      border-color: #ff7b72;
-      background: #3d1f1e;
-    }
-    .array-item.both {
-      border-color: #d2a8ff;
-      background: #2a1f3d;
-    }
-    .array-item.active {
-      border-color: #7ee787;
-      background: #1b3a2b;
-    }
-    .array-item.water {
-      background: #1a4a6b;
-      border-color: #58a6ff;
-    }
-
-    /* Pointer labels */
-    .pointer-label {
-      font-size: 0.6rem;
-      font-weight: 700;
-      white-space: nowrap;
-      display: block;
-      text-align: center;
-      width: 100%;
-      line-height: 1.1;
-    }
-    .l-ptr-label { color: #58a6ff; }
-    .r-ptr-label { color: #ff7b72; }
-    .s-ptr-label { color: #d2a8ff; }
-    .f-ptr-label { color: #7ee787; }
-
-    /* Container visual for water */
-    .bar-chart {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      margin: 1rem 0;
-      height: 160px;
-      padding: 0 4px;
-    }
-    .bar {
-      width: 36px;
-      background: #58a6ff;
-      border-radius: 3px 3px 0 0;
-      position: relative;
-      min-height: 4px;
-    }
-    .bar-label {
-      position: absolute;
-      bottom: -22px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.7rem;
-      color: #8b949e;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .bar.water {
-      background: #1a4a6b;
-      border: 1px solid #58a6ff;
-    }
-    .bar.empty {
-      background: transparent;
-      border: 1px dashed #30363d;
-    }
-
-    /* Checklist */
-    ul, ol { padding-left: 1.4rem; }
-    li { margin-bottom: 0.3rem; }
-
-    /* Flow diagram */
-    .flow {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 1.2rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      white-space: pre;
-      overflow-x: auto;
-      margin: 0.8rem 0;
-    }
-
-    /* Arrow symbol */
-    .arrow { color: #ffa657; font-weight: bold; }
-
-    /* Responsive */
-    @media (max-width: 640px) {
-      body { padding: 1rem; }
-      h1 { font-size: 1.8rem; }
-      .array-item { width: 38px; min-height: 46px; font-size: 0.78rem; }
-      .bar { width: 26px; }
-    }
-
-    .toc {
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 10px;
-      padding: 1.2rem 1.6rem;
-      margin-bottom: 2rem;
-    }
-    .toc h3 { margin: 0 0 0.6rem 0; }
-    .toc a { display: block; padding: 2px 0; font-size: 0.92rem; }
-
-    /* Accordion */
-    details.approach, details.solution {
+      gap: 10px;
       margin-top: 0.8rem;
     }
-    details summary {
-      cursor: pointer;
-      color: #8b949e;
-      font-size: 0.85rem;
+    .complexity-badge {
+      font-size: 0.8rem;
       font-weight: 600;
-      padding: 0.3rem 0.6rem;
+      padding: 4px 10px;
       border-radius: 6px;
-      background: #1c2128;
-      user-select: none;
-      display: inline-block;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
     }
-    details summary:hover {
-      background: #21262d;
+    .complexity-badge span {
+      color: var(--accent-color);
     }
-    details[open] summary {
-      color: #d2a8ff;
-      margin-bottom: 0.4rem;
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+      margin-bottom: 3rem;
     }
-    #toggle-all {
-      margin-bottom: 1rem;
-      padding: 6px 16px;
-      background: #21262d;
-      color: #8b949e;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-family: inherit;
+    .toc-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
     }
-    #toggle-all:hover {
-      background: #30363d;
-      color: #e1e4ea;
+    .toc-item:hover {
+      border-color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .toc-item-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .theory-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .theory-section h3 {
+      color: var(--accent-color);
+      margin-bottom: 0.8rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: var(--accent-color);
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
 <div class="container">
 
-<h1>Pattern 1: Two Pointers</h1>
-<p style="color: #8b949e; margin-bottom: 1.2rem;">A comprehensive guide with visuals, code, and intuition.</p>
-
-<button id="toggle-all">▼ Expand All Walkthroughs &amp; Code</button>
-<script>
-(function(){
-  var btn = document.getElementById('toggle-all');
-  var expanded = false;
-  btn.onclick = function(){
-    expanded = !expanded;
-    document.querySelectorAll('.approach,.solution').forEach(function(e){ e.open = expanded; });
-    btn.textContent = expanded
-      ? '▲ Collapse All Walkthroughs & Code'
-      : '▼ Expand All Walkthroughs & Code';
-  };
-})();
-</script>
-
-<div class="toc">
-  <h3>Contents</h3>
-  <a href="#what">What is Two Pointers?</a>
-  <a href="#when">When to Use It</a>
-  <a href="#patterns">Sub-Patterns &amp; Templates</a>
-  <a href="#easy">Easy Problems</a>
-  <a href="#medium">Medium Problems</a>
-  <a href="#cheatsheet">Cheatsheet</a>
-</div>
-
-<!-- ==================== WHAT ==================== -->
-<h2 id="what">What is Two Pointers?</h2>
-
-<p>Two Pointers is a technique where <strong>two indices traverse a data structure</strong> (array or string) — moving toward each other, away, or at different speeds — to solve problems in <strong>O(n) time and O(1) space</strong>.</p>
-
-<p>Instead of nested loops (O(n²)), we coordinate two pointers to make a single pass:</p>
-
-<pre><span class="cm">// Before (brute force):</span>
-<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
-    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n):   <span class="cm">// O(n²)</span>
-
-<span class="cm">// After (two pointers):</span>
-<span class="kw">while</span> left &lt; right:
-    <span class="fn">move</span> left <span class="kw">or</span> right     <span class="cm">// O(n)</span></pre>
-
-<!-- ==================== WHEN ==================== -->
-<h2 id="when">When to Use It</h2>
-
-<table>
-  <tr><th>Signal</th><th>Example Problem</th></tr>
-  <tr><td>Sorted array is given or can be sorted</td><td>#167 Two Sum II, #15 3Sum</td></tr>
-  <tr><td>Compare elements from both ends</td><td>#125 Valid Palindrome</td></tr>
-  <tr><td>In-place modification from both sides</td><td>#283 Move Zeroes, #344 Reverse String</td></tr>
-  <tr><td>Subarray/substring with a condition</td><td>#11 Container With Most Water</td></tr>
-</table>
-
-<h3>Decision Flowchart</h3>
-
-<div class="flow">Is the array sorted?
-├── <span style="color:#7ee787;">Yes</span> → Can I use colliding pointers?
-│   ├── Need a pair with a target?        → <span style="color:#58a6ff;">Colliding</span> (#167, #15)
-│   ├── Need to compute area?             → <span style="color:#58a6ff;">Colliding, move shorter</span> (#11)
-│   └── Need to compute squares?          → <span style="color:#58a6ff;">Colliding from ends</span> (#977)
-└── <span style="color:#ff7b72;">No</span> → Can I sort it?
-    ├── <span style="color:#7ee787;">Yes</span> → Sort + two pointers (#15, #16)
-    └── <span style="color:#ff7b72;">No</span>  → Use fast &amp; slow or hash map
-
-Need in-place modification?
-└── <span style="color:#7ee787;">Yes</span> → Fast &amp; slow pointers (#283)</div>
-
-<!-- ==================== PATTERNS ==================== -->
-<h2 id="patterns">Sub-Patterns &amp; Templates</h2>
-
-<h3>A) Colliding (Opposite Direction)</h3>
-
-<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.8rem 0;">
-  <div class="array-item l-pointer">1<span class="pointer-label l-ptr-label">L</span></div>
-  <div class="array-item">2</div>
-  <div class="array-item">3</div>
-  <div class="array-item">4</div>
-  <div class="array-item">5</div>
-  <div class="array-item">6</div>
-  <div class="array-item">7</div>
-  <div class="array-item r-pointer">8<span class="pointer-label r-ptr-label">R</span></div>
-</div>
-
-<div class="array-visual" style="font-size:0.85rem; color:#8b949e;">
-  <span class="arrow">&rarr;</span> L moves right &nbsp;&nbsp; <span class="arrow">&larr;</span> R moves left
-</div>
-
-<p><strong>Logic:</strong> L at 0, R at n-1. Move one pointer per iteration based on a condition.</p>
-
-<p><strong>Problems:</strong> Valid Palindrome, 3Sum, Container With Most Water, Trapping Rain Water</p>
-
-<pre><span class="kw">def</span> <span class="fn">two_pointer</span>(arr):
-    l, r = <span class="num">0</span>, <span class="fn">len</span>(arr) - <span class="num">1</span>
-    <span class="kw">while</span> l &lt; r:
-        <span class="cm"># work with arr[l] and arr[r]</span>
-        <span class="kw">if</span> condition:
-            l += <span class="num">1</span>
-        <span class="kw">else</span>:
-            r -= <span class="num">1</span>
-    <span class="kw">return</span> result</pre>
-
-<h3>B) Fast &amp; Slow (Same Direction)</h3>
-
-<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.8rem 0;">
-  <div class="array-item">0</div>
-  <div class="array-item active">1<span class="pointer-label f-ptr-label">Fast</span></div>
-  <div class="array-item">0</div>
-  <div class="array-item">3</div>
-  <div class="array-item r-pointer">12<span class="pointer-label s-ptr-label">Slow</span></div>
-</div>
-
-<p><strong>Logic:</strong> Slow tracks where to write next; Fast scans ahead.</p>
-<p><strong>Problems:</strong> Move Zeroes, Remove Duplicates</p>
-
-<pre><span class="kw">def</span> <span class="fn">fast_slow</span>(arr):
-    slow = <span class="num">0</span>
-    <span class="kw">for</span> fast <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
-        <span class="kw">if</span> arr[fast] != target:
-            arr[slow], arr[fast] = arr[fast], arr[slow]
-            slow += <span class="num">1</span></pre>
-
-<h3>C) Pointers from Different Arrays</h3>
-<p>One pointer per array, used in merge-type problems like <strong>Squares of a Sorted Array</strong> or Merge Sorted Array.</p>
-
-<!-- ==================== EASY ==================== -->
-<h2 id="easy">Easy Problems</h2>
-
-<!-- #125 -->
-<div class="card">
-  <div>
-    <span class="tag tag-easy">EASY</span>
-    <strong>#125 Valid Palindrome</strong>
-  </div>
-  <p style="margin-top:0.5rem;">A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Colliding pointers — skip non-alphanumeric, compare lowercase.</p>
-
-  <h4>Visual Walkthrough</h4>
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0; font-family:'JetBrains Mono',monospace; font-size:0.78rem;">
-    <div class="array-item l-pointer">a<span class="pointer-label l-ptr-label">L</span></div>
-    <div class="array-item">,</div>
-    <div class="array-item"> </div>
-    <div class="array-item">m</div>
-    <div class="array-item">a</div>
-    <div class="array-item">n</div>
-    <div class="array-item">,</div>
-    <div class="array-item"> </div>
-    <div class="array-item">a</div>
-    <div class="array-item"> </div>
-    <div class="array-item">p</div>
-    <div class="array-item">l</div>
-    <div class="array-item">a</div>
-    <div class="array-item">n</div>
-    <div class="array-item">,</div>
-    <div class="array-item"> </div>
-    <div class="array-item">a</div>
-    <div class="array-item"> </div>
-    <div class="array-item">c</div>
-    <div class="array-item">a</div>
-    <div class="array-item">n</div>
-    <div class="array-item">a</div>
-    <div class="array-item">l</div>
-    <div class="array-item">:</div>
-    <div class="array-item"> </div>
-    <div class="array-item r-pointer">P<span class="pointer-label r-ptr-label">R</span></div>
-  </div>
-  <p style="font-size:0.85rem; color:#8b949e;">L and R skip non-alphanumeric characters, then compare. All matches &rarr; palindrome.</p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">isPalindrome</span>(s: <span class="kw">str</span>) -> <span class="kw">bool</span>:
-    l, r = <span class="num">0</span>, <span class="fn">len</span>(s) - <span class="num">1</span>
-    <span class="kw">while</span> l &lt; r:
-        <span class="kw">while</span> l &lt; r <span class="kw">and</span> <span class="kw">not</span> s[l].<span class="fn">isalnum</span>():
-            l += <span class="num">1</span>
-        <span class="kw">while</span> l &lt; r <span class="kw">and</span> <span class="kw">not</span> s[r].<span class="fn">isalnum</span>():
-            r -= <span class="num">1</span>
-        <span class="kw">if</span> s[l].<span class="fn">lower</span>() != s[r].<span class="fn">lower</span>():
-            <span class="kw">return</span> <span class="kw">False</span>
-        l += <span class="num">1</span>; r -= <span class="num">1</span>
-    <span class="kw">return</span> <span class="kw">True</span></pre>
-
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- #283 -->
-<div class="card">
-  <div>
-    <span class="tag tag-easy">EASY</span>
-    <strong>#283 Move Zeroes</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Given an integer array nums, move all 0's to the end of it while maintaining the relative order of the non-zero elements. Note that you must do this in-place without making a copy of the array.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Fast &amp; slow — slow points to where the next non-zero goes.</p>
-
-  <h4>Visual Walkthrough</h4>
-  <p style="font-size:0.85rem; color:#8b949e;">Input: [0, 1, 0, 3, 12]</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item active">0<span class="pointer-label s-ptr-label">S</span></div>
-    <div class="array-item">1<span class="pointer-label f-ptr-label">F</span></div>
-    <div class="array-item">0</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">12</div>
-  </div>
-  <p style="font-size:0.8rem;">Step 1: nums[1] != 0 → <span style="color:#7ee787;">swap</span> with slow (0). S=1, F=2</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item active">1</div>
-    <div class="array-item active">0<span class="pointer-label s-ptr-label">S</span></div>
-    <div class="array-item">0</div>
-    <div class="array-item">3<span class="pointer-label f-ptr-label">F</span></div>
-    <div class="array-item" style="opacity:0.3;">12</div>
-  </div>
-  <p style="font-size:0.8rem;">Step 2: nums[3] != 0 → <span style="color:#7ee787;">swap</span> with slow. S=2, F=4</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item active">1</div>
-    <div class="array-item active">3</div>
-    <div class="array-item active">0</div>
-    <div class="array-item active">12</div>
-    <div class="array-item">0</div>
-  </div>
-  <p style="font-size:0.8rem;">Step 3: nums[4] != 0 → <span style="color:#7ee787;">swap</span> with slow. S=3 → done.</p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">moveZeroes</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">None</span>:
-    slow = <span class="num">0</span>
-    fast = <span class="num">0</span>
-    <span class="kw">while</span> fast < <span class="fn">len</span>(nums):
-        <span class="kw">if</span> nums[fast] != <span class="num">0</span>:
-            nums[slow], nums[fast] = nums[fast], nums[slow]
-            slow += <span class="num">1</span>
-        fast += <span class="num">1</span></pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- #344 -->
-<div class="card">
-  <div>
-    <span class="tag tag-easy">EASY</span>
-    <strong>#344 Reverse String</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Write a function that reverses a string. The input string is given as an array of characters s. You must do this by modifying the input array in-place with O(1) extra memory.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Colliding pointers — swap L and R.</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item l-pointer" style="border-color:#58a6ff;">h<span class="pointer-label l-ptr-label">L</span></div>
-    <div class="array-item">e</div>
-    <div class="array-item">l</div>
-    <div class="array-item">l</div>
-    <div class="array-item r-pointer" style="border-color:#ff7b72;">o<span class="pointer-label r-ptr-label">R</span></div>
-  </div>
-  <div class="array-visual" style="gap:0;"><span class="arrow">&darr;</span> swap</div>
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.2rem 0 0.8rem;">
-    <div class="array-item active">o</div>
-    <div class="array-item">e</div>
-    <div class="array-item">l</div>
-    <div class="array-item active">l</div>
-    <div class="array-item active">h</div>
-  </div>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">reverseString</span>(s: <span class="kw">list</span>[<span class="kw">str</span>]) -> <span class="kw">None</span>:
-    l, r = <span class="num">0</span>, <span class="fn">len</span>(s) - <span class="num">1</span>
-    <span class="kw">while</span> l &lt; r:
-        s[l], s[r] = s[r], s[l]
-        l += <span class="num">1</span>; r -= <span class="num">1</span></pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- #977 -->
-<div class="card">
-  <div>
-    <span class="tag tag-easy">EASY</span>
-    <strong>#977 Squares of a Sorted Array</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Given an integer array nums sorted in non-decreasing order, return an array of the squares of each number sorted in non-decreasing order.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Colliding from ends — biggest square is at one of the two ends. Fill result from right to left.</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item l-pointer">-7<span class="pointer-label l-ptr-label">L</span></div>
-    <div class="array-item">-3</div>
-    <div class="array-item">2</div>
-    <div class="array-item">3</div>
-    <div class="array-item r-pointer">11<span class="pointer-label r-ptr-label">R</span></div>
-  </div>
-
-  <table style="width:auto; font-size:0.85rem; margin:0.8rem 0;">
-    <tr><th>Step</th><th>abs(L)</th><th>abs(R)</th><th>Take</th><th>Square</th><th>Fill at</th></tr>
-    <tr><td>1</td><td>7</td><td>11</td><td>R</td><td>121</td><td>result[4]</td></tr>
-    <tr><td>2</td><td>7</td><td>3</td><td>L</td><td>49</td><td>result[3]</td></tr>
-    <tr><td>3</td><td>3</td><td>3</td><td>L</td><td>9</td><td>result[2]</td></tr>
-    <tr><td>4</td><td>2</td><td>3</td><td>R</td><td>9</td><td>result[1]</td></tr>
-    <tr><td>5</td><td>2</td><td>—</td><td>L</td><td>4</td><td>result[0]</td></tr>
-  </table>
-
-  <p><strong>Result:</strong> [4, 9, 9, 49, 121]</p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">sortedSquares</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">list</span>[<span class="kw">int</span>]:
-    n = <span class="fn">len</span>(nums)
-    res = [<span class="num">0</span>] * n
-    l, r = <span class="num">0</span>, n - <span class="num">1</span>
-    i = n - <span class="num">1</span>
-    <span class="kw">while</span> i &gt;= <span class="num">0</span>:
-        <span class="kw">if</span> <span class="fn">abs</span>(nums[l]) &gt; <span class="fn">abs</span>(nums[r]):
-            res[i] = nums[l] * nums[l]; l += <span class="num">1</span>
-        <span class="kw">else</span>:
-            res[i] = nums[r] * nums[r]; r -= <span class="num">1</span>
-        i -= <span class="num">1</span>
-    <span class="kw">return</span> res</pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(n) for output</p>
-  </details>
-</div>
-
-<!-- #167 -->
-<div class="card">
-  <div>
-    <span class="tag tag-easy">EASY</span>
-    <strong>#167 Two Sum II - Input Array Is Sorted</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number. Let these two numbers be numbers[index1] and numbers[index2] where 1 &lt;= index1 &lt; index2 &lt;= numbers.length. Return the indices of the two numbers, index1 and index2, added by one as an integer array [index1, index2] of length 2. The tests are generated such that there is exactly one solution. You may not use the same element twice. Your solution must use only constant extra space.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Colliding pointers. If sum &lt; target, move L right. If sum &gt; target, move R left.</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item l-pointer">2<span class="pointer-label l-ptr-label">L</span></div>
-    <div class="array-item">7</div>
-    <div class="array-item">11</div>
-    <div class="array-item r-pointer">15<span class="pointer-label r-ptr-label">R</span></div>
-  </div>
-  <p style="font-size:0.85rem; color:#8b949e;">target=9: 2+15=17 &gt; 9 → R--; 2+11=13 &gt; 9 → R--; 2+7=9 → <span style="color:#7ee787;">found [1,2]</span></p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">twoSum</span>(numbers: <span class="kw">list</span>[<span class="kw">int</span>], target: <span class="kw">int</span>) -> <span class="kw">list</span>[<span class="kw">int</span>]:
-    l, r = <span class="num">0</span>, <span class="fn">len</span>(numbers) - <span class="num">1</span>
-    <span class="kw">while</span> l &lt; r:
-        s = numbers[l] + numbers[r]
-        <span class="kw">if</span> s == target:
-            <span class="kw">return</span> [l + <span class="num">1</span>, r + <span class="num">1</span>]
-        <span class="kw">elif</span> s &lt; target:
-            l += <span class="num">1</span>
-        <span class="kw">else</span>:
-            r -= <span class="num">1</span></pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- #26 -->
-<div class="card">
-  <div>
-    <span class="tag tag-easy">EASY</span>
-    <strong>#26 Remove Duplicates from Sorted Array</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Given an integer array nums sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same. Then return the number of unique elements in nums.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Fast &amp; slow. <code>slow</code> marks the next write position; <code>fast</code> scans for new values. Compare <code>nums[fast]</code> against <code>nums[slow-1]</code> (the last unique value written).</p>
-
-  <div style="background:#1c2128; border-left:3px solid #d2a8ff; padding:0.6rem 1rem; margin:0.8rem 0; font-size:0.88rem; border-radius:0 6px 6px 0;">
-    <strong style="color:#d2a8ff;">Invariant:</strong> <code>nums[0..slow-1]</code> = deduplicated prefix. <code>nums[slow..fast-1]</code> = scanned duplicates. <code>nums[fast..]</code> = unexplored. <code>slow</code> counts unique elements, which is the return value.
-  </div>
-
-  <h4>Visual Walkthrough</h4>
-  <p style="font-size:0.85rem; color:#8b949e;">Input: [0, 0, 1, 1, 1, 2, 2, 3, 3, 4] &nbsp;&nbsp; S and F start at index 1</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item active">0</div>
-    <div class="array-item both">0<span class="pointer-label s-ptr-label">S</span><span class="pointer-label f-ptr-label">F</span></div>
-    <div class="array-item" style="opacity:0.3;">1</div>
-    <div class="array-item" style="opacity:0.3;">1</div>
-    <div class="array-item" style="opacity:0.3;">1</div>
-    <div class="array-item" style="opacity:0.3;">2</div>
-    <div class="array-item" style="opacity:0.3;">2</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">4</div>
-  </div>
-  <p style="font-size:0.8rem;">S=F=1. <code>nums[1]=0</code> equals <code>nums[0]=0</code> (last unique) → skip. F moves to 2.</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item">0</div>
-    <div class="array-item active">1<span class="pointer-label s-ptr-label">S</span></div>
-    <div class="array-item">1<span class="pointer-label f-ptr-label">F</span></div>
-    <div class="array-item" style="opacity:0.3;">1</div>
-    <div class="array-item" style="opacity:0.3;">1</div>
-    <div class="array-item" style="opacity:0.3;">2</div>
-    <div class="array-item" style="opacity:0.3;">2</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">4</div>
-  </div>
-  <p style="font-size:0.8rem;">F=2 found 1 ≠ nums[0]=0 → <span style="color:#7ee787;">write 1 at nums[1]</span>. S=2. F scans 1's at 3,4 (equal to nums[1]=1 → skip).</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item">0</div>
-    <div class="array-item">1</div>
-    <div class="array-item active">2<span class="pointer-label s-ptr-label">S</span></div>
-    <div class="array-item">1</div>
-    <div class="array-item">1</div>
-    <div class="array-item">2<span class="pointer-label f-ptr-label">F</span></div>
-    <div class="array-item" style="opacity:0.3;">2</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">4</div>
-  </div>
-  <p style="font-size:0.8rem;">F=5 found 2 ≠ nums[1]=1 → <span style="color:#7ee787;">write 2 at nums[2]</span>. S=3. F=6 skips (2 equals nums[2]=2).</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item">0</div>
-    <div class="array-item">1</div>
-    <div class="array-item">2</div>
-    <div class="array-item active">3<span class="pointer-label s-ptr-label">S</span></div>
-    <div class="array-item">1</div>
-    <div class="array-item">2</div>
-    <div class="array-item">2</div>
-    <div class="array-item">3<span class="pointer-label f-ptr-label">F</span></div>
-    <div class="array-item" style="opacity:0.3;">3</div>
-    <div class="array-item" style="opacity:0.3;">4</div>
-  </div>
-  <p style="font-size:0.8rem;">F=7 found 3 ≠ nums[2]=2 → <span style="color:#7ee787;">write 3 at nums[3]</span>. S=4. F=8 skips (3 equals nums[3]=3).</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.4rem 0;">
-    <div class="array-item">0</div>
-    <div class="array-item">1</div>
-    <div class="array-item">2</div>
-    <div class="array-item">3</div>
-    <div class="array-item active">4<span class="pointer-label s-ptr-label">S</span></div>
-    <div class="array-item">2</div>
-    <div class="array-item">2</div>
-    <div class="array-item">3</div>
-    <div class="array-item">3</div>
-    <div class="array-item">4<span class="pointer-label f-ptr-label">F</span></div>
-  </div>
-  <p style="font-size:0.8rem;">F=9 found 4 ≠ nums[3]=3 → <span style="color:#7ee787;">write 4 at nums[4]</span>. S=5. Loop ends. Return <strong>5</strong>.</p>
-
-  <p style="font-size:0.85rem; color:#8b949e;">Prefix: <strong>[0, 1, 2, 3, 4]</strong> &nbsp;·&nbsp; nums beyond index 4 is garbage (ignored).</p>
-
-  <h4>Full Trace</h4>
-  <table style="width:auto; font-size:0.85rem;">
-    <tr><th>Iter</th><th>fast</th><th>nums[fast]</th><th>slow</th><th>nums[slow-1]</th><th>Match?</th><th>Action</th></tr>
-    <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>Yes</td><td>skip</td></tr>
-    <tr><td>2</td><td>2</td><td style="color:#7ee787;">1</td><td>1</td><td>0</td><td>No</td><td>write at slow</td></tr>
-    <tr><td>3</td><td>3</td><td>1</td><td>2</td><td>1</td><td>Yes</td><td>skip</td></tr>
-    <tr><td>4</td><td>4</td><td>1</td><td>2</td><td>1</td><td>Yes</td><td>skip</td></tr>
-    <tr><td>5</td><td>5</td><td style="color:#7ee787;">2</td><td>2</td><td>1</td><td>No</td><td>write at slow</td></tr>
-    <tr><td>6</td><td>6</td><td>2</td><td>3</td><td>2</td><td>Yes</td><td>skip</td></tr>
-    <tr><td>7</td><td>7</td><td style="color:#7ee787;">3</td><td>3</td><td>2</td><td>No</td><td>write at slow</td></tr>
-    <tr><td>8</td><td>8</td><td>3</td><td>4</td><td>3</td><td>Yes</td><td>skip</td></tr>
-    <tr><td>9</td><td>9</td><td style="color:#7ee787;">4</td><td>4</td><td>3</td><td>No</td><td>write at slow</td></tr>
-  </table>
-  <p style="font-size:0.85rem; color:#8b949e;">Total writes = 4. Final slow = 5 = <strong>unique count</strong>. Only 4 of 9 iterations mutate the array.</p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">removeDuplicates</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
-    slow = <span class="num">1</span>
-    fast = <span class="num">1</span>
-    <span class="kw">while</span> fast < <span class="fn">len</span>(nums):
-        <span class="kw">if</span> nums[fast] != nums[slow - <span class="num">1</span>]:
-            nums[slow] = nums[fast]
-            slow += <span class="num">1</span>
-        fast += <span class="num">1</span>
-    <span class="kw">return</span> slow</pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- ==================== MEDIUM ==================== -->
-<h2 id="medium">Medium Problems</h2>
-
-<!-- #11 -->
-<div class="card">
-  <div>
-    <span class="tag tag-medium">MEDIUM</span>
-    <strong>#11 Container With Most Water</strong>
-  </div>
-  <p style="margin-top:0.5rem;">You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the i<sup>th</sup> line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store. Notice that you may not slant the container.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Colliding pointers. Area = min(height[L], height[R]) × (R−L). Move the <em>shorter</em> line inward.</p>
-
-  <div class="bar-chart" style="height:180px;">
-    <div class="bar" style="height:8px; background:#f0883e;"><div class="bar-label">0</div></div>
-    <div class="bar" style="height:128px; background:#ff7b72;"><div class="bar-label">1 (8)</div></div>
-    <div class="bar" style="height:96px; background:#f0883e;"><div class="bar-label">2 (6)</div></div>
-    <div class="bar" style="height:32px; background:#f0883e;"><div class="bar-label">3 (2)</div></div>
-    <div class="bar" style="height:80px; background:#f0883e;"><div class="bar-label">4 (5)</div></div>
-    <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">5 (4)</div></div>
-    <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">6 (8)</div></div>
-    <div class="bar" style="height:48px; background:#f0883e;"><div class="bar-label">7 (3)</div></div>
-    <div class="bar" style="height:112px; background:#58a6ff;"><div class="bar-label">8 (7)</div></div>
-  </div>
-  <p style="font-size:0.85rem; color:#8b949e;"><span style="display:inline-block;width:12px;height:12px;background:#ff7b72;vertical-align:middle;margin-right:4px;"></span> L (height 8) &nbsp; <span style="display:inline-block;width:12px;height:12px;background:#58a6ff;vertical-align:middle;margin-right:4px;"></span> R (height 7) &nbsp; &rarr; width=7, min=7, area=<strong>49</strong></p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">maxArea</span>(height: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
-    l, r = <span class="num">0</span>, <span class="fn">len</span>(height) - <span class="num">1</span>
-    best = <span class="num">0</span>
-    <span class="kw">while</span> l &lt; r:
-        h = <span class="fn">min</span>(height[l], height[r])
-        w = r - l
-        best = <span class="fn">max</span>(best, h * w)
-        <span class="kw">if</span> height[l] &lt; height[r]:
-            l += <span class="num">1</span>
-        <span class="kw">else</span>:
-            r -= <span class="num">1</span>
-    <span class="kw">return</span> best</pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- #15 -->
-<div class="card">
-  <div>
-    <span class="tag tag-medium">MEDIUM</span>
-    <strong>#15 3Sum</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0. Notice that the solution set must not contain duplicate triplets.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Sort + for each i, two-pointer (l=i+1, r=n-1) to find pairs summing to -nums[i]. Skip duplicates.</p>
-
-  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:0.8rem 0;">
-    <div class="array-item both">-4<span class="pointer-label" style="color:#d2a8ff;">i</span></div>
-    <div class="array-item l-pointer">-1<span class="pointer-label l-ptr-label">L</span></div>
-    <div class="array-item">-1</div>
-    <div class="array-item">0</div>
-    <div class="array-item">1</div>
-    <div class="array-item r-pointer">2<span class="pointer-label r-ptr-label">R</span></div>
-  </div>
-  <p style="font-size:0.85rem; color:#8b949e;">
-    i=-4: need pair sum = 4 &rarr; L=-1, R=2 &rarr; sum=1 ··· never reaches 4, L passes R &rarr; no triplet<br>
-    i=-1: need pair sum = 1 &rarr; L=-1, R=2 &rarr; <span style="color:#7ee787;">found [-1, -1, 2]</span>; then L=0, R=1 &rarr; <span style="color:#7ee787;">found [-1, 0, 1]</span>
-  </p>
-
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">threeSum</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">list</span>[<span class="kw">list</span>[<span class="kw">int</span>]]:
-    nums.<span class="fn">sort</span>()
-    res = []
-    n = <span class="fn">len</span>(nums)
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n - <span class="num">2</span>):
-        <span class="kw">if</span> i &gt; <span class="num">0</span> <span class="kw">and</span> nums[i] == nums[i-<span class="num">1</span>]:
-            <span class="kw">continue</span>
-        l, r = i + <span class="num">1</span>, n - <span class="num">1</span>
-        target = -nums[i]
-        <span class="kw">while</span> l &lt; r:
-            s = nums[l] + nums[r]
-            <span class="kw">if</span> s == target:
-                res.<span class="fn">append</span>([nums[i], nums[l], nums[r]])
-                <span class="kw">while</span> l &lt; r <span class="kw">and</span> nums[l] == nums[l+<span class="num">1</span>]: l += <span class="num">1</span>
-                <span class="kw">while</span> l &lt; r <span class="kw">and</span> nums[r] == nums[r-<span class="num">1</span>]: r -= <span class="num">1</span>
-                l += <span class="num">1</span>; r -= <span class="num">1</span>
-            <span class="kw">elif</span> s &lt; target: l += <span class="num">1</span>
-            <span class="kw">else</span>: r -= <span class="num">1</span>
-    <span class="kw">return</span> res</pre>
-  <p><strong>Time:</strong> O(n²) &nbsp;|&nbsp; <strong>Space:</strong> O(1) (excluding output)</p>
-  </details>
-</div>
-
-<!-- #42 -->
-<div class="card">
-  <div>
-    <span class="tag tag-medium">MEDIUM</span>
-    <strong>#42 Trapping Rain Water</strong>
-  </div>
-  <p style="margin-top:0.5rem;">Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Colliding + track left_max and right_max. Water at position = min(L_max, R_max) − height[pos]. Move the pointer with the smaller max inward.</p>
-
-  <div style="display:flex; gap:4px; margin:0.8rem 0;">
-    <div class="bar-chart" style="height:180px;">
-      <div class="bar" style="height:4px; background:#f0883e;"><div class="bar-label">0</div></div>
-      <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">1</div></div>
-      <div class="bar" style="height:4px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">2</div></div>
-      <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">3</div></div>
-      <div class="bar" style="height:64px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">4</div></div>
-      <div class="bar" style="height:4px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">5</div></div>
-      <div class="bar" style="height:64px; background:#1a4a6b; border:1px solid #58a6ff;"><div class="bar-label">6</div></div>
-      <div class="bar" style="height:192px; background:#f0883e;"><div class="bar-label">7</div></div>
-      <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">8</div></div>
-      <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">9</div></div>
-      <div class="bar" style="height:128px; background:#f0883e;"><div class="bar-label">10</div></div>
-      <div class="bar" style="height:64px; background:#f0883e;"><div class="bar-label">11</div></div>
+  <header>
+    <h1>Pattern 01: Two Pointers</h1>
+    <p class="subtitle">Linear traversal using multiple scanning pointers to achieve O(N) time with O(1) space.</p>
+  </header>
+
+  <!-- ==================== INTERACTIVE SANDBOX ==================== -->
+  <div class="sandbox-card">
+    <div class="sandbox-header">
+      <h2><span>🛠️</span> Live Two-Pointer Simulator</h2>
+      <div class="problem-selector">
+        <select id="sandbox-problem-select">
+          <option value="valid-palindrome">Valid Palindrome (#125)</option>
+          <option value="move-zeroes">Move Zeroes (#283)</option>
+          <option value="container-water">Container With Most Water (#11)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Inputs -->
+    <div class="sandbox-inputs" id="inputs-palindrome">
+      <div class="input-group">
+        <label>String S</label>
+        <input type="text" id="pal-string" value="A man, a plan, a canal: Panama" />
+      </div>
+    </div>
+
+    <div class="sandbox-inputs" id="inputs-zeroes" style="display: none;">
+      <div class="input-group">
+        <label>Array Elements</label>
+        <input type="text" id="zeroes-arr" value="0, 1, 0, 3, 12" />
+      </div>
+    </div>
+
+    <div class="sandbox-inputs" id="inputs-water" style="display: none;">
+      <div class="input-group">
+        <label>Array Heights</label>
+        <input type="text" id="water-arr" value="1, 8, 6, 2, 5, 4, 8, 3, 7" />
+      </div>
+    </div>
+
+    <div class="sandbox-controls">
+      <button class="btn btn-primary" id="btn-vis-start">Initialize</button>
+      <button class="btn" id="btn-vis-step" disabled>Step Forward</button>
+      <button class="btn" id="btn-vis-reset">Reset</button>
+    </div>
+
+    <div class="sandbox-screen">
+      <div id="vis-display-area"></div>
+      <div class="sandbox-status" id="vis-desc-status">
+        Select a problem, configure inputs, and click "Initialize" to watch how pointers traverse.
+      </div>
     </div>
   </div>
-  <p style="font-size:0.85rem; color:#8b949e;">
-    <span style="display:inline-block;width:12px;height:12px;background:#f0883e;vertical-align:middle;margin-right:4px;"></span> Land &nbsp;
-    <span style="display:inline-block;width:12px;height:12px;background:#1a4a6b;border:1px solid #58a6ff;vertical-align:middle;margin-right:4px;"></span> Trapped water (6 units)
-  </p>
 
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">trap</span>(height: <span class="kw">list</span>[<span class="kw">int</span>]) -> <span class="kw">int</span>:
-    <span class="kw">if</span> <span class="kw">not</span> height: <span class="kw">return</span> <span class="num">0</span>
-    l, r = <span class="num">0</span>, <span class="fn">len</span>(height) - <span class="num">1</span>
-    l_max, r_max = height[l], height[r]
-    water = <span class="num">0</span>
-    <span class="kw">while</span> l &lt; r:
-        <span class="kw">if</span> l_max &lt; r_max:
-            l += <span class="num">1</span>
-            l_max = <span class="fn">max</span>(l_max, height[l])
-            water += l_max - height[l]
-        <span class="kw">else</span>:
-            r -= <span class="num">1</span>
-            r_max = <span class="fn">max</span>(r_max, height[r])
-            water += r_max - height[r]
-    <span class="kw">return</span> water</pre>
-  <p><strong>Time:</strong> O(n) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
-</div>
-
-<!-- #16 -->
-<div class="card">
-  <div>
-    <span class="tag tag-medium">MEDIUM</span>
-    <strong>#16 3Sum Closest</strong>
+  <!-- ==================== QUESTIONS GRID ==================== -->
+  <h2 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--accent-color);">Questions List</h2>
+  <div class="toc-grid">
+    <a href="#prob-125" class="toc-item">
+      <span class="toc-item-title">#125 Valid Palindrome</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-283" class="toc-item">
+      <span class="toc-item-title">#283 Move Zeroes</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-344" class="toc-item">
+      <span class="toc-item-title">#344 Reverse String</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-977" class="toc-item">
+      <span class="toc-item-title">#977 Squares of a Sorted Array</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-11" class="toc-item">
+      <span class="toc-item-title">#11 Container With Most Water</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-15" class="toc-item">
+      <span class="toc-item-title">#15 3Sum</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-42" class="toc-item">
+      <span class="toc-item-title">#42 Trapping Rain Water</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-16" class="toc-item">
+      <span class="toc-item-title">#16 3Sum Closest</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
   </div>
-  <p style="margin-top:0.5rem;">Given an integer array nums of length n and an integer target, find three integers in nums such that the sum is closest to target. Return the sum of the three integers. You may assume that each input would have exactly one solution.</p>
-  <details class="approach" open>
-    <summary>Approach &amp; Walkthrough</summary>
-  <p><strong>Approach:</strong> Sort + two pointers. Same as 3Sum but track closest absolute difference.</p>
 
-  </details>
-  <details class="solution">
-    <summary>Solution Code</summary>
-  <pre><span class="kw">def</span> <span class="fn">threeSumClosest</span>(nums: <span class="kw">list</span>[<span class="kw">int</span>], target: <span class="kw">int</span>) -> <span class="kw">int</span>:
-    nums.<span class="fn">sort</span>()
-    n = <span class="fn">len</span>(nums)
-    closest = nums[<span class="num">0</span>] + nums[<span class="num">1</span>] + nums[<span class="num">2</span>]
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n - <span class="num">2</span>):
-        l, r = i + <span class="num">1</span>, n - <span class="num">1</span>
-        <span class="kw">while</span> l &lt; r:
-            s = nums[i] + nums[l] + nums[r]
-            <span class="kw">if</span> s == target: <span class="kw">return</span> s
-            <span class="kw">if</span> <span class="fn">abs</span>(s - target) &lt; <span class="fn">abs</span>(closest - target):
-                closest = s
-            <span class="kw">if</span> s &lt; target: l += <span class="num">1</span>
-            <span class="kw">else</span>: r -= <span class="num">1</span>
-    <span class="kw">return</span> closest</pre>
-  <p><strong>Time:</strong> O(n²) &nbsp;|&nbsp; <strong>Space:</strong> O(1)</p>
-  </details>
+  <!-- ==================== METHODOLOGY ==================== -->
+  <div class="theory-section">
+    <h3>The Two Pointer Technique</h3>
+    <p>Two Pointers is a technique typically used on sorted arrays or strings to resolve questions in <strong>O(N) time</strong> and **O(1) auxiliary space**. Rather than scanning elements in nested loops, we maintain two pointer indices that move relative to one another (either from both ends inward, or in tandem at different speeds).</p>
+  </div>
+
+  <!-- ==================== PROBLEMS GUIDE ==================== -->
+  <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--accent-color);">Curated Problems Study Guide</h2>
+
+  <!-- #125 Valid Palindrome -->
+  <div class="problem-card" id="prob-125">
+    <div class="problem-title-bar">
+      <h3>#125 Valid Palindrome</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      A phrase is a <strong>palindrome</strong> if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers.<br/><br/>
+      Given a string <code>s</code>, return <code>true</code> if it is a palindrome, or <code>false</code> otherwise.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>A palindrome reads the same forwards and backwards. Instead of copying the string and reversing it (which takes O(N) extra space), we can check it in place.</p>
+        <p>Initialize a pointer <code>L</code> at the beginning and <code>R</code> at the end. Step inward. Skip characters that aren't letters or numbers. Compare the characters case-insensitively. If mismatch, return false.</p>
+        <div class="key-shift">
+          <h4>Intuition Shift</h4>
+          Instead of allocating a new string to sanitize and reverse, utilize two pointers in place, skipping punctuation on the fly to guarantee O(1) space.
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: s = "A man, a plan, a canal: Panama"
+
+L = 0  (char: "A") | R = 29 (char: "a")
+  - L is alphanumeric, R is alphanumeric.
+  - Lowercase compare: "a" === "a" -> Match.
+  - Move L to 1, R to 28.
+
+L = 1  (char: " ") | R = 28 (char: "m")
+  - L is NOT alphanumeric. Skip L. Move L to 2.
+
+L = 2  (char: "m") | R = 28 (char: "m")
+  - Both alphanumeric. Lowercase compare: "m" === "m" -> Match.
+  - Move L to 3, R to 27.
+
+... (Continues until pointers meet or cross)
+Result: True</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">isPalindrome</span>(s: <span class="kw">string</span>): <span class="kw">boolean</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = s.length - <span class="num">1</span>;
+    
+    const isAlphanumeric = (char: <span class="kw">string</span>) =&gt; {
+        const code = char.charCodeAt(<span class="num">0</span>);
+        <span class="kw">return</span> (code &gt;= <span class="num">48</span> &amp;&amp; code &lt;= <span class="num">57</span>) || <span class="cm">// 0-9</span>
+               (code &gt;= <span class="num">65</span> &amp;&amp; code &lt;= <span class="num">90</span>) || <span class="cm">// A-Z</span>
+               (code &gt;= <span class="num">97</span> &amp;&amp; code &lt;= <span class="num">122</span>);  <span class="cm">// a-z</span>
+    };
+    
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="kw">while</span> (l &lt; r &amp;&amp; !isAlphanumeric(s[l])) l++;
+        <span class="kw">while</span> (l &lt; r &amp;&amp; !isAlphanumeric(s[r])) r--;
+        
+        <span class="kw">if</span> (s[l].toLowerCase() !== s[r].toLowerCase()) {
+            <span class="kw">return</span> <span class="kw">false</span>;
+        }
+        l++;
+        r--;
+    }
+    <span class="kw">return</span> <span class="kw">true</span>;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #283 Move Zeroes -->
+  <div class="problem-card" id="prob-283">
+    <div class="problem-title-bar">
+      <h3>#283 Move Zeroes</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given an integer array <code>nums</code>, move all <code>0</code>'s to the end of it while maintaining the relative order of the non-zero elements.<br/><br/>
+      Note that you must do this <strong>in-place</strong> without making a copy of the array.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>We need to push all zeroes to the end of the array without copying it. To do this, use a **slow pointer** to track where the next non-zero element should go, and a **fast pointer** to explore the array.</p>
+        <p>Every time the fast pointer spots a non-zero element, swap the values at the slow and fast pointers, and advance the slow pointer.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [0, 1, 0, 3, 12]
+
+Step 1: fast = 0 | nums[0] = 0
+  - Element is 0.
+  - Action: Skip swap.
+  - State: slow = 0, fast = 1
+
+Step 2: fast = 1 | nums[1] = 1
+  - Element is non-zero.
+  - Action: Swap nums[slow] and nums[fast] -> Swap nums[0] and nums[1].
+  - Array: [1, 0, 0, 3, 12]
+  - State: slow = 1, fast = 2
+
+Step 3: fast = 2 | nums[2] = 0
+  - Element is 0.
+  - Action: Skip swap.
+  - State: slow = 1, fast = 3
+
+Step 4: fast = 3 | nums[3] = 3
+  - Element is non-zero.
+  - Action: Swap nums[slow] and nums[fast] -> Swap nums[1] and nums[3].
+  - Array: [1, 3, 0, 0, 12]
+  - State: slow = 2, fast = 4
+
+Step 5: fast = 4 | nums[4] = 12
+  - Element is non-zero.
+  - Action: Swap nums[slow] and nums[fast] -> Swap nums[2] and nums[4].
+  - Array: [1, 3, 12, 0, 0]
+  - State: slow = 3, fast = 5 (End)</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">moveZeroes</span>(nums: <span class="kw">number</span>[]): <span class="kw">void</span> {
+    <span class="kw">let</span> slow = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">let</span> fast = <span class="num">0</span>; fast &lt; nums.length; fast++) {
+        <span class="kw">if</span> (nums[fast] !== <span class="num">0</span>) {
+            <span class="cm">// Swap elements</span>
+            const temp = nums[slow];
+            nums[slow] = nums[fast];
+            nums[fast] = temp;
+            slow++;
+        }
+    }
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #344 Reverse String -->
+  <div class="problem-card" id="prob-344">
+    <div class="problem-title-bar">
+      <h3>#344 Reverse String</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Write a function that reverses a string. The input string is given as an array of characters <code>s</code>.<br/><br/>
+      You must do this by modifying the input array <strong>in-place</strong> with <code>O(1)</code> extra memory.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Reverse an array of characters in-place. We position one pointer at index 0 and another at length - 1. Swap the characters, move pointers inward, and stop when they meet or cross.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: s = ["h", "e", "l", "l", "o"]
+
+Step 1: L = 0 (char: "h"), R = 4 (char: "o")
+  - Action: Swap s[0] and s[4]
+  - Array state: ["o", "e", "l", "l", "h"]
+  - Pointers: Move L to 1, R to 3
+
+Step 2: L = 1 (char: "e"), R = 3 (char: "l")
+  - Action: Swap s[1] and s[3]
+  - Array state: ["o", "l", "l", "e", "h"]
+  - Pointers: Move L to 2, R to 2
+
+Step 3: L = 2, R = 2
+  - Action: Pointers met (L >= R), terminate loop.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">reverseString</span>(s: <span class="kw">string</span>[]): <span class="kw">void</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = s.length - <span class="num">1</span>;
+    <span class="kw">while</span> (l &lt; r) {
+        const temp = s[l];
+        s[l] = s[r];
+        s[r] = temp;
+        l++;
+        r--;
+    }
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #977 Squares of a Sorted Array -->
+  <div class="problem-card" id="prob-977">
+    <div class="problem-title-bar">
+      <h3>#977 Squares of a Sorted Array</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given an integer array <code>nums</code> sorted in non-decreasing order, return an array of <strong>the squares of each number</strong> sorted in non-decreasing order.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The array is sorted, but it contains negative values. Squaring makes negative numbers positive, which means the largest squares will actually sit at either the far-left or the far-right boundaries of the array.</p>
+        <p>Initialize one pointer at the start and another at the end. Compare the squared values. Fill the result array from back to front, placing the larger squared value at the current end of the output array.</p>
+        <div class="key-shift">
+          <h4>Intuition Shift</h4>
+          Instead of squaring the array and re-sorting it (O(N log N)), select the largest squares from the outer margins inward (O(N)) using two pointers.
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [-4, -1, 0, 3, 10]
+Initial res = [_, _, _, _, _]
+
+Step 1: L = 0 (val = -4), R = 4 (val = 10)
+  - Compare squares: |-4|^2 = 16 vs |10|^2 = 100
+  - Action: 100 > 16 -> place 100 at res[4]
+  - Pointers: Move R to 3. Array state: [_, _, _, _, 100]
+
+Step 2: L = 0 (val = -4), R = 3 (val = 3)
+  - Compare squares: |-4|^2 = 16 vs |3|^2 = 9
+  - Action: 16 > 9 -> place 16 at res[3]
+  - Pointers: Move L to 1. Array state: [_, _, _, 16, 100]
+
+Step 3: L = 1 (val = -1), R = 3 (val = 3)
+  - Compare squares: |-1|^2 = 1 vs |3|^2 = 9
+  - Action: 9 > 1 -> place 9 at res[2]
+  - Pointers: Move R to 2. Array state: [_, _, 9, 16, 100]
+
+Step 4: L = 1 (val = -1), R = 2 (val = 0)
+  - Compare squares: |-1|^2 = 1 vs |0|^2 = 0
+  - Action: 1 > 0 -> place 1 at res[1]
+  - Pointers: Move L to 2. Array state: [_, 1, 9, 16, 100]
+
+Step 5: L = 2 (val = 0), R = 2 (val = 0)
+  - Compare squares: |0|^2 = 0 vs |0|^2 = 0
+  - Action: Place 0 at res[0]
+  - Pointers: Move L to 3 (Loop terminates). Array state: [0, 1, 9, 16, 100]</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">sortedSquares</span>(nums: <span class="kw">number</span>[]): <span class="kw">number</span>[] {
+    const res = <span class="kw">new</span> <span class="fn">Array</span>(nums.length);
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+    
+    <span class="kw">for</span> (<span class="kw">let</span> i = nums.length - <span class="num">1</span>; i &gt;= <span class="num">0</span>; i--) {
+        <span class="kw">if</span> (Math.<span class="fn">abs</span>(nums[l]) &gt; Math.<span class="fn">abs</span>(nums[r])) {
+            res[i] = nums[l] * nums[l];
+            l++;
+        } else {
+            res[i] = nums[r] * nums[r];
+            r--;
+        }
+    }
+    <span class="kw">return</span> res;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(N)</span> (for output array)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #11 Container With Most Water -->
+  <div class="problem-card" id="prob-11">
+    <div class="problem-title-bar">
+      <h3>#11 Container With Most Water</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      You are given an integer array <code>height</code> of length <code>n</code>. There are <code>n</code> vertical lines drawn such that the two endpoints of the <code>i<sup>th</sup></code> line are <code>(i, 0)</code> and <code>(i, height[i])</code>.<br/><br/>
+      Find two lines that together with the x-axis form a container, such that the container contains the most water.<br/><br/>
+      Return <em>the maximum amount of water a container can store</em>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The amount of water trapped is limited by the shorter of the two boundaries: <code>Area = min(height[L], height[R]) * (R - L)</code>.</p>
+        <p>We position our pointers at the far ends (L=0 and R=height.length-1) to maximize the width. To find a larger area, we must search for taller lines. Since the current height is bottlenecked by the smaller height, moving the taller pointer will never increase the area. Therefore, we always shift the pointer that has the smaller height.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+
+Step 1: L = 0 (h: 1) | R = 8 (h: 7)
+  - Width: R - L = 8 - 0 = 8
+  - Current Area: min(1, 7) * 8 = 8
+  - Max Area: max(0, 8) = 8
+  - Action: height[L] (1) < height[R] (7) -> Move L to 1
+
+Step 2: L = 1 (h: 8) | R = 8 (h: 7)
+  - Width: 8 - 1 = 7
+  - Current Area: min(8, 7) * 7 = 49
+  - Max Area: max(8, 49) = 49
+  - Action: height[R] (7) < height[L] (8) -> Move R to 7
+
+Step 3: L = 1 (h: 8) | R = 7 (h: 3)
+  - Width: 7 - 1 = 6
+  - Current Area: min(8, 3) * 6 = 18
+  - Max Area: max(49, 18) = 49
+  - Action: height[R] (3) < height[L] (8) -> Move R to 6
+
+... (Repeats until pointers meet)
+Max Area Result: 49</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">maxArea</span>(height: <span class="kw">number</span>[]): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = height.length - <span class="num">1</span>;
+    <span class="kw">let</span> maxVal = <span class="num">0</span>;
+    
+    <span class="kw">while</span> (l &lt; r) {
+        const area = Math.<span class="fn">min</span>(height[l], height[r]) * (r - l);
+        maxVal = Math.<span class="fn">max</span>(maxVal, area);
+        
+        <span class="kw">if</span> (height[l] &lt; height[r]) {
+            l++;
+        } else {
+            r--;
+        }
+    }
+    <span class="kw">return</span> maxVal;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #15 3Sum -->
+  <div class="problem-card" id="prob-15">
+    <div class="problem-title-bar">
+      <h3>#15 3Sum</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given an integer array <code>nums</code>, return all the triplets <code>[nums[i], nums[j], nums[k]]</code> such that <code>i != j</code>, <code>i != k</code>, and <code>j != k</code>, and <code>nums[i] + nums[j] + nums[k] == 0</code>.<br/><br/>
+      Notice that the solution set must not contain duplicate triplets.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>We want to find all unique triplets that add up to 0. First, sort the array (which takes <code>O(N log N)</code>).</p>
+        <p>Iterate through the array, locking in the current element <code>nums[i]</code> as the first number. To find the remaining two numbers, run a standard Two-Pointer scan on the array to the right of index <code>i</code>. To avoid duplicate triplets, skip identical values for <code>i</code>, <code>L</code>, and <code>R</code>.</p>
+        <div class="key-shift">
+          <h4>Intuition Shift</h4>
+          Sort first, then convert a 3-variable problem into a nested 2-pointer scan. Skipped duplicate values dynamically to guarantee unique triplet outputs.
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [-1, 0, 1, 2, -1, -4]
+Sorted array: [-4, -1, -1, 0, 1, 2]
+
+Pass 1: i = 0 | nums[0] = -4
+  - Lock in first element = -4. Target sum for remaining = 4.
+  - L = 1 (val: -1) | R = 5 (val: 2) -> sum = 1 < 4 -> Move L to 2
+  - L = 2 (val: -1) | R = 5 (val: 2) -> sum = 1 < 4 -> Move L to 3
+  - L = 3 (val: 0)  | R = 5 (val: 2) -> sum = 2 < 4 -> Move L to 4
+  - L = 4 (val: 1)  | R = 5 (val: 2) -> sum = 3 < 4 -> Move L to 5 (L >= R, terminates)
+
+Pass 2: i = 1 | nums[1] = -1
+  - Lock in first element = -1. Target sum for remaining = 1.
+  - L = 2 (val: -1) | R = 5 (val: 2) -> sum = 1 === 1 -> Found triplet [-1, -1, 2].
+  - Action: Shift pointers: L to 3, R to 4 (skipping duplicate values)
+  - L = 3 (val: 0)  | R = 4 (val: 1) -> sum = 1 === 1 -> Found triplet [-1, 0, 1].
+  - Action: Shift pointers: L to 4, R to 3 (L >= R, terminates)
+
+Pass 3: i = 2 | nums[2] = -1
+  - nums[2] === nums[1] -> Skip iteration to prevent duplicate triplets.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">threeSum</span>(nums: <span class="kw">number</span>[]): <span class="kw">number</span>[][] {
+    nums.<span class="fn">sort</span>((a, b) =&gt; a - b);
+    const res: <span class="kw">number</span>[][] = [];
+    
+    <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; nums.length - <span class="num">2</span>; i++) {
+        <span class="kw">if</span> (i &gt; <span class="num">0</span> &amp;&amp; nums[i] === nums[i - <span class="num">1</span>]) <span class="kw">continue</span>;
+        
+        <span class="kw">let</span> l = i + <span class="num">1</span>;
+        <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+        
+        <span class="kw">while</span> (l &lt; r) {
+            const sum = nums[i] + nums[l] + nums[r];
+            <span class="kw">if</span> (sum === <span class="num">0</span>) {
+                res.<span class="fn">push</span>([nums[i], nums[l], nums[r]]);
+                <span class="kw">while</span> (l &lt; r &amp;&amp; nums[l] === nums[l + <span class="num">1</span>]) l++;
+                <span class="kw">while</span> (l &lt; r &amp;&amp; nums[r] === nums[r - <span class="num">1</span>]) r--;
+                l++;
+                r--;
+            } else if (sum &lt; <span class="num">0</span>) {
+                l++;
+            } else {
+                r--;
+            }
+        }
+    }
+    <span class="kw">return</span> res;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N²)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span> (excluding sorting storage)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #42 Trapping Rain Water -->
+  <div class="problem-card" id="prob-42">
+    <div class="problem-title-bar">
+      <h3>#42 Trapping Rain Water</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given <code>n</code> non-negative integers representing an elevation map where the width of each bar is <code>1</code>, compute how much water it can trap after raining.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The water level at any index <code>i</code> is determined by the minimum of the highest walls to its left and right, minus the height of the bar at <code>i</code> itself: <code>Water = min(maxLeft, maxRight) - height[i]</code>.</p>
+        <p>To do this in <strong>O(N) time</strong> and **O(1) space**, place pointers at the far ends (L=0, R=height.length-1) and maintain <code>leftMax</code> and <code>rightMax</code>. Move the pointer pointing to the smaller bar, updating the max boundaries and accumulating trapped water on the fly.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]
+
+L = 0 (h: 0) | R = 11 (h: 1) | leftMax = 0 | rightMax = 0
+  - height[L] < height[R] (0 < 1) -> Process L
+  - Update leftMax = max(0, 0) = 0
+  - Water += leftMax - height[L] = 0 - 0 = 0
+  - Action: Move L to 1
+
+L = 1 (h: 1) | R = 11 (h: 1) | leftMax = 0 | rightMax = 0
+  - height[L] <= height[R] (1 <= 1) -> Process L
+  - Update leftMax = max(0, 1) = 1
+  - Water += leftMax - height[L] = 1 - 1 = 0
+  - Action: Move L to 2
+
+L = 2 (h: 0) | R = 11 (h: 1) | leftMax = 1 | rightMax = 0
+  - height[L] < height[R] (0 < 1) -> Process L
+  - Water += leftMax - height[L] = 1 - 0 = 1
+  - Action: Move L to 3
+
+... (Repeats until pointers meet)
+Total Water Trapped: 6</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">trap</span>(height: <span class="kw">number</span>[]): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = height.length - <span class="num">1</span>;
+    <span class="kw">let</span> leftMax = <span class="num">0</span>;
+    <span class="kw">let</span> rightMax = <span class="num">0</span>;
+    <span class="kw">let</span> res = <span class="num">0</span>;
+    
+    <span class="kw">while</span> (l &lt; r) {
+        <span class="kw">if</span> (height[l] &lt; height[r]) {
+            <span class="kw">if</span> (height[l] &gt;= leftMax) {
+                leftMax = height[l];
+            } else {
+                res += leftMax - height[l];
+            }
+            l++;
+        } else {
+            <span class="kw">if</span> (height[r] &gt;= rightMax) {
+                rightMax = height[r];
+            } else {
+                res += rightMax - height[r];
+            }
+            r--;
+        }
+    }
+    <span class="kw">return</span> res;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #16 3Sum Closest -->
+  <div class="problem-card" id="prob-16">
+    <div class="problem-title-bar">
+      <h3>#16 3Sum Closest</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given an integer array <code>nums</code> of length <code>n</code> and an integer <code>target</code>, find three integers in <code>nums</code> such that the sum is closest to <code>target</code>.<br/><br/>
+      Return <em>the sum of the three integers</em>. You may assume that each input would have exactly one solution.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Similar to 3Sum, sort the array first. Loop through, fixing the first element <code>nums[i]</code>. Use a left and right pointer to scan the remainder of the array.</p>
+        <p>Calculate the sum of the triplet. Track the sum that has the absolute minimum difference from the target. Move the pointers closer to the target (L++ if sum is smaller than target, R-- if larger).</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [-1, 2, 1, -4], target = 1
+Sorted array: [-4, -1, 1, 2]
+
+Pass 1: i = 0 | nums[0] = -4
+  - L = 1 (val: -1) | R = 3 (val: 2)
+  - Sum = -4 + (-1) + 2 = -3
+  - Difference: |1 - (-3)| = 4. Update closest = -3.
+  - sum < target (-3 < 1) -> Move L to 2
+  - L = 2 (val: 1)  | R = 3 (val: 2)
+  - Sum = -4 + 1 + 2 = -1
+  - Difference: |1 - (-1)| = 2. Update closest = -1.
+  - sum < target (-1 < 1) -> Move L to 3 (L >= R, terminates)
+
+Pass 2: i = 1 | nums[1] = -1
+  - L = 2 (val: 1)  | R = 3 (val: 2)
+  - Sum = -1 + 1 + 2 = 2
+  - Difference: |1 - 2| = 1. Update closest = 2.
+  - sum > target (2 > 1) -> Move R to 2 (L >= R, terminates)
+
+Result Closest Sum: 2</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">threeSumClosest</span>(nums: <span class="kw">number</span>[], target: <span class="kw">number</span>): <span class="kw">number</span> {
+    nums.<span class="fn">sort</span>((a, b) =&gt; a - b);
+    <span class="kw">let</span> closest = nums[<span class="num">0</span>] + nums[<span class="num">1</span>] + nums[<span class="num">2</span>];
+    
+    <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; nums.length - <span class="num">2</span>; i++) {
+        <span class="kw">let</span> l = i + <span class="num">1</span>;
+        <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+        
+        <span class="kw">while</span> (l &lt; r) {
+            const sum = nums[i] + nums[l] + nums[r];
+            <span class="kw">if</span> (Math.<span class="fn">abs</span>(target - sum) &lt; Math.<span class="fn">abs</span>(target - closest)) {
+                closest = sum;
+            }
+            
+            <span class="kw">if</span> (sum &lt; target) {
+                l++;
+            } else if (sum &gt; target) {
+                r--;
+            } else {
+                <span class="kw">return</span> sum; // exact match
+            }
+        }
+    }
+    <span class="kw">return</span> closest;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N²)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html">← Back to Dashboard</a>
+  </footer>
 </div>
 
-<!-- ==================== CHEATSHEET ==================== -->
-<h2 id="cheatsheet">Cheatsheet</h2>
+<!-- ==================== INTERACTIVE SCRIPTS ==================== -->
+<script>
+  // Tab switcher
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.problem-card');
+      const tabName = btn.getAttribute('data-tab');
+      card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      card.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      card.querySelector(`.tab-content[data-content="${tabName}"]`).classList.add('active');
+    });
+  });
 
-<table>
-  <tr><th>Problem</th><th>Sub-Pattern</th><th>Key Insight</th></tr>
-  <tr><td>#125 Valid Palindrome</td><td>Colliding</td><td>Skip non-alnum, compare lowercase</td></tr>
-  <tr><td>#283 Move Zeroes</td><td>Fast &amp; Slow</td><td>Slow marks where to write next non-zero</td></tr>
-  <tr><td>#344 Reverse String</td><td>Colliding</td><td>Swap L and R</td></tr>
-  <tr><td>#977 Squares of Sorted Array</td><td>Colliding (from ends)</td><td>Biggest square is at one of the ends</td></tr>
-  <tr><td>#167 Two Sum II</td><td>Colliding</td><td>Move L or R based on sum vs target</td></tr>
-  <tr><td>#26 Remove Duplicates</td><td>Fast &amp; Slow</td><td>Slow tracks position for next unique element</td></tr>
-  <tr><td>#11 Container With Most Water</td><td>Colliding</td><td>Move the shorter line inward</td></tr>
-  <tr><td>#15 3Sum</td><td>Sort + Colliding</td><td>Fix one, two-pointer the rest; skip duplicates</td></tr>
-  <tr><td>#42 Trapping Rain Water</td><td>Colliding + max tracking</td><td>Water = min(L_max, R_max) − height[pos]</td></tr>
-  <tr><td>#16 3Sum Closest</td><td>Sort + Colliding</td><td>Track minimum absolute diff from target</td></tr>
-</table>
+  // Simulator logic
+  const selectProb = document.getElementById('sandbox-problem-select');
+  const inputPal = document.getElementById('inputs-palindrome');
+  const inputZeroes = document.getElementById('inputs-zeroes');
+  const inputWater = document.getElementById('inputs-water');
 
-<p style="margin-top:2rem; color:#8b949e; font-size:0.85rem; text-align:center;">
-  All problems from <a href="https://leetcode.com" target="_blank">LeetCode</a> · Solutions in Python
-</p>
+  const btnInit = document.getElementById('btn-vis-start');
+  const btnStep = document.getElementById('btn-vis-step');
+  const btnReset = document.getElementById('btn-vis-reset');
 
-</div>
+  const displayArea = document.getElementById('vis-display-area');
+  const textStatus = document.getElementById('vis-desc-status');
+
+  const palStrInput = document.getElementById('pal-string');
+  const zeroesArrInput = document.getElementById('zeroes-arr');
+  const waterArrInput = document.getElementById('water-arr');
+
+  let state = {
+    problem: 'valid-palindrome',
+    data: null
+  };
+
+  selectProb.addEventListener('change', (e) => {
+    const val = e.target.value;
+    inputPal.style.display = val === 'valid-palindrome' ? 'flex' : 'none';
+    inputZeroes.style.display = val === 'move-zeroes' ? 'flex' : 'none';
+    inputWater.style.display = val === 'container-water' ? 'flex' : 'none';
+    resetSimulator();
+  });
+
+  btnInit.addEventListener('click', initializeSimulator);
+  btnStep.addEventListener('click', stepSimulator);
+  btnReset.addEventListener('click', resetSimulator);
+
+  function resetSimulator() {
+    displayArea.innerHTML = '';
+    textStatus.innerHTML = 'Select a problem, configure inputs, and click "Initialize" to watch how pointers traverse.';
+    textStatus.className = 'sandbox-status';
+    btnInit.disabled = false;
+    btnStep.disabled = true;
+  }
+
+  function initializeSimulator() {
+    const prob = selectProb.value;
+    state.problem = prob;
+    displayArea.innerHTML = '';
+    btnInit.disabled = true;
+    btnStep.disabled = false;
+
+    if (prob === 'valid-palindrome') {
+      const s = palStrInput.value;
+      state.data = { s, l: 0, r: s.length - 1 };
+
+      const row = document.createElement('div');
+      row.className = 'array-row';
+      s.split('').forEach((char, idx) => {
+        row.innerHTML += `<div class="cell" id="sb-pal-${idx}">${char === ' ' ? '&nbsp;' : char}<span class="cell-sub">${idx}</span></div>`;
+      });
+      displayArea.appendChild(row);
+
+      textStatus.innerHTML = `Initialized. Pointer <strong>L</strong> at index 0, <strong>R</strong> at index ${s.length - 1}.`;
+      updatePalindromePointersUI();
+
+    } else if (prob === 'move-zeroes') {
+      const arr = zeroesArrInput.value.split(',').map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x));
+      state.data = { arr, slow: 0, fast: 0 };
+
+      const row = document.createElement('div');
+      row.className = 'array-row';
+      arr.forEach((val, idx) => {
+        row.innerHTML += `<div class="cell" id="sb-zero-${idx}">${val}<span class="cell-sub">${idx}</span></div>`;
+      });
+      displayArea.appendChild(row);
+
+      textStatus.innerHTML = `Initialized. Explorer pointer <strong>Fast</strong> and anchor <strong>Slow</strong> both start at index 0.`;
+      updateZeroesPointersUI();
+
+    } else if (prob === 'container-water') {
+      const heights = waterArrInput.value.split(',').map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x));
+      state.data = { heights, l: 0, r: heights.length - 1, maxArea: 0, currentArea: 0 };
+
+      // Render bar chart
+      const chart = document.createElement('div');
+      chart.className = 'water-vis-container';
+      heights.forEach((h, idx) => {
+        chart.innerHTML += `<div class="water-bar" id="sb-bar-${idx}" style="height: ${h * 12}px;">${h}<div class="water-fill" id="sb-fill-${idx}"></div></div>`;
+      });
+      displayArea.appendChild(chart);
+
+      textStatus.innerHTML = `Initialized boundaries at outer edges (<strong>L = 0</strong>, <strong>R = ${heights.length - 1}</strong>).`;
+      updateWaterPointersUI();
+    }
+  }
+
+  function stepSimulator() {
+    const d = state.data;
+    if (state.problem === 'valid-palindrome') {
+      const isAlphanumeric = (char) => {
+        if (!char) return false;
+        const code = char.toLowerCase().charCodeAt(0);
+        return (code >= 48 && code <= 57) || (code >= 97 && code <= 122);
+      };
+
+      if (d.l >= d.r) {
+        textStatus.innerHTML = `🎉 <strong>Success!</strong> Pointers crossed or met. The string is a Valid Palindrome!`;
+        textStatus.className = 'sandbox-status complete';
+        btnStep.disabled = true;
+        return;
+      }
+
+      const charL = d.s[d.l];
+      const charR = d.s[d.r];
+
+      if (!isAlphanumeric(charL)) {
+        textStatus.innerHTML = `Pointer <strong>L</strong> points to a non-alphanumeric character <strong>"${charL}"</strong>. Skipping...`;
+        document.getElementById(`sb-pal-${d.l}`).className = 'cell matched';
+        d.l++;
+        updatePalindromePointersUI();
+      } else if (!isAlphanumeric(charR)) {
+        textStatus.innerHTML = `Pointer <strong>R</strong> points to a non-alphanumeric character <strong>"${charR}"</strong>. Skipping...`;
+        document.getElementById(`sb-pal-${d.r}`).className = 'cell matched';
+        d.r--;
+        updatePalindromePointersUI();
+      } else {
+        textStatus.innerHTML = `Comparing characters: <strong>L: "${charL}"</strong> vs <strong>R: "${charR}"</strong>.`;
+        setTimeout(() => {
+          if (charL.toLowerCase() !== charR.toLowerCase()) {
+            textStatus.innerHTML = `<span style="color:var(--danger)">Mismatch!</span> Character <strong>"${charL}"</strong> does not match <strong>"${charR}"</strong>. Not a palindrome.`;
+            btnStep.disabled = true;
+          } else {
+            textStatus.innerHTML += `<br/>It's a match! Shifting both pointers inward.`;
+            document.getElementById(`sb-pal-${d.l}`).className = 'cell matched';
+            document.getElementById(`sb-pal-${d.r}`).className = 'cell matched';
+            d.l++;
+            d.r--;
+            updatePalindromePointersUI();
+          }
+        }, 600);
+      }
+
+    } else if (state.problem === 'move-zeroes') {
+      if (d.fast >= d.arr.length) {
+        textStatus.innerHTML = `🎉 <strong>Done!</strong> Traversal complete. All zeroes pushed to the end.`;
+        textStatus.className = 'sandbox-status complete';
+        btnStep.disabled = true;
+        return;
+      }
+
+      const val = d.arr[d.fast];
+      textStatus.innerHTML = `Explorer <strong>Fast</strong> pointer at index ${d.fast} (value = ${val}).`;
+
+      setTimeout(() => {
+        if (val !== 0) {
+          textStatus.innerHTML += `<br/>Value is non-zero. Swap elements at <strong>Slow</strong> (${d.slow}) and <strong>Fast</strong> (${d.fast}).`;
+          
+          // Swap visually
+          const temp = d.arr[d.slow];
+          d.arr[d.slow] = d.arr[d.fast];
+          d.arr[d.fast] = temp;
+          
+          // Render array state
+          d.arr.forEach((v, idx) => {
+            const cell = document.getElementById(`sb-zero-${idx}`);
+            cell.innerHTML = `${v}<span class="cell-sub">${idx}</span>`;
+          });
+          
+          d.slow++;
+        } else {
+          textStatus.innerHTML += `<br/>Value is zero. Advance explorer only.`;
+        }
+        d.fast++;
+        updateZeroesPointersUI();
+      }, 500);
+
+    } else if (state.problem === 'container-water') {
+      if (d.l >= d.r) {
+        textStatus.innerHTML = `🎉 <strong>Simulation complete!</strong> Max water volume trapped: <strong>${d.maxArea}</strong>.`;
+        textStatus.className = 'sandbox-status complete';
+        btnStep.disabled = true;
+        return;
+      }
+
+      const hL = d.heights[d.l];
+      const hR = d.heights[d.r];
+      const width = d.r - d.l;
+      const currentH = Math.min(hL, hR);
+      d.currentArea = currentH * width;
+      d.maxArea = Math.max(d.maxArea, d.currentArea);
+
+      // Render water fill heights
+      d.heights.forEach((h, idx) => {
+        const fill = document.getElementById(`sb-fill-${idx}`);
+        if (idx >= d.l && idx <= d.r) {
+          fill.style.height = `${currentH * 12}px`;
+        } else {
+          fill.style.height = '0px';
+        }
+      });
+
+      textStatus.innerHTML = `Pointers: L = ${d.l} (h=${hL}), R = ${d.r} (h=${hR}).<br/>` +
+                             `Current width: <strong>${width}</strong>. Bottleneck height: <strong>${currentH}</strong>.<br/>` +
+                             `Calculated volume: ${currentH} * ${width} = <strong>${d.currentArea}</strong>. Max volume: <strong>${d.maxArea}</strong>.`;
+
+      setTimeout(() => {
+        if (hL < hR) {
+          textStatus.innerHTML += `<br/>Since height[L] (${hL}) &lt; height[R] (${hR}), we shift <strong>L</strong> inward to look for taller walls.`;
+          d.l++;
+        } else {
+          textStatus.innerHTML += `<br/>Since height[R] (${hR}) &le; height[L] (${hL}), we shift <strong>R</strong> inward to look for taller walls.`;
+          d.r--;
+        }
+        updateWaterPointersUI();
+      }, 900);
+    }
+  }
+
+  function updatePalindromePointersUI() {
+    const d = state.data;
+    for(let i = 0; i < d.s.length; i++) {
+      const cell = document.getElementById(`sb-pal-${i}`);
+      if (cell.className !== 'cell matched') {
+        cell.className = 'cell';
+      }
+    }
+    if (d.l <= d.r) {
+      if (d.l === d.r) {
+        const cell = document.getElementById(`sb-pal-${d.l}`);
+        cell.className = 'cell both-ptr';
+        cell.innerHTML += `<span class="cell-sub" style="bottom:15px;color:var(--warning)">L,R</span>`;
+      } else {
+        const cellL = document.getElementById(`sb-pal-${d.l}`);
+        const cellR = document.getElementById(`sb-pal-${d.r}`);
+        if (cellL) {
+          cellL.className = 'cell left-ptr';
+          cellL.querySelector('.cell-sub').innerHTML += `,L`;
+        }
+        if (cellR) {
+          cellR.className = 'cell right-ptr';
+          cellR.querySelector('.cell-sub').innerHTML += `,R`;
+        }
+      }
+    }
+  }
+
+  function updateZeroesPointersUI() {
+    const d = state.data;
+    d.arr.forEach((v, idx) => {
+      document.getElementById(`sb-zero-${idx}`).className = 'cell';
+    });
+    if (d.fast < d.arr.length) {
+      if (d.slow === d.fast) {
+        const cell = document.getElementById(`sb-zero-${d.slow}`);
+        cell.className = 'cell both-ptr';
+        cell.innerHTML += `<span class="cell-sub" style="bottom:15px;color:var(--warning)">S,F</span>`;
+      } else {
+        const cellS = document.getElementById(`sb-zero-${d.slow}`);
+        const cellF = document.getElementById(`sb-zero-${d.fast}`);
+        if (cellS) {
+          cellS.className = 'cell left-ptr';
+          cellS.querySelector('.cell-sub').innerHTML += `,S`;
+        }
+        if (cellF) {
+          cellF.className = 'cell right-ptr';
+          cellF.querySelector('.cell-sub').innerHTML += `,F`;
+        }
+      }
+    }
+  }
+
+  function updateWaterPointersUI() {
+    const d = state.data;
+    d.heights.forEach((h, idx) => {
+      document.getElementById(`sb-bar-${idx}`).className = 'water-bar';
+    });
+    if (d.l <= d.r) {
+      const barL = document.getElementById(`sb-bar-${d.l}`);
+      const barR = document.getElementById(`sb-bar-${d.r}`);
+      if (barL) barL.classList.add('active-L');
+      if (barR) barR.classList.add('active-R');
+    }
+  }
+</script>
 </body>
 </html>

@@ -1,0 +1,107 @@
+===============================================================================
+               FRONTEND & WEB ARCHITECTURE INTERVIEW PREPARATION
+                       Study Guide & Checklist for 5+ YOE
+===============================================================================
+
+This guide outlines the critical browser-side concepts, architectural patterns,
+and interview archetypes required to pass the Frontend/Web Architecture rounds
+at Tier 2 and Tier 3 tech companies in Japan (e.g., Mercari, LINE, PayPay).
+
+===============================================================================
+1. CORE TOPICS & CHECKLIST
+===============================================================================
+
+--- A. PERFORMANCE & RENDERING OPTIMIZATION ---
+[ ] List Virtualization (Windowing):
+    - Render only visible DOM elements (e.g., 20 items out of 10,000).
+    - Handle dynamic item heights and recalculate scroll offsets.
+    - Reference tools: react-window, react-virtualized.
+[ ] Asset Loading Strategies:
+    - Lazy loading of components (React.lazy / dynamic imports).
+    - Image optimization: progressive loading, WebP format, srcset, and placeholder blur.
+    - Prioritizing resource delivery: preload, prefetch, dns-prefetch.
+[ ] Core Web Vitals (Metrics & Optimization):
+    - LCP (Largest Contentful Paint): Optimize hero images, server response times, and render-blocking JS/CSS.
+    - CLS (Cumulative Layout Shift): Set explicit dimensions on images/iframes, reserve skeleton loader space.
+    - INP (Interaction to Next Paint): Break up long tasks (>50ms) using requestIdleCallback, Web Workers, or yielding execution.
+[ ] Bundlers & Compilation:
+    - Code splitting (route-based vs. component-based).
+    - Tree shaking (removing unused exports via ES modules).
+    - Differential loading (modern JS bundle vs. legacy ES5 fallback).
+
+--- B. DATA MANAGEMENT & CLIENT-SIDE CACHING ---
+[ ] Server State vs. Client UI State:
+    - Storing UI state locally (Redux, Zustand) vs. caching server data (React Query, RTK Query).
+    - Cache invalidation strategies (stale-while-revalidate, polling, manual mutation invalidation).
+[ ] Optimistic UI Updates:
+    - Immediately update the UI on user action; roll back smoothly if the network request fails.
+[ ] Offline-First & Service Workers:
+    - Intercepting network requests via a Service Worker fetch handler.
+    - Workbox caching strategies (NetworkFirst, CacheFirst, StaleWhileRevalidate).
+    - Client-side storage: IndexedDB (for structured transactional data) vs. LocalStorage (blocking, synchronous, small key-value).
+
+--- C. BROWSER NETWORKING & DATA FLOW ---
+[ ] Protocols & Communication:
+    - REST APIs vs. GraphQL (solving over-fetching/under-fetching).
+    - WebSockets: Real-time bi-directional messaging, handling heartbeat pings, reconnection strategies (exponential backoff).
+    - SSE (Server-Sent Events): Unidirectional real-time streaming (ideal for feeds/dashboards).
+    - HTTP/2 vs. HTTP/3: Multiplexing, header compression (HPACK), and head-of-line blocking resolutions.
+[ ] Client-Side Request Control:
+    - Race Conditions: Canceling pending requests when a new search starts (AbortController).
+    - Rate Control: Debouncing (typing in search bar) via debounce vs. Throttling (scroll/resize events) via throttle.
+
+--- D. FRONTEND SECURITY ---
+[ ] XSS (Cross-Site Scripting):
+    - Sanitizing user input, using textContent instead of innerHTML, setting CSP (Content Security Policy) headers.
+[ ] CSRF (Cross-Site Request Forgery):
+    - Mitigating via SameSite cookies (Lax/Strict) and anti-CSRF tokens.
+[ ] Token Storage Security:
+    - Storing JWTs: HttpOnly, Secure, SameSite cookies (prevents XSS access) vs. memory variables with refresh tokens.
+
+===============================================================================
+2. MASTER FRONTEND ARCHETYPES
+===============================================================================
+
+Be prepared to design and whiteboard the frontend architecture for these three 
+archetypes in 45 minutes:
+
+-------------------------------------------------------------------------------
+Archetype A: Infinite Scroll Image Feed (e.g., Mercari Marketplace / Instagram)
+-------------------------------------------------------------------------------
+* Core Problems: Memory bloat from too many DOM nodes, layout shift on load, and image load latency.
+* Key Components:
+  - Intersection Observer API to detect when the user is nearing the bottom.
+  - Virtual Scroll Container to reuse DOM nodes.
+  - Layout Grid with aspect-ratio boxes to prevent layout shifts.
+  - Image Cache & Queue Manager to prioritize fetching of visible images.
+
+-------------------------------------------------------------------------------
+Archetype B: Real-Time Chat Application UI (e.g., LINE app client)
+-------------------------------------------------------------------------------
+* Core Problems: Out-of-order message rendering, UI lag during massive updates, connection drops.
+* Key Components:
+  - WS Connection Manager: Handles auth, connection drops, and reconnect backoff logic.
+  - Local Database (IndexedDB): Write messages locally first (optimistic rendering) and sync with server asynchronously.
+  - Virtualized Message List: Keeps rendering smooth during heavy text/media flow.
+  - Presence Manager: Throttled user-online presence status updates.
+
+-------------------------------------------------------------------------------
+Archetype C: Autocomplete Search Widget (e.g., Rakuten / Yahoo Search Bar)
+-------------------------------------------------------------------------------
+* Core Problems: Saturation of backend with keypress requests, displaying outdated results due to network latency.
+* Key Components:
+  - Input Controller: Custom hook applying debounce (e.g., 300ms delay).
+  - Cache Layer: Simple local Map (Query -> Results) to save identical searches.
+  - Network Controller: Aborts the previous query using `AbortController` if the user types a new character before the first request returns.
+  - Keyboard Accessibility: Handling ARIA attributes, focus states, and arrow-key navigation.
+
+===============================================================================
+3. TYPICAL FRONTEND CODING CHALLENGES
+===============================================================================
+You may be asked to implement these utilities on a code editor during live rounds:
+
+1. Debounce & Throttle functions.
+2. Custom Promise utilities (e.g., Promise.all polyfill, Promise with retry count).
+3. Custom Event Emitter (Pub/Sub class).
+4. Deep clone / Deep equal functions.
+5. DOM Tree Traversal (e.g., finding the nearest common ancestor of two DOM nodes).
