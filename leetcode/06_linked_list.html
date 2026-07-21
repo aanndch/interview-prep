@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pattern 06: Linked List</title>
+  <style>
+    :root {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #121620;
+      --bg-tertiary: #1a202c;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #f778ba;
+      --accent-gradient: linear-gradient(135deg, #f778ba, #8250df);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --code-bg: #07090e;
+      --success: #4ade80;
+      --success-bg: rgba(74, 222, 128, 0.1);
+      --warning: #facc15;
+      --danger: #f87171;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    header {
+      margin-bottom: 3rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2.8rem;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      font-weight: 800;
+    }
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    /* Sandbox visualizer styling */
+    .sandbox-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sandbox-header h2 {
+      font-size: 1.4rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sandbox-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--text-secondary);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: #238636;
+      border-color: #2ea44f;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #2ea44f;
+    }
+
+    .sandbox-screen {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      justify-content: center;
+      position: relative;
+    }
+
+    .list-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .node {
+      width: 70px;
+      height: 50px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .node-sub {
+      position: absolute;
+      bottom: 2px;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+    .node.curr-node {
+      border-color: var(--accent-color);
+      background: rgba(247, 120, 186, 0.15);
+      box-shadow: 0 0 10px rgba(247, 120, 186, 0.4);
+    }
+    .node.prev-node {
+      border-color: var(--danger);
+      background: rgba(248, 113, 113, 0.15);
+    }
+    .arrow {
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      font-family: monospace;
+      user-select: none;
+      transition: transform 0.4s ease;
+    }
+    .arrow.reversed {
+      transform: rotate(180deg);
+      color: var(--accent-color);
+    }
+
+    .sandbox-status {
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 4px solid var(--accent-color);
+      padding: 12px;
+      font-size: 0.95rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .sandbox-status.complete {
+      border-left-color: var(--success);
+      background: var(--success-bg);
+    }
+
+    /* Problem cards and Tabs */
+    .problem-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 2.5rem;
+    }
+    .problem-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .problem-title-bar h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .problem-description {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255, 255, 255, 0.01);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-color);
+    }
+
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.2rem;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    .tab-btn.active {
+      color: var(--accent-color);
+      border-bottom-color: var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .intuition-content p {
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .intuition-content ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .intuition-content li {
+      margin-bottom: 0.4rem;
+      color: var(--text-secondary);
+    }
+
+    .key-shift {
+      background: var(--bg-tertiary);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .key-shift h4 {
+      color: var(--accent-color);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .visual-explanation {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .code-wrapper {
+      position: relative;
+    }
+    .code-lang-label {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    pre {
+      background: var(--code-bg) !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op { color: #ffa657; }
+
+    .complexity-badges {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.8rem;
+    }
+    .complexity-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+    }
+    .complexity-badge span {
+      color: var(--accent-color);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+      margin-bottom: 3rem;
+    }
+    .toc-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    .toc-item:hover {
+      border-color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .toc-item-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .theory-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .theory-section h3 {
+      color: var(--accent-color);
+      margin-bottom: 0.8rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Pattern 06: Linked List</h1>
+    <p class="subtitle">Linear data structure connected via pointers requiring custom pointer operations for manipulation.</p>
+  </header>
+
+  <!-- ==================== INTERACTIVE SANDBOX ==================== -->
+  <div class="sandbox-card">
+    <div class="sandbox-header">
+      <h2><span>🛠️</span> Live Reverse Linked List Simulator</h2>
+    </div>
+
+    <div class="sandbox-controls">
+      <button class="btn btn-primary" id="btn-vis-start">Initialize List (1→2→3→4)</button>
+      <button class="btn" id="btn-vis-step" disabled>Step Reverse</button>
+      <button class="btn" id="btn-vis-reset">Reset</button>
+    </div>
+
+    <div class="sandbox-screen">
+      <div class="list-row" id="vis-list-area">
+        <!-- Render nodes dynamic -->
+      </div>
+      <div class="sandbox-status" id="vis-desc-status">
+        Click "Initialize" to set up a 4-node singly linked list.
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== QUESTIONS GRID ==================== -->
+  <h2 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--accent-color);">Questions List</h2>
+  <div class="toc-grid">
+    <a href="#prob-206" class="toc-item">
+      <span class="toc-item-title">#206 Reverse Linked List</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-141" class="toc-item">
+      <span class="toc-item-title">#141 Linked List Cycle</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-21" class="toc-item">
+      <span class="toc-item-title">#21 Merge Two Sorted Lists</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-160" class="toc-item">
+      <span class="toc-item-title">#160 Intersection of Two Lists</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-83" class="toc-item">
+      <span class="toc-item-title">#83 Remove Duplicates from Sorted</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-234" class="toc-item">
+      <span class="toc-item-title">#234 Palindrome Linked List</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-19" class="toc-item">
+      <span class="toc-item-title">#19 Remove Nth Node From End</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-2" class="toc-item">
+      <span class="toc-item-title">#2 Add Two Numbers</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-142" class="toc-item">
+      <span class="toc-item-title">#142 Linked List Cycle II</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-24" class="toc-item">
+      <span class="toc-item-title">#24 Swap Nodes in Pairs</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-328" class="toc-item">
+      <span class="toc-item-title">#328 Odd Even Linked List</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+  </div>
+
+  <!-- ==================== METHODOLOGY ==================== -->
+  <div class="theory-section">
+    <h3>Pointer Manipulation Strategies</h3>
+    <p>Linked list problems check your ability to change object pointers without losing references. Key techniques include:</p>
+    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Dummy Head:</strong> Always create a dummy pre-head node (e.g. `dummy = new ListNode(-1)`) to handle edge cases easily, such as deleting the head node or returning a new list.</li>
+      <li><strong>Two Pointers (Slow/Fast):</strong> Crucial for finding list midpoints, detecting cycles, or obtaining the Nth node from the end.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== PROBLEMS GUIDE ==================== -->
+  <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--accent-color);">Curated Problems Study Guide</h2>
+
+  <!-- #206 -->
+  <div class="problem-card" id="prob-206">
+    <div class="problem-title-bar">
+      <h3>#206 Reverse Linked List</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given the <code>head</code> of a singly linked list, reverse the list, and return <em>the reversed list</em>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Maintain three pointers: <code>prev</code> (initially null), <code>curr</code> (initially head), and <code>next</code> (temporary pointer).</p>
+        <p>Iterate through the list. Point <code>curr.next</code> backward to <code>prev</code>. Then shift <code>prev</code> to <code>curr</code>, and move <code>curr</code> to the next node (stored in <code>next</code>).</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [1, 2, 3]
+
+Step 1: curr = node(1), prev = null
+  - next = curr.next = node(2)
+  - curr.next = prev = null
+  - prev = curr = node(1)
+  - curr = next = node(2)
+
+Step 2: curr = node(2), prev = node(1)
+  - next = curr.next = node(3)
+  - curr.next = prev = node(1)
+  - prev = curr = node(2)
+  - curr = next = node(3)
+
+Step 3: curr = node(3), prev = node(2)
+  - next = curr.next = null
+  - curr.next = prev = node(2)
+  - prev = curr = node(3)
+  - curr = next = null
+
+Result: prev points to node(3). Reversed list: 3 -> 2 -> 1 -> null</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">class</span> ListNode {
+    val: <span class="kw">number</span>;
+    next: ListNode | <span class="kw">null</span>;
+    <span class="kw">constructor</span>(val?: <span class="kw">number</span>, next?: ListNode | <span class="kw">null</span>) {
+        <span class="kw">this</span>.val = (val===undefined ? <span class="num">0</span> : val);
+        <span class="kw">this</span>.next = (next===undefined ? <span class="kw">null</span> : next);
+    }
+}
+
+<span class="kw">function</span> <span class="fn">reverseList</span>(head: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    <span class="kw">let</span> prev: ListNode | <span class="kw">null</span> = <span class="kw">null</span>;
+    <span class="kw">let</span> curr = head;
+    
+    <span class="kw">while</span> (curr !== <span class="kw">null</span>) {
+        const nextNode = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = nextNode;
+    }
+    <span class="kw">return</span> prev;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #141 -->
+  <div class="problem-card" id="prob-141">
+    <div class="problem-title-bar">
+      <h3>#141 Linked List Cycle</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given <code>head</code>, the head of a linked list, determine if the linked list has a cycle in it.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Use Floyd's Cycle-Finding Algorithm (Tortoise and Hare). Maintain two pointers: <code>slow</code> and <code>fast</code>.</p>
+        <p>Advance <code>slow</code> by 1 step and <code>fast</code> by 2 steps. If there is no cycle, <code>fast</code> will reach null. If there is a cycle, <code>fast</code> will eventually lap and meet <code>slow</code>.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [3, 2, 0, -4], cycle at index 1
+
+Step 1: slow = node(3), fast = node(3)
+Step 2: slow = slow.next = node(2)
+  - fast = fast.next.next = node(0)
+  - slow !== fast
+Step 3: slow = slow.next = node(0)
+  - fast = fast.next.next = node(2)
+  - slow !== fast
+Step 4: slow = slow.next = node(-4)
+  - fast = fast.next.next = node(-4)
+  - slow === fast -> Meeting detected! Cycle exists.
+
+Result: true</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">hasCycle</span>(head: ListNode | <span class="kw">null</span>): <span class="kw">boolean</span> {
+    <span class="kw">let</span> slow = head;
+    <span class="kw">let</span> fast = head;
+    
+    <span class="kw">while</span> (fast !== <span class="kw">null</span> &amp;&amp; fast.next !== <span class="kw">null</span>) {
+        slow = slow!.next;
+        fast = fast.next.next;
+        <span class="kw">if</span> (slow === fast) {
+            <span class="kw">return true</span>;
+        }
+    }
+    <span class="kw">return</span> <span class="kw">false</span>;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #21 -->
+  <div class="problem-card" id="prob-21">
+    <div class="problem-title-bar">
+      <h3>#21 Merge Two Sorted Lists</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      You are given the heads of two sorted linked lists <code>list1</code> and <code>list2</code>. Merge the two lists into one <strong>sorted</strong> list. The list should be made by splicing together the nodes of the first two lists.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Use a dummy pre-head node. Compare head values of <code>list1</code> and <code>list2</code>. Link the smaller node to the merged list and advance its pointer. Repeat until one list is empty, then append the remaining list directly.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: list1 = [1, 2, 4], list2 = [1, 3, 4]
+Dummy = ListNode(-1), curr = Dummy
+
+Step 1: list1(1) === list2(1) -> Link list1(1). Advance list1. curr = node(1)
+Step 2: list1(2) > list2(1) -> Link list2(1). Advance list2. curr = node(1)
+Step 3: list1(2) < list2(3) -> Link list1(2). Advance list1. curr = node(2)
+Step 4: list1(4) > list2(3) -> Link list2(3). Advance list2. curr = node(3)
+Step 5: list1(4) === list2(4) -> Link list1(4). Advance list1. curr = node(4)
+Step 6: list1 is null. Append remaining list2(4) node. curr.next = list2
+
+Result: Dummy.next = 1 -> 1 -> 2 -> 3 -> 4 -> 4</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">mergeTwoLists</span>(list1: ListNode | <span class="kw">null</span>, list2: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    const dummy = <span class="kw">new</span> <span class="fn">ListNode</span>(-<span class="num">1</span>);
+    <span class="kw">let</span> curr = dummy;
+    
+    <span class="kw">while</span> (list1 !== <span class="kw">null</span> &amp;&amp; list2 !== <span class="kw">null</span>) {
+        <span class="kw">if</span> (list1.val &lt;= list2.val) {
+            curr.next = list1;
+            list1 = list1.next;
+        } <span class="kw">else</span> {
+            curr.next = list2;
+            list2 = list2.next;
+        }
+        curr = curr.next;
+    }
+    
+    curr.next = list1 !== <span class="kw">null</span> ? list1 : list2;
+    <span class="kw">return</span> dummy.next;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N + M)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #160 -->
+  <div class="problem-card" id="prob-160">
+    <div class="problem-title-bar">
+      <h3>#160 Intersection of Two Linked Lists</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given the heads of two singly linked-lists <code>headA</code> and <code>headB</code>, return the node at which the two lists intersect. If the two linked lists have no intersection at all, return <code>null</code>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Walk pointers `A` and `B` simultaneously. When a pointer reaches the end, reset it to the head of the *other* list.</p>
+        <p>Since this offsets the length difference between the two lists, the pointers will align on their second pass, meeting exactly at the intersection node (or null if no intersection exists).</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: List A = [4, 1, 8, 4, 5], List B = [5, 6, 1, 8, 4, 5]
+Intersection starts at node 8. Length(A)=5, Length(B)=6.
+
+Pass 1:
+  - ptrA starts at A(4), ptrB starts at B(5).
+  - ptrA reaches end after 5 steps. Reset ptrA to headB(5).
+  - ptrB reaches end after 6 steps. Reset ptrB to headA(4).
+Pass 2:
+  - Walk pointers. They align.
+  - They meet at node(8) after 2 more steps.
+
+Result: node(8)</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">getIntersectionNode</span>(headA: ListNode | <span class="kw">null</span>, headB: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    <span class="kw">if</span> (headA === <span class="kw">null</span> || headB === <span class="kw">null</span>) <span class="kw">return null</span>;
+    <span class="kw">let</span> a = headA;
+    <span class="kw">let</span> b = headB;
+    
+    <span class="kw">while</span> (a !== b) {
+        a = a === <span class="kw">null</span> ? headB : a.next!;
+        b = b === <span class="kw">null</span> ? headA : b.next!;
+    }
+    <span class="kw">return</span> a;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N + M)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #83 -->
+  <div class="problem-card" id="prob-83">
+    <div class="problem-title-bar">
+      <h3>#83 Remove Duplicates from Sorted List</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given the <code>head</code> of a sorted linked list, <em>delete all duplicates such that each element appears only once</em>. Return <em>the linked list <strong>sorted</strong> as well</em>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Since the list is sorted, duplicate elements will be adjacent. Traverse the list. If <code>curr.val === curr.next.val</code>, delete the duplicate by pointing <code>curr.next = curr.next.next</code>. Otherwise, advance `curr`.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [1, 1, 2]
+
+Step 1: curr = node(1), next = node(1)
+  - values match (1 === 1) -> curr.next = curr.next.next = node(2). List: 1 -> 2
+Step 2: curr = node(1), next = node(2)
+  - mismatch (1 !== 2) -> curr = curr.next = node(2)
+Step 3: curr.next is null -> Loop terminates.
+
+Result: 1 -> 2 -> null</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">deleteDuplicates</span>(head: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    <span class="kw">let</span> curr = head;
+    <span class="kw">while</span> (curr !== <span class="kw">null</span> &amp;&amp; curr.next !== <span class="kw">null</span>) {
+        <span class="kw">if</span> (curr.val === curr.next.val) {
+            curr.next = curr.next.next;
+        } <span class="kw">else</span> {
+            curr = curr.next;
+        }
+    }
+    <span class="kw">return</span> head;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #234 -->
+  <div class="problem-card" id="prob-234">
+    <div class="problem-title-bar">
+      <h3>#234 Palindrome Linked List</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given the <code>head</code> of a singly linked list, return <code>true</code><em> if it is a palindrome or </em><code>false</code><em> otherwise</em>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>To solve in O(N) time and O(1) space:</p>
+        <p>1. Find midpoint of the list using slow/fast pointers.<br/>
+        2. Reverse the second half of the list starting from the midpoint.<br/>
+        3. Compare the first half and reversed second half node-by-node. If mismatch occurs, return false.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [1, 2, 2, 1]
+
+Step 1: Find midpoint. slow stops at index 2 (node(2)).
+Step 2: Reverse second half. Reversed half starts at 1: 1 -> 2 -> null
+Step 3: Compare head [1, 2] and reversed half [1, 2]:
+  - head(1) === reversed(1) -> Matches
+  - head(2) === reversed(2) -> Matches
+
+Result: true</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">isPalindrome</span>(head: ListNode | <span class="kw">null</span>): <span class="kw">boolean</span> {
+    <span class="kw">if</span> (head === <span class="kw">null</span> || head.next === <span class="kw">null</span>) <span class="kw">return true</span>;
+    
+    <span class="kw">let</span> slow: ListNode | <span class="kw">null</span> = head;
+    <span class="kw">let</span> fast = head;
+    <span class="kw">while</span> (fast !== <span class="kw">null</span> &amp;&amp; fast.next !== <span class="kw">null</span>) {
+        slow = slow!.next;
+        fast = fast.next.next;
+    }
+    
+    <span class="kw">let</span> prev: ListNode | <span class="kw">null</span> = <span class="kw">null</span>;
+    <span class="kw">let</span> curr = slow;
+    <span class="kw">while</span> (curr !== <span class="kw">null</span>) {
+        const nextNode = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = nextNode;
+    }
+    
+    <span class="kw">let</span> p1: ListNode | <span class="kw">null</span> = head;
+    <span class="kw">let</span> p2 = prev;
+    <span class="kw">while</span> (p2 !== <span class="kw">null</span>) {
+        <span class="kw">if</span> (p1!.val !== p2.val) {
+            <span class="kw">return false</span>;
+        }
+        p1 = p1!.next;
+        p2 = p2.next;
+    }
+    <span class="kw">return true</span>;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #19 -->
+  <div class="problem-card" id="prob-19">
+    <div class="problem-title-bar">
+      <h3>#19 Remove Nth Node From End of List</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given the <code>head</code> of a linked list, remove the <code>n<sup>th</sup></code> node from the end of the list and return its head.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Use two pointers <code>fast</code> and <code>slow</code>. Advance <code>fast</code> by <code>n</code> steps first. This creates a gap of size N between them.</p>
+        <p>Walk both pointers together. When <code>fast.next</code> reaches null, <code>slow</code> will point to the node immediately preceding the node to delete. Re-link <code>slow.next = slow.next.next</code>.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [1, 2, 3, 4, 5], n = 2
+Dummy = node(-1), dummy.next = head
+fast = Dummy, slow = Dummy
+
+Step 1: Advance fast by 2 steps -> fast points to node(2).
+Step 2: Walk both fast and slow until fast reaches the end node(5):
+  - slow stops at node(3).
+Step 3: Delete target: slow.next = slow.next.next (node(3).next = node(5)).
+
+Result: 1 -> 2 -> 3 -> 5 -> null</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">removeNthFromEnd</span>(head: ListNode | <span class="kw">null</span>, n: <span class="kw">number</span>): ListNode | <span class="kw">null</span> {
+    const dummy = <span class="kw">new</span> <span class="fn">ListNode</span>(-<span class="num">1</span>, head);
+    <span class="kw">let</span> fast: ListNode | <span class="kw">null</span> = dummy;
+    <span class="kw">let</span> slow: ListNode | <span class="kw">null</span> = dummy;
+    
+    <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; n; i++) {
+        fast = fast!.next;
+    }
+    
+    <span class="kw">while</span> (fast!.next !== <span class="kw">null</span>) {
+        fast = fast!.next;
+        slow = slow!.next;
+    }
+    
+    slow!.next = slow!.next!.next;
+    <span class="kw">return</span> dummy.next;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #2 -->
+  <div class="problem-card" id="prob-2">
+    <div class="problem-title-bar">
+      <h3>#2 Add Two Numbers</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      You are given two <strong>non-empty</strong> linked lists representing two non-negative integers. The digits are stored in <strong>reverse order</strong>, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Walk both lists node-by-node. Add node values along with a running <code>carry</code>.</p>
+        <p>Create a new node with value `sum % 10` and update `carry = Math.floor(sum / 10)`. Continue until both lists are empty and no carry remains.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: l1 = [2, 4, 3], l2 = [5, 6, 4]
+
+Step 1: val1 = 2, val2 = 5, carry = 0 -> sum = 7. New node(7). carry = 0
+Step 2: val1 = 4, val2 = 6, carry = 0 -> sum = 10. New node(0). carry = 1
+Step 3: val1 = 3, val2 = 4, carry = 1 -> sum = 8. New node(8). carry = 0
+
+Result: 7 -> 0 -> 8 -> null</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">addTwoNumbers</span>(l1: ListNode | <span class="kw">null</span>, l2: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    const dummy = <span class="kw">new</span> <span class="fn">ListNode</span>(-<span class="num">1</span>);
+    <span class="kw">let</span> curr = dummy;
+    <span class="kw">let</span> carry = <span class="num">0</span>;
+    
+    <span class="kw">while</span> (l1 !== <span class="kw">null</span> || l2 !== <span class="kw">null</span> || carry !== <span class="num">0</span>) {
+        const val1 = l1 !== <span class="kw">null</span> ? l1.val : <span class="num">0</span>;
+        const val2 = l2 !== <span class="kw">null</span> ? l2.val : <span class="num">0</span>;
+        const sum = val1 + val2 + carry;
+        
+        carry = Math.<span class="fn">floor</span>(sum / <span class="num">10</span>);
+        curr.next = <span class="kw">new</span> <span class="fn">ListNode</span>(sum % <span class="num">10</span>);
+        curr = curr.next;
+        
+        <span class="kw">if</span> (l1 !== <span class="kw">null</span>) l1 = l1.next;
+        <span class="kw">if</span> (l2 !== <span class="kw">null</span>) l2 = l2.next;
+    }
+    <span class="kw">return</span> dummy.next;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(max(N, M))</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(max(N, M))</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #142 -->
+  <div class="problem-card" id="prob-142">
+    <div class="problem-title-bar">
+      <h3>#142 Linked List Cycle II</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given the <code>head</code> of a linked list, return <em>the node where the cycle begins. If there is no cycle, return </em><code>null</code>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Use Floyd's Cycle Detection. If slow and fast pointers meet, a cycle exists.</p>
+        <p>Reset one pointer to <code>head</code>. Walk both pointers 1 step at a time. The point where they meet is the start node of the cycle.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [3, 2, 0, -4], cycle at index 1
+
+Step 1: Meeting point found at node(-4).
+Step 2: Reset slow pointer to head node(3).
+Step 3: Walk both slow and fast 1 step at a time:
+  - slow goes from node(3) to node(2).
+  - fast goes from node(-4) to node(2).
+  - They meet at node(2).
+
+Result: Node(2)</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">detectCycle</span>(head: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    <span class="kw">let</span> slow = head;
+    <span class="kw">let</span> fast = head;
+    
+    <span class="kw">while</span> (fast !== <span class="kw">null</span> &amp;&amp; fast.next !== <span class="kw">null</span>) {
+        slow = slow!.next;
+        fast = fast.next.next;
+        <span class="kw">if</span> (slow === fast) {
+            <span class="kw">let</span> entry = head;
+            <span class="kw">while</span> (entry !== slow) {
+                entry = entry!.next;
+                slow = slow!.next;
+            }
+            <span class="kw">return</span> entry;
+        }
+    }
+    <span class="kw">return null</span>;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #24 -->
+  <div class="problem-card" id="prob-24">
+    <div class="problem-title-bar">
+      <h3>#24 Swap Nodes in Pairs</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given a singly linked list, swap every two adjacent nodes and return its head. You must solve the problem without modifying the values in the list's nodes (i.e., only nodes themselves may be changed.)
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Use a dummy node pointing to head. Maintain a <code>prev</code> pointer starting at dummy.</p>
+        <p>For each pair of nodes (<code>first</code> and <code>second</code>), re-link: <code>prev.next = second</code>, <code>first.next = second.next</code>, and <code>second.next = first</code>. Then advance <code>prev = first</code> for the next pair.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [1, 2, 3, 4]
+Dummy = node(-1), dummy.next = head, prev = Dummy
+
+Step 1: first = node(1), second = node(2)
+  - prev.next = second (dummy -> 2)
+  - first.next = second.next (1 -> 3)
+  - second.next = first (2 -> 1)
+  - prev = first = node(1). List: dummy -> 2 -> 1 -> 3 -> 4
+
+Step 2: first = node(3), second = node(4)
+  - prev.next = second (1 -> 4)
+  - first.next = second.next (3 -> null)
+  - second.next = first (4 -> 3)
+  - prev = first = node(3). List: dummy -> 2 -> 1 -> 4 -> 3 -> null
+
+Result: 2 -> 1 -> 4 -> 3 -> null</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">swapPairs</span>(head: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    const dummy = <span class="kw">new</span> <span class="fn">ListNode</span>(-<span class="num">1</span>, head);
+    <span class="kw">let</span> prev = dummy;
+    
+    <span class="kw">while</span> (prev.next !== <span class="kw">null</span> &amp;&amp; prev.next.next !== <span class="kw">null</span>) {
+        const first = prev.next;
+        const second = prev.next.next;
+        
+        first.next = second.next;
+        second.next = first;
+        prev.next = second;
+        
+        prev = first;
+    }
+    <span class="kw">return</span> dummy.next;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #328 -->
+  <div class="problem-card" id="prob-328">
+    <div class="problem-title-bar">
+      <h3>#328 Odd Even Linked List</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Given the <code>head</code> of a singly linked list, group all the nodes with odd indices together followed by the nodes with even indices, and return <em>the reordered list</em>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>Maintain two separate lists: <code>odd</code> (starting at head) and <code>even</code> (starting at head.next).</p>
+        <p>Iterate linking <code>odd.next = odd.next.next</code> and <code>even.next = even.next.next</code> to skip alternate nodes. Finally, link the end of the odd list to the head of the even list.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: head = [1, 2, 3, 4, 5]
+odd = node(1), even = node(2), evenHead = node(2)
+
+Step 1: odd.next = node(3). odd = node(3)
+  - even.next = node(4). even = node(4)
+Step 2: odd.next = node(5). odd = node(5)
+  - even.next = null. even = null
+Step 3: Link lists: odd.next = evenHead (5 -> 2)
+
+Result: 1 -> 3 -> 5 -> 2 -> 4 -> null</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">oddEvenList</span>(head: ListNode | <span class="kw">null</span>): ListNode | <span class="kw">null</span> {
+    <span class="kw">if</span> (head === <span class="kw">null</span>) <span class="kw">return null</span>;
+    <span class="kw">let</span> odd = head;
+    <span class="kw">let</span> even = head.next;
+    const evenHead = even;
+    
+    <span class="kw">while</span> (even !== <span class="kw">null</span> &amp;&amp; even.next !== <span class="kw">null</span>) {
+        odd.next = even.next;
+        odd = odd.next;
+        even.next = odd.next;
+        even = even.next;
+    }
+    odd.next = evenHead;
+    <span class="kw">return</span> head;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html">← Back to Dashboard</a>
+  </footer>
+</div>
+
+<!-- ==================== INTERACTIVE SCRIPTS ==================== -->
+<script>
+  // Tab switcher
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.problem-card');
+      const tabName = btn.getAttribute('data-tab');
+      card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      card.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      card.querySelector(`.tab-content[data-content="${tabName}"]`).classList.add('active');
+    });
+  });
+
+  // Simulator logic
+  const btnInit = document.getElementById('btn-vis-start');
+  const btnStep = document.getElementById('btn-vis-step');
+  const btnReset = document.getElementById('btn-vis-reset');
+
+  const listArea = document.getElementById('vis-list-area');
+  const textStatus = document.getElementById('vis-desc-status');
+
+  let state = {
+    nodes: [1, 2, 3, 4],
+    prev: -1,
+    curr: 0,
+    next: 1,
+    reversedArrows: [false, false, false] // Arrow states
+  };
+
+  btnInit.addEventListener('click', initializeSimulator);
+  btnStep.addEventListener('click', stepSimulator);
+  btnReset.addEventListener('click', resetSimulator);
+
+  function resetSimulator() {
+    listArea.innerHTML = '';
+    textStatus.innerHTML = 'Click "Initialize" to set up a 4-node singly linked list.';
+    textStatus.className = 'sandbox-status';
+    btnInit.disabled = false;
+    btnStep.disabled = true;
+  }
+
+  function initializeSimulator() {
+    listArea.innerHTML = '';
+    btnInit.disabled = true;
+    btnStep.disabled = false;
+
+    state.prev = -1;
+    state.curr = 0;
+    state.next = 1;
+    state.reversedArrows = [false, false, false];
+
+    renderListUI();
+    textStatus.innerHTML = `List initialized. Pointer <strong>curr</strong> is at Node 1. Pointer <strong>prev</strong> is null.<br/>` +
+                           `Press Step Reverse to begin pointer re-linking.`;
+  }
+
+  function stepSimulator() {
+    if (state.curr >= state.nodes.length) {
+      textStatus.innerHTML = `🎉 <strong>Simulation complete!</strong> The list is fully reversed.<br/>` +
+                             `New head node is Node 4.`;
+      textStatus.className = 'sandbox-status complete';
+      btnStep.disabled = true;
+      return;
+    }
+
+    const currVal = state.nodes[state.curr];
+    const prevVal = state.prev === -1 ? 'null' : `Node ${state.nodes[state.prev]}`;
+    
+    // Reverse arrow index (state.curr - 1)
+    if (state.curr > 0) {
+      state.reversedArrows[state.curr - 1] = true;
+    }
+
+    textStatus.innerHTML = `Re-linking pointer: Node ${currVal}.next changed from Node ${currVal + 1 || 'null'} to point back to <strong>${prevVal}</strong>.`;
+
+    state.prev = state.curr;
+    state.curr = state.next;
+    state.next = state.curr + 1;
+
+    setTimeout(() => {
+      renderListUI();
+      if (state.curr < state.nodes.length) {
+        textStatus.innerHTML += `<br/>Shifted pointers: <strong>curr</strong> advanced to Node ${state.nodes[state.curr]}, ` +
+                               `<strong>prev</strong> advanced to Node ${state.nodes[state.prev]}.`;
+      }
+    }, 400);
+  }
+
+  function renderListUI() {
+    listArea.innerHTML = '';
+    state.nodes.forEach((val, idx) => {
+      let nodeClass = 'node';
+      if (idx === state.curr) nodeClass += ' curr-node';
+      else if (idx === state.prev) nodeClass += ' prev-node';
+
+      listArea.innerHTML += `<div class="${nodeClass}">${val}<span class="node-sub">Node ${val}</span></div>`;
+      
+      // Add arrows between nodes
+      if (idx < state.nodes.length - 1) {
+        const isReversed = state.reversedArrows[idx];
+        const arrowClass = isReversed ? 'arrow reversed' : 'arrow';
+        listArea.innerHTML += `<div class="${arrowClass}">&rarr;</div>`;
+      }
+    });
+  }
+</script>
+</body>
+</html>

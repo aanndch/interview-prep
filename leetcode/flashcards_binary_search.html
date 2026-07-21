@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Two Pointers · Revision Cards</title>
+  <title>Binary Search · Revision Cards</title>
   <style>
     :root {
       --bg-primary: #0a0c10;
@@ -11,7 +11,7 @@
       --bg-tertiary: #1a202c;
       --border-color: rgba(255, 255, 255, 0.08);
       --accent-color: #58a6ff;
-      --accent-gradient: linear-gradient(135deg, #58a6ff, #8250df);
+      --accent-gradient: linear-gradient(135deg, #58a6ff, #38ef7d);
       --text-primary: #e2e8f0;
       --text-secondary: #94a3b8;
       
@@ -110,7 +110,6 @@
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     
-    /* Glowing borders based on difficulty */
     .flip-card[data-difficulty="easy"]:hover .front {
       border-color: var(--easy-color);
       box-shadow: 0 0 15px var(--easy-bg);
@@ -124,7 +123,6 @@
       box-shadow: 0 0 15px var(--hard-bg);
     }
 
-    /* Badges & Tags */
     .tag {
       font-size: 0.65rem;
       font-weight: 800;
@@ -137,7 +135,6 @@
     }
     .tag-easy { background: var(--easy-bg); color: var(--easy-color); border-color: var(--easy-border); }
     .tag-medium { background: var(--medium-bg); color: var(--medium-color); border-color: var(--medium-border); }
-    .tag-hard { background: var(--hard-bg); color: var(--hard-color); border-color: var(--hard-border); }
 
     .front .prob-num {
       font-size: 0.85rem;
@@ -157,12 +154,11 @@
       line-height: 1.4;
     }
 
-    /* Back Card Layout (No Scrolling) */
     .back {
       background: #111420;
       transform: rotateY(180deg);
       border-color: rgba(255,255,255,0.12);
-      overflow: hidden; /* Prevent scrolling inside card */
+      overflow: hidden;
     }
     
     .back-header {
@@ -215,7 +211,6 @@
     .complexity-green { color: var(--easy-color); }
     .complexity-orange { color: var(--medium-color); }
 
-    /* Backlink styled */
     .backlink {
       display: inline-flex;
       align-items: center;
@@ -243,39 +238,38 @@
 
   <header>
     <div>
-      <h1>Two Pointers · Revision Cards</h1>
-      <p class="subtitle">9 cards &middot; 6 easy &middot; 3 medium &middot; 0 hard</p>
+      <h1>Binary Search · Revision Cards</h1>
+      <p class="subtitle">7 cards &middot; 4 easy &middot; 3 medium &middot; 0 hard</p>
     </div>
     <a class="backlink" href="index.html">← Back to Dashboard</a>
   </header>
 
-  <!-- ==================== REVISION CARDS GRID ==================== -->
   <div class="grid" id="cards-grid">
 
-    <!-- #125 Valid Palindrome -->
-    <div class="flip-card" data-difficulty="easy" data-subtype="colliding" data-card-id="125" onclick="toggleFlip(this)">
+    <!-- #704 -->
+    <div class="flip-card" data-difficulty="easy" data-card-id="704" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-easy">EASY</span>
-          <div class="prob-num">#125</div>
-          <div class="prob-name">Valid Palindrome</div>
-          <div class="prob-summary">Determine if a string is a palindrome after converting all characters to lowercase and ignoring non-alphanumeric symbols.</div>
+          <div class="prob-num">#704</div>
+          <div class="prob-name">Binary Search</div>
+          <div class="prob-summary">Search for a target value in a sorted integer array, returning its index if found.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Colliding</span>
+            <span class="back-value highlight">Standard BS</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Scan elements inwards from both ends using left and right pointers, skipping non-alphanumeric characters dynamically to achieve O(1) space.</p>
+            <p class="insight-text">Compare `nums[mid]` with target. If equal, return index. If target is larger, search right half (`L = mid + 1`). If target is smaller, search left half (`R = mid - 1`).</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
+              <div class="complexity-val complexity-green">O(log N)</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -285,36 +279,36 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">Empty/single char, only spaces/symbols, mixed-case comparisons</p>
+            <p class="insight-text">Target not in array, single-element arrays</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- #283 Move Zeroes -->
-    <div class="flip-card" data-difficulty="easy" data-subtype="fast-slow" data-card-id="283" onclick="toggleFlip(this)">
+    <!-- #35 -->
+    <div class="flip-card" data-difficulty="easy" data-card-id="35" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-easy">EASY</span>
-          <div class="prob-num">#283</div>
-          <div class="prob-name">Move Zeroes</div>
-          <div class="prob-summary">Move all zero elements to the end of the array while maintaining the relative order of non-zero items.</div>
+          <div class="prob-num">#35</div>
+          <div class="prob-name">Search Insert Position</div>
+          <div class="prob-summary">Return index of target in sorted array, or index where it would be inserted in order.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Fast &amp; Slow</span>
+            <span class="back-value highlight">Search Position</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Use a slow pointer to mark the write index for non-zero elements and a fast pointer to scan. Swap elements when fast finds a non-zero element.</p>
+            <p class="insight-text">Execute standard binary search. If target is not found, the left pointer `L` will end up pointing to the correct insert position when loop exits.</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
+              <div class="complexity-val complexity-green">O(log N)</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -324,36 +318,36 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">No zeros, all zeros, single-element arrays</p>
+            <p class="insight-text">Insert at 0 index, insert at end of array</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- #344 Reverse String -->
-    <div class="flip-card" data-difficulty="easy" data-subtype="colliding" data-card-id="344" onclick="toggleFlip(this)">
+    <!-- #69 -->
+    <div class="flip-card" data-difficulty="easy" data-card-id="69" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-easy">EASY</span>
-          <div class="prob-num">#344</div>
-          <div class="prob-name">Reverse String</div>
-          <div class="prob-summary">Modify a character array in-place to reverse its order, using O(1) auxiliary memory.</div>
+          <div class="prob-num">#69</div>
+          <div class="prob-name">Sqrt(x)</div>
+          <div class="prob-summary">Calculate square root of x, rounded down to nearest integer, in constant space.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Colliding</span>
+            <span class="back-value highlight">Integer Binary Search</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Place pointers at the start and end of the character array. Swap elements at L and R, then step both pointers inward until they meet.</p>
+            <p class="insight-text">Search space is 1 to x. If `mid * mid <= x`, record `mid` as a candidate solution and search right side for larger integer root. If `sq > x`, search left side.</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
+              <div class="complexity-val complexity-green">O(log X)</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -363,75 +357,36 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">Odd vs. even length arrays, single-character arrays</p>
+            <p class="insight-text">x = 0 or 1, square root is not a perfect square</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- #977 Squares of a Sorted Array -->
-    <div class="flip-card" data-difficulty="easy" data-subtype="colliding" data-card-id="977" onclick="toggleFlip(this)">
+    <!-- #278 -->
+    <div class="flip-card" data-difficulty="easy" data-card-id="278" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-easy">EASY</span>
-          <div class="prob-num">#977</div>
-          <div class="prob-name">Squares of a Sorted Array</div>
-          <div class="prob-summary">Given an array sorted in non-decreasing order, return the squared values sorted in non-decreasing order.</div>
+          <div class="prob-num">#278</div>
+          <div class="prob-name">First Bad Version</div>
+          <div class="prob-summary">Find the first bad version in versions 1..n that causes all subsequent ones to fail.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Colliding</span>
+            <span class="back-value highlight">Boundary Search</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Negative values yield large squares. The largest values reside at boundaries. Compare squares at L and R and fill the result array R→L.</p>
+            <p class="insight-text">If `mid` is bad, search left half including `mid` (`R = mid`). If `mid` is good, the first bad version must be in the right half (`L = mid + 1`).</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
-            </div>
-            <div>
-              <span class="back-label">Space</span>
-              <div class="complexity-val complexity-orange">O(N)</div>
-            </div>
-          </div>
-
-          <div class="back-section">
-            <span class="back-label">Edge Cases</span>
-            <p class="insight-text">All positive values, all negative values, single-element arrays</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- #167 Two Sum II -->
-    <div class="flip-card" data-difficulty="easy" data-subtype="colliding" data-card-id="167" onclick="toggleFlip(this)">
-      <div class="flip-inner">
-        <div class="front">
-          <span class="tag tag-easy">EASY</span>
-          <div class="prob-num">#167</div>
-          <div class="prob-name">Two Sum II</div>
-          <div class="prob-summary">Find two indices in a 1-indexed sorted array that sum up to target, utilizing constant extra space.</div>
-        </div>
-        <div class="back">
-          <div class="back-header">
-            <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Colliding</span>
-          </div>
-          
-          <div class="back-section">
-            <span class="back-label">Key Insight</span>
-            <p class="insight-text">Compare `sum = nums[L] + nums[R]`. If `sum > target`, shift R inward (R--). If `sum < target`, shift L inward (L++). Array must be sorted.</p>
-          </div>
-
-          <div class="back-grid">
-            <div>
-              <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
+              <div class="complexity-val complexity-green">O(log N)</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -441,75 +396,36 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">Solution located at outer boundaries, duplicate values in array</p>
+            <p class="insight-text">First version is bad, only the last version is bad</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- #26 Remove Duplicates -->
-    <div class="flip-card" data-difficulty="easy" data-subtype="fast-slow" data-card-id="26" onclick="toggleFlip(this)">
-      <div class="flip-inner">
-        <div class="front">
-          <span class="tag tag-easy">EASY</span>
-          <div class="prob-num">#26</div>
-          <div class="prob-name">Remove Duplicates</div>
-          <div class="prob-summary">Remove duplicate elements from sorted array in-place, returning the unique element count.</div>
-        </div>
-        <div class="back">
-          <div class="back-header">
-            <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Fast &amp; Slow</span>
-          </div>
-          
-          <div class="back-section">
-            <span class="back-label">Key Insight</span>
-            <p class="insight-text">Maintain slow pointer at next unique index. Use fast pointer to scan. Write value when `nums[fast] !== nums[slow - 1]`.</p>
-          </div>
-
-          <div class="back-grid">
-            <div>
-              <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
-            </div>
-            <div>
-              <span class="back-label">Space</span>
-              <div class="complexity-val complexity-green">O(1)</div>
-            </div>
-          </div>
-
-          <div class="back-section">
-            <span class="back-label">Edge Cases</span>
-            <p class="insight-text">All elements duplicate, no duplicates, single-element arrays</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- #11 Container With Most Water -->
-    <div class="flip-card" data-difficulty="medium" data-subtype="colliding" data-card-id="11" onclick="toggleFlip(this)">
+    <!-- #153 -->
+    <div class="flip-card" data-difficulty="medium" data-card-id="153" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-medium">MEDIUM</span>
-          <div class="prob-num">#11</div>
-          <div class="prob-name">Container With Most Water</div>
-          <div class="prob-summary">Find two vertical lines that form a container that traps the maximum possible water volume.</div>
+          <div class="prob-num">#153</div>
+          <div class="prob-name">Min in Rotated Sorted Array</div>
+          <div class="prob-summary">Find the minimum element in a sorted array that has been rotated.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Colliding</span>
+            <span class="back-value highlight">Rotated Boundaries</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Water volume is bottlenecked by the shorter boundary. Shift the pointer pointing to the shorter wall inwards to look for taller lines.</p>
+            <p class="insight-text">Compare `nums[mid]` with `nums[R]`. If `nums[mid] > nums[R]`, pivot (minimum) is in the right half (`L = mid + 1`). Otherwise it is at or to the left (`R = mid`).</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-green">O(N)</div>
+              <div class="complexity-val complexity-green">O(log N)</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -519,36 +435,36 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">Monotonically decreasing heights slope, valley shapes, equal heights</p>
+            <p class="insight-text">Array not rotated, array size 1 or 2</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- #15 3Sum -->
-    <div class="flip-card" data-difficulty="medium" data-subtype="colliding" data-card-id="15" onclick="toggleFlip(this)">
+    <!-- #33 -->
+    <div class="flip-card" data-difficulty="medium" data-card-id="33" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-medium">MEDIUM</span>
-          <div class="prob-num">#15</div>
-          <div class="prob-name">3Sum</div>
-          <div class="prob-summary">Find all unique triplets in an integer array that sum up to exactly zero.</div>
+          <div class="prob-num">#33</div>
+          <div class="prob-name">Search in Rotated Array</div>
+          <div class="prob-summary">Search for a target value in a possibly rotated sorted array.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Sort + Colliding</span>
+            <span class="back-value highlight">Interval Search</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Sort the array. Loop through elements, locking in `nums[i]`. Run colliding two pointers to scan for target `-nums[i]`. Skip duplicates.</p>
+            <p class="insight-text">Identify which half (left/right) is sorted. If target lies within the boundaries of the sorted half, search there. Otherwise, search the other half.</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-orange">O(N²)</div>
+              <div class="complexity-val complexity-green">O(log N)</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -558,38 +474,36 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">All zeros, duplicate values, subarrays yielding no triplets</p>
+            <p class="insight-text">Target not in array, rotation pivot at index 0</p>
           </div>
         </div>
       </div>
     </div>
 
-
-
-    <!-- #16 3Sum Closest -->
-    <div class="flip-card" data-difficulty="medium" data-subtype="colliding" data-card-id="16" onclick="toggleFlip(this)">
+    <!-- #875 -->
+    <div class="flip-card" data-difficulty="medium" data-card-id="875" onclick="toggleFlip(this)">
       <div class="flip-inner">
         <div class="front">
           <span class="tag tag-medium">MEDIUM</span>
-          <div class="prob-num">#16</div>
-          <div class="prob-name">3Sum Closest</div>
-          <div class="prob-summary">Find three integers in nums such that the sum is closest to a given target. Return the sum.</div>
+          <div class="prob-num">#875</div>
+          <div class="prob-name">Koko Eating Bananas</div>
+          <div class="prob-summary">Find the minimum integer eating speed k to eat all bananas in h hours.</div>
         </div>
         <div class="back">
           <div class="back-header">
             <span class="back-label">Subtype</span>
-            <span class="back-value highlight">Sort + Colliding</span>
+            <span class="back-value highlight">Search on Range</span>
           </div>
           
           <div class="back-section">
             <span class="back-label">Key Insight</span>
-            <p class="insight-text">Sort array. Iterate locking in `nums[i]` and search rest using two pointers, keeping track of the minimum absolute sum difference from target.</p>
+            <p class="insight-text">Binary search on eating speed `K` between 1 and `max(piles)`. Test speed `mid`; if valid, record and look for slower speed (`R = mid - 1`).</p>
           </div>
 
           <div class="back-grid">
             <div>
               <span class="back-label">Time</span>
-              <div class="complexity-val complexity-orange">O(N²)</div>
+              <div class="complexity-val complexity-orange">O(N * log(Max))</div>
             </div>
             <div>
               <span class="back-label">Space</span>
@@ -599,7 +513,7 @@
 
           <div class="back-section">
             <span class="back-label">Edge Cases</span>
-            <p class="insight-text">Target smaller than all sums, highly duplicate arrays</p>
+            <p class="insight-text">Hours h equals piles length, piles with single elements</p>
           </div>
         </div>
       </div>
@@ -612,7 +526,6 @@
   </footer>
 </div>
 
-<!-- ==================== INTERACTIVE SCRIPTS ==================== -->
 <script>
   function toggleFlip(card) {
     card.classList.toggle('flipped');

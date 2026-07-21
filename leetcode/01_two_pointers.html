@@ -565,10 +565,6 @@
       <span class="toc-item-title">#15 3Sum</span>
       <span class="tag tag-medium">Medium</span>
     </a>
-    <a href="#prob-42" class="toc-item">
-      <span class="toc-item-title">#42 Trapping Rain Water</span>
-      <span class="tag tag-medium">Medium</span>
-    </a>
     <a href="#prob-16" class="toc-item">
       <span class="toc-item-title">#16 3Sum Closest</span>
       <span class="tag tag-medium">Medium</span>
@@ -1062,90 +1058,6 @@ Pass 3: i = 2 | nums[2] = -1
     </div>
   </div>
 
-  <!-- #42 Trapping Rain Water -->
-  <div class="problem-card" id="prob-42">
-    <div class="problem-title-bar">
-      <h3>#42 Trapping Rain Water</h3>
-      <span class="tag tag-medium">Medium</span>
-    </div>
-
-    <div class="problem-description">
-      Given <code>n</code> non-negative integers representing an elevation map where the width of each bar is <code>1</code>, compute how much water it can trap after raining.
-    </div>
-    
-    <div class="tabs-header">
-      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
-      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
-      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
-    </div>
-
-    <div class="tab-content active" data-content="intuition">
-      <div class="intuition-content">
-        <p>The water level at any index <code>i</code> is determined by the minimum of the highest walls to its left and right, minus the height of the bar at <code>i</code> itself: <code>Water = min(maxLeft, maxRight) - height[i]</code>.</p>
-        <p>To do this in <strong>O(N) time</strong> and **O(1) space**, place pointers at the far ends (L=0, R=height.length-1) and maintain <code>leftMax</code> and <code>rightMax</code>. Move the pointer pointing to the smaller bar, updating the max boundaries and accumulating trapped water on the fly.</p>
-      </div>
-    </div>
-
-    <div class="tab-content" data-content="visual">
-      <div class="visual-explanation">Input: height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]
-
-L = 0 (h: 0) | R = 11 (h: 1) | leftMax = 0 | rightMax = 0
-  - height[L] < height[R] (0 < 1) -> Process L
-  - Update leftMax = max(0, 0) = 0
-  - Water += leftMax - height[L] = 0 - 0 = 0
-  - Action: Move L to 1
-
-L = 1 (h: 1) | R = 11 (h: 1) | leftMax = 0 | rightMax = 0
-  - height[L] <= height[R] (1 <= 1) -> Process L
-  - Update leftMax = max(0, 1) = 1
-  - Water += leftMax - height[L] = 1 - 1 = 0
-  - Action: Move L to 2
-
-L = 2 (h: 0) | R = 11 (h: 1) | leftMax = 1 | rightMax = 0
-  - height[L] < height[R] (0 < 1) -> Process L
-  - Water += leftMax - height[L] = 1 - 0 = 1
-  - Action: Move L to 3
-
-... (Repeats until pointers meet)
-Total Water Trapped: 6</div>
-    </div>
-
-    <div class="tab-content" data-content="typescript">
-      <div class="code-wrapper">
-        <span class="code-lang-label">TypeScript</span>
-        <pre><span class="kw">function</span> <span class="fn">trap</span>(height: <span class="kw">number</span>[]): <span class="kw">number</span> {
-    <span class="kw">let</span> l = <span class="num">0</span>;
-    <span class="kw">let</span> r = height.length - <span class="num">1</span>;
-    <span class="kw">let</span> leftMax = <span class="num">0</span>;
-    <span class="kw">let</span> rightMax = <span class="num">0</span>;
-    <span class="kw">let</span> res = <span class="num">0</span>;
-    
-    <span class="kw">while</span> (l &lt; r) {
-        <span class="kw">if</span> (height[l] &lt; height[r]) {
-            <span class="kw">if</span> (height[l] &gt;= leftMax) {
-                leftMax = height[l];
-            } else {
-                res += leftMax - height[l];
-            }
-            l++;
-        } else {
-            <span class="kw">if</span> (height[r] &gt;= rightMax) {
-                rightMax = height[r];
-            } else {
-                res += rightMax - height[r];
-            }
-            r--;
-        }
-    }
-    <span class="kw">return</span> res;
-}</pre>
-      </div>
-      <div class="complexity-badges">
-        <div class="complexity-badge">Time Complexity: <span>O(N)</span></div>
-        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
-      </div>
-    </div>
-  </div>
 
   <!-- #16 3Sum Closest -->
   <div class="problem-card" id="prob-16">

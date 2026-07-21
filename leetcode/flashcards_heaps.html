@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heaps · Revision Cards</title>
+  <style>
+    :root {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #121620;
+      --bg-tertiary: #1a202c;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #d2a8ff;
+      --accent-gradient: linear-gradient(135deg, #d2a8ff, #a371f7);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      
+      --easy-color: #7ee787;
+      --easy-bg: rgba(126, 231, 135, 0.1);
+      --easy-border: rgba(126, 231, 135, 0.25);
+      
+      --medium-color: #fcc21b;
+      --medium-bg: rgba(252, 194, 27, 0.1);
+      --medium-border: rgba(252, 194, 27, 0.25);
+      
+      --hard-color: #ff7b72;
+      --hard-bg: rgba(255, 123, 114, 0.1);
+      --hard-border: rgba(255, 123, 114, 0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 2rem 1.5rem;
+    }
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; }
+
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+      font-weight: 800;
+    }
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    /* Cards Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .flip-card {
+      perspective: 1000px;
+      height: 310px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .flip-card:hover {
+      transform: translateY(-4px);
+    }
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      padding: 1.2rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .front {
+      background: var(--bg-secondary);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .flip-card[data-difficulty="easy"]:hover .front {
+      border-color: var(--easy-color);
+      box-shadow: 0 0 15px var(--easy-bg);
+    }
+    .flip-card[data-difficulty="medium"]:hover .front {
+      border-color: var(--medium-color);
+      box-shadow: 0 0 15px var(--medium-bg);
+    }
+    .flip-card[data-difficulty="hard"]:hover .front {
+      border-color: var(--hard-color);
+      box-shadow: 0 0 15px var(--hard-bg);
+    }
+
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .tag-easy { background: var(--easy-bg); color: var(--easy-color); border-color: var(--easy-border); }
+    .tag-medium { background: var(--medium-bg); color: var(--medium-color); border-color: var(--medium-border); }
+    .tag-hard { background: var(--hard-bg); color: var(--hard-color); border-color: var(--hard-border); }
+
+    .front .prob-num {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+    .front .prob-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+    .front .prob-summary {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    .back {
+      background: #111420;
+      transform: rotateY(180deg);
+      border-color: rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+    
+    .back-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 4px;
+    }
+    .back-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .back-value {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .back-value.highlight {
+      color: var(--accent-color);
+    }
+    
+    .back-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .insight-text {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+    
+    .back-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .complexity-val {
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .complexity-green { color: var(--easy-color); }
+    .complexity-orange { color: var(--medium-color); }
+
+    .backlink {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .backlink:hover {
+      color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      h1 { font-size: 2rem; }
+      .grid { grid-template-columns: 1fr; }
+      .flip-card { height: 300px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>Heaps &amp; Priority Queues</h1>
+      <p class="subtitle">4 cards &middot; 1 easy &middot; 3 medium &middot; 0 hard</p>
+    </div>
+    <a class="backlink" href="index.html">← Back to Dashboard</a>
+  </header>
+
+  <div class="grid" id="cards-grid">
+
+    <!-- #703 -->
+    <div class="flip-card" data-difficulty="easy" data-card-id="703" onclick="toggleFlip(this)">
+      <div class="flip-inner">
+        <div class="front">
+          <span class="tag tag-easy">EASY</span>
+          <div class="prob-num">#703</div>
+          <div class="prob-name">Kth Largest Element in a Stream</div>
+          <div class="prob-summary">Design a class to find the kth largest element in a dynamically growing stream of numbers.</div>
+        </div>
+        <div class="back">
+          <div class="back-header">
+            <span class="back-label">Subtype</span>
+            <span class="back-value highlight">Min-Heap</span>
+          </div>
+          
+          <div class="back-section">
+            <span class="back-label">Key Insight</span>
+            <p class="insight-text">Maintain a min-heap of size K. The root of the heap always stores the Kth largest element. Evict root if size exceeds K.</p>
+          </div>
+
+          <div class="back-grid">
+            <div>
+              <span class="back-label">Time</span>
+              <div class="complexity-val complexity-orange">O(log K) per add</div>
+            </div>
+            <div>
+              <span class="back-label">Space</span>
+              <div class="complexity-val complexity-green">O(K)</div>
+            </div>
+          </div>
+
+          <div class="back-section">
+            <span class="back-label">Edge Cases</span>
+            <p class="insight-text">Stream size smaller than K, adding duplicate values</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- #347 -->
+    <div class="flip-card" data-difficulty="medium" data-card-id="347" onclick="toggleFlip(this)">
+      <div class="flip-inner">
+        <div class="front">
+          <span class="tag tag-medium">MEDIUM</span>
+          <div class="prob-num">#347</div>
+          <div class="prob-name">Top K Frequent Elements</div>
+          <div class="prob-summary">Given an integer array, return the k most frequent elements in the array.</div>
+        </div>
+        <div class="back">
+          <div class="back-header">
+            <span class="back-label">Subtype</span>
+            <span class="back-value highlight">Min-Heap / Bucket</span>
+          </div>
+          
+          <div class="back-section">
+            <span class="back-label">Key Insight</span>
+            <p class="insight-text">Track frequencies in a Hash Map. Keep a Min-Heap of size K. Push pairs and evict smaller frequencies to leave the top K elements.</p>
+          </div>
+
+          <div class="back-grid">
+            <div>
+              <span class="back-label">Time</span>
+              <div class="complexity-val complexity-orange">O(N log K)</div>
+            </div>
+            <div>
+              <span class="back-label">Space</span>
+              <div class="complexity-val complexity-orange">O(N)</div>
+            </div>
+          </div>
+
+          <div class="back-section">
+            <span class="back-label">Edge Cases</span>
+            <p class="insight-text">K equals unique count, items with identical frequencies</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- #973 -->
+    <div class="flip-card" data-difficulty="medium" data-card-id="973" onclick="toggleFlip(this)">
+      <div class="flip-inner">
+        <div class="front">
+          <span class="tag tag-medium">MEDIUM</span>
+          <div class="prob-num">#973</div>
+          <div class="prob-name">K Closest Points to Origin</div>
+          <div class="prob-summary">Find the k closest points to the origin (0, 0) on a 2D plane.</div>
+        </div>
+        <div class="back">
+          <div class="back-header">
+            <span class="back-label">Subtype</span>
+            <span class="back-value highlight">Max-Heap</span>
+          </div>
+          
+          <div class="back-section">
+            <span class="back-label">Key Insight</span>
+            <p class="insight-text">Maintain a max-heap of size K based on Euclidean distance. Pop the max distance node when new points are closer to origin.</p>
+          </div>
+
+          <div class="back-grid">
+            <div>
+              <span class="back-label">Time</span>
+              <div class="complexity-val complexity-orange">O(N log K)</div>
+            </div>
+            <div>
+              <span class="back-label">Space</span>
+              <div class="complexity-val complexity-green">O(K)</div>
+            </div>
+          </div>
+
+          <div class="back-section">
+            <span class="back-label">Edge Cases</span>
+            <p class="insight-text">Points with identical distances, K equals points length</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- #215 -->
+    <div class="flip-card" data-difficulty="medium" data-card-id="215" onclick="toggleFlip(this)">
+      <div class="flip-inner">
+        <div class="front">
+          <span class="tag tag-medium">MEDIUM</span>
+          <div class="prob-num">#215</div>
+          <div class="prob-name">Kth Largest Element in Array</div>
+          <div class="prob-summary">Find the kth largest element in an unsorted array without sorting it first.</div>
+        </div>
+        <div class="back">
+          <div class="back-header">
+            <span class="back-label">Subtype</span>
+            <span class="back-value highlight">Min-Heap / Select</span>
+          </div>
+          
+          <div class="back-section">
+            <span class="back-label">Key Insight</span>
+            <p class="insight-text">Iterate through array, maintaining a Min-Heap of size K. Evict root elements that are smaller than current value. Root holds the Kth largest.</p>
+          </div>
+
+          <div class="back-grid">
+            <div>
+              <span class="back-label">Time</span>
+              <div class="complexity-val complexity-orange">O(N log K)</div>
+            </div>
+            <div>
+              <span class="back-label">Space</span>
+              <div class="complexity-val complexity-green">O(K)</div>
+            </div>
+          </div>
+
+          <div class="back-section">
+            <span class="back-label">Edge Cases</span>
+            <p class="insight-text">Negative numbers, duplicates, K equals array length</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer style="margin-top: 3rem;">
+    <a class="backlink" href="index.html">← Back to Dashboard</a>
+  </footer>
+</div>
+
+<script>
+  function toggleFlip(card) {
+    card.classList.toggle('flipped');
+  }
+</script>
+</body>
+</html>

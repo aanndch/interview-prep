@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pattern 04: Binary Search</title>
+  <style>
+    :root {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #121620;
+      --bg-tertiary: #1a202c;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #58a6ff;
+      --accent-gradient: linear-gradient(135deg, #58a6ff, #38ef7d);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --code-bg: #07090e;
+      --success: #4ade80;
+      --success-bg: rgba(74, 222, 128, 0.1);
+      --warning: #facc15;
+      --danger: #f87171;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    header {
+      margin-bottom: 3rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2.8rem;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      font-weight: 800;
+    }
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    /* Sandbox visualizer styling */
+    .sandbox-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sandbox-header h2 {
+      font-size: 1.4rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .problem-selector select {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .sandbox-inputs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    .input-group input {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 8px;
+      outline: none;
+      font-family: monospace;
+    }
+    .input-group input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .sandbox-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--text-secondary);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: #238636;
+      border-color: #2ea44f;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #2ea44f;
+    }
+
+    .sandbox-screen {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      justify-content: center;
+      position: relative;
+    }
+
+    .array-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cell {
+      width: 55px;
+      height: 55px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .cell-sub {
+      position: absolute;
+      bottom: 2px;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+    .cell.in-range {
+      border-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.08);
+    }
+    .cell.left-ptr {
+      border-color: var(--danger);
+      background: rgba(248, 113, 113, 0.15);
+    }
+    .cell.right-ptr {
+      border-color: var(--success);
+      background: var(--success-bg);
+    }
+    .cell.mid-ptr {
+      border-color: var(--warning);
+      background: rgba(250, 204, 21, 0.15);
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+    }
+    .cell.match {
+      border-color: var(--success);
+      background: var(--success-bg);
+      transform: scale(1.05);
+    }
+    .cell.disabled {
+      opacity: 0.25;
+    }
+
+    .sandbox-status {
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 4px solid var(--accent-color);
+      padding: 12px;
+      font-size: 0.95rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .sandbox-status.complete {
+      border-left-color: var(--success);
+      background: var(--success-bg);
+    }
+
+    /* Problem cards and Tabs */
+    .problem-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 2.5rem;
+    }
+    .problem-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .problem-title-bar h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .problem-description {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255, 255, 255, 0.01);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-color);
+    }
+
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.2rem;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    .tab-btn.active {
+      color: var(--accent-color);
+      border-bottom-color: var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .intuition-content p {
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .intuition-content ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .intuition-content li {
+      margin-bottom: 0.4rem;
+      color: var(--text-secondary);
+    }
+
+    .key-shift {
+      background: var(--bg-tertiary);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .key-shift h4 {
+      color: var(--accent-color);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .visual-explanation {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .code-wrapper {
+      position: relative;
+    }
+    .code-lang-label {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    pre {
+      background: var(--code-bg) !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin: 0.8rem 0;
+    }
+    code { font-family: inherit; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op { color: #ffa657; }
+
+    .complexity-badges {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.8rem;
+    }
+    .complexity-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+    }
+    .complexity-badge span {
+      color: var(--accent-color);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+      margin-bottom: 3rem;
+    }
+    .toc-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    .toc-item:hover {
+      border-color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .toc-item-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .theory-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .theory-section h3 {
+      color: var(--accent-color);
+      margin-bottom: 0.8rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Pattern 04: Binary Search</h1>
+    <p class="subtitle">Logarithmic interval halving to find elements in O(log N) time.</p>
+  </header>
+
+  <!-- ==================== INTERACTIVE SANDBOX ==================== -->
+  <div class="sandbox-card">
+    <div class="sandbox-header">
+      <h2><span>🛠️</span> Live Binary Search Simulator</h2>
+      <div class="problem-selector">
+        <select id="sandbox-problem-select">
+          <option value="binary-search">Binary Search (#704)</option>
+          <option value="rotated-min">Rotated Array Min (#153)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Inputs -->
+    <div class="sandbox-inputs" id="inputs-search">
+      <div class="input-group">
+        <label>Sorted Array Nums</label>
+        <input type="text" id="search-arr" value="1, 3, 5, 7, 9, 11, 13, 15" />
+      </div>
+      <div class="input-group" style="flex: 0; min-width: 100px;">
+        <label>Target</label>
+        <input type="number" id="search-target" value="11" />
+      </div>
+    </div>
+
+    <div class="sandbox-inputs" id="inputs-rotated" style="display: none;">
+      <div class="input-group">
+        <label>Rotated Sorted Array</label>
+        <input type="text" id="rotated-arr" value="4, 5, 6, 7, 1, 2, 3" />
+      </div>
+    </div>
+
+    <div class="sandbox-controls">
+      <button class="btn btn-primary" id="btn-vis-start">Initialize</button>
+      <button class="btn" id="btn-vis-step" disabled>Step Forward</button>
+      <button class="btn" id="btn-vis-reset">Reset</button>
+    </div>
+
+    <div class="sandbox-screen">
+      <div id="vis-display-area"></div>
+      <div class="sandbox-status" id="vis-desc-status">
+        Select a problem, configure inputs, and click "Initialize" to watch how search boundaries contract.
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== QUESTIONS GRID ==================== -->
+  <h2 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--accent-color);">Questions List</h2>
+  <div class="toc-grid">
+    <a href="#prob-704" class="toc-item">
+      <span class="toc-item-title">#704 Binary Search</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-35" class="toc-item">
+      <span class="toc-item-title">#35 Search Insert Position</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-69" class="toc-item">
+      <span class="toc-item-title">#69 Sqrt(x)</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-278" class="toc-item">
+      <span class="toc-item-title">#278 First Bad Version</span>
+      <span class="tag tag-easy">Easy</span>
+    </a>
+    <a href="#prob-153" class="toc-item">
+      <span class="toc-item-title">#153 Find Min in Rotated Array</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-33" class="toc-item">
+      <span class="toc-item-title">#33 Search in Rotated Array</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+    <a href="#prob-875" class="toc-item">
+      <span class="toc-item-title">#875 Koko Eating Bananas</span>
+      <span class="tag tag-medium">Medium</span>
+    </a>
+
+  </div>
+
+  <!-- ==================== METHODOLOGY ==================== -->
+  <div class="theory-section">
+    <h3>The Binary Search Framework</h3>
+    <p>Binary Search is a divide-and-conquer paradigm that operates on a sorted search space. By examining the middle index, we can eliminate half of the potential candidates in O(1) decision time. To set up standard Binary Search:</p>
+    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Indices:</strong> Initialize `L = 0` and `R = length - 1`.</li>
+      <li><strong>Loop Condition:</strong> Loop while `L <= R`.</li>
+      <li><strong>Midpoint Guard:</strong> Avoid integer overflow by calculating mid as `L + Math.floor((R - L) / 2)`.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== PROBLEMS GUIDE ==================== -->
+  <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--accent-color);">Curated Problems Study Guide</h2>
+
+  <!-- #704 -->
+  <div class="problem-card" id="prob-704">
+    <div class="problem-title-bar">
+      <h3>#704 Binary Search</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given an array of integers <code>nums</code> which is sorted in ascending order, and an integer <code>target</code>, write a function to search <code>target</code> in <code>nums</code>. If <code>target</code> exists, then return its index. Otherwise, return <code>-1</code>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The array is sorted. Instead of checking every index (O(N)), we check the middle element `nums[mid]`.</p>
+        <p>If `target` matches `nums[mid]`, return its index. If `target` is larger, we look in the right half by setting `L = mid + 1`. If `target` is smaller, search the left half by setting `R = mid - 1`.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [-1, 0, 3, 5, 9, 12], target = 9
+
+Step 1: L = 0, R = 5
+  - mid = floor((0 + 5) / 2) = 2
+  - nums[mid] = nums[2] = 3
+  - 3 < 9 -> Target in right half. Set L = mid + 1 = 3.
+
+Step 2: L = 3, R = 5
+  - mid = floor((3 + 5) / 2) = 4
+  - nums[mid] = nums[4] = 9
+  - 9 === 9 -> Match! Return index 4.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">search</span>(nums: <span class="kw">number</span>[], target: <span class="kw">number</span>): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+    
+    <span class="kw">while</span> (l &lt;= r) {
+        const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+        <span class="kw">if</span> (nums[mid] === target) {
+            <span class="kw">return</span> mid;
+        } <span class="kw">else if</span> (nums[mid] &lt; target) {
+            l = mid + <span class="num">1</span>;
+        } <span class="kw">else</span> {
+            r = mid - <span class="num">1</span>;
+        }
+    }
+    <span class="kw">return</span> -<span class="num">1</span>;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(log N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #35 -->
+  <div class="problem-card" id="prob-35">
+    <div class="problem-title-bar">
+      <h3>#35 Search Insert Position</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given a sorted array of distinct integers and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>This is a binary search to find the insert index. When the binary search finishes without finding the target, the left pointer `L` points to the correct insertion index.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [1, 3, 5, 6], target = 5
+
+Step 1: L = 0, R = 3
+  - mid = floor((0 + 3) / 2) = 1
+  - nums[mid] = nums[1] = 3
+  - 3 < 5 -> Set L = mid + 1 = 2
+
+Step 2: L = 2, R = 3
+  - mid = floor((2 + 3) / 2) = 2
+  - nums[mid] = nums[2] = 5
+  - 5 === 5 -> Match! Return index 2.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">searchInsert</span>(nums: <span class="kw">number</span>[], target: <span class="kw">number</span>): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+    
+    <span class="kw">while</span> (l &lt;= r) {
+        const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+        <span class="kw">if</span> (nums[mid] === target) {
+            <span class="kw">return</span> mid;
+        } <span class="kw">else if</span> (nums[mid] &lt; target) {
+            l = mid + <span class="num">1</span>;
+        } <span class="kw">else</span> {
+            r = mid - <span class="num">1</span>;
+        }
+    }
+    <span class="kw">return</span> l;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(log N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #69 -->
+  <div class="problem-card" id="prob-69">
+    <div class="problem-title-bar">
+      <h3>#69 Sqrt(x)</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      Given a non-negative integer <code>x</code>, return <em>the square root of </em><code>x</code><em> rounded down to the nearest integer</em>. The returned integer should be <strong>non-negative</strong> as well.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The square root of `x` must reside between `1` and `x`. Our search space is therefore sorted.</p>
+        <p>Calculate `mid * mid`. If it matches `x`, `mid` is the answer. If it is smaller than `x`, store `mid` as a potential answer and narrow the bounds to the right side (to look for a larger value). If larger, search the left half.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: x = 8
+Search space: L = 1, R = 8
+
+Step 1: L = 1, R = 8
+  - mid = floor((1 + 8) / 2) = 4
+  - 4 * 4 = 16 > 8 -> Set R = mid - 1 = 3
+
+Step 2: L = 1, R = 3
+  - mid = floor((1 + 3) / 2) = 2
+  - 2 * 2 = 4 <= 8 -> Potential match. Store res = 2. Set L = mid + 1 = 3
+
+Step 3: L = 3, R = 3
+  - mid = floor((3 + 3) / 2) = 3
+  - 3 * 3 = 9 > 8 -> Set R = mid - 1 = 2
+
+Step 4: L = 3, R = 2
+  - L > R -> Loop terminates. Return res = 2.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">mySqrt</span>(x: <span class="kw">number</span>): <span class="kw">number</span> {
+    <span class="kw">if</span> (x &lt; <span class="num">2</span>) <span class="kw">return</span> x;
+    <span class="kw">let</span> l = <span class="num">1</span>;
+    <span class="kw">let</span> r = Math.<span class="fn">floor</span>(x / <span class="num">2</span>);
+    <span class="kw">let</span> res = <span class="num">0</span>;
+    
+    <span class="kw">while</span> (l &lt;= r) {
+        const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+        const sqr = mid * mid;
+        
+        <span class="kw">if</span> (sqr === x) {
+            <span class="kw">return</span> mid;
+        } <span class="kw">else if</span> (sqr &lt; x) {
+            res = mid;
+            l = mid + <span class="num">1</span>;
+        } <span class="kw">else</span> {
+            r = mid - <span class="num">1</span>;
+        }
+    }
+    <span class="kw">return</span> res;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(log X)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #278 -->
+  <div class="problem-card" id="prob-278">
+    <div class="problem-title-bar">
+      <h3>#278 First Bad Version</h3>
+      <span class="tag tag-easy">Easy</span>
+    </div>
+
+    <div class="problem-description">
+      You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad.<br/><br/>
+      Suppose you have <code>n</code> versions <code>[1, 2, ..., n]</code> and you want to find out the first bad one, which causes all the following ones to be bad.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The versions are sorted sequentially. If version `mid` is bad, all versions after it are also bad, which means the first bad version lies at or before `mid`. Narrow the search space to the left by setting `R = mid`.</p>
+        <p>If version `mid` is good, all versions before it are also good. Search the right half by setting `L = mid + 1`. Loop terminates when `L === R`.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: n = 5, bad = 4 (Versions: 1, 2, 3, 4, 5)
+
+Step 1: L = 1, R = 5
+  - mid = floor((1 + 5) / 2) = 3
+  - isBadVersion(3) = false -> search right half. Set L = mid + 1 = 4.
+
+Step 2: L = 4, R = 5
+  - mid = floor((4 + 5) / 2) = 4
+  - isBadVersion(4) = true -> Potential solution. Set R = mid = 4.
+
+Step 3: L = 4, R = 4
+  - L === R -> Loop terminates. First bad version = 4.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="cm">// Boilerplate wrapper for API</span>
+<span class="kw">var</span> <span class="fn">solution</span> = <span class="kw">function</span>(isBadVersion: <span class="kw">any</span>) {
+    <span class="kw">return function</span>(n: <span class="kw">number</span>): <span class="kw">number</span> {
+        <span class="kw">let</span> l = <span class="num">1</span>;
+        <span class="kw">let</span> r = n;
+        
+        <span class="kw">while</span> (l &lt; r) {
+            const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+            <span class="kw">if</span> (<span class="fn">isBadVersion</span>(mid)) {
+                r = mid;
+            } <span class="kw">else</span> {
+                l = mid + <span class="num">1</span>;
+            }
+        }
+        <span class="kw">return</span> l;
+    };
+};</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(log N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #153 -->
+  <div class="problem-card" id="prob-153">
+    <div class="problem-title-bar">
+      <h3>#153 Find Minimum in Rotated Sorted Array</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Suppose an array of length <code>n</code> sorted in ascending order is <strong>rotated</strong> between <code>1</code> and <code>n</code> times.<br/><br/>
+      Given the sorted rotated array <code>nums</code> of <strong>unique</strong> elements, return <em>the minimum element of this array</em>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>In a sorted rotated array, compare `nums[mid]` with `nums[r]`.</p>
+        <p>If `nums[mid] > nums[r]`, it indicates the pivot (minimum element) lies to the right of `mid`. Shift the left boundary past `mid` (`L = mid + 1`). Otherwise, the minimum element sits at or before `mid` (`R = mid`).</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [3, 4, 5, 1, 2]
+
+Step 1: L = 0, R = 4
+  - mid = floor((0 + 4) / 2) = 2
+  - nums[mid] = nums[2] = 5
+  - nums[mid] > nums[R] (5 > 2) -> Minimum lies to the right. Set L = mid + 1 = 3.
+
+Step 2: L = 3, R = 4
+  - mid = floor((3 + 4) / 2) = 3
+  - nums[mid] = nums[3] = 1
+  - nums[mid] <= nums[R] (1 <= 2) -> Minimum could be mid itself. Set R = mid = 3.
+
+Step 3: L = 3, R = 3
+  - L === R -> Loop terminates. Return nums[3] = 1.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">findMin</span>(nums: <span class="kw">number</span>[]): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+    
+    <span class="kw">while</span> (l &lt; r) {
+        const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+        <span class="kw">if</span> (nums[mid] &gt; nums[r]) {
+            l = mid + <span class="num">1</span>;
+        } <span class="kw">else</span> {
+            r = mid;
+        }
+    }
+    <span class="kw">return</span> nums[l];
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(log N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #33 -->
+  <div class="problem-card" id="prob-33">
+    <div class="problem-title-bar">
+      <h3>#33 Search in Rotated Sorted Array</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      There is an integer array <code>nums</code> sorted in ascending order (with <strong>distinct</strong> values). Prior to being passed to your function, <code>nums</code> is <strong>possibly rotated</strong>.<br/><br/>
+      Given the array <code>nums</code> <strong>after</strong> the rotation and an integer <code>target</code>, return <em>the index of </em><code>target</code><em> if it is in </em><code>nums</code>, or <em>-1 if it is not in </em><code>nums</code>.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>A rotated sorted array will always have at least one sorted half (either `L..mid` or `mid..R`). Determine which half is sorted by comparing `nums[L]` and `nums[mid]`.</p>
+        <p>Check if `target` lies within the sorted range. If it does, narrow the search space to that half. If it doesn't, search the other half.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: nums = [4, 5, 6, 7, 0, 1, 2], target = 0
+
+Step 1: L = 0, R = 6
+  - mid = floor((0 + 6) / 2) = 3
+  - nums[mid] = nums[3] = 7
+  - Left half [4, 5, 6, 7] is sorted because nums[L](4) <= nums[mid](7).
+  - Target (0) in left half? (0 >= 4 and 0 <= 7)? No.
+  - Search right half. Set L = mid + 1 = 4.
+
+Step 2: L = 4, R = 6
+  - mid = floor((4 + 6) / 2) = 5
+  - nums[mid] = nums[5] = 1
+  - Right half [1, 2] is sorted because nums[mid](1) <= nums[R](2).
+  - Target (0) in right half? (0 >= 1 and 0 <= 2)? No.
+  - Search left half of this space. Set R = mid - 1 = 4.
+
+Step 3: L = 4, R = 4
+  - mid = floor((4 + 4) / 2) = 4
+  - nums[mid] = nums[4] = 0
+  - nums[mid] === target (0 === 0) -> Found! Return index 4.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">searchRotated</span>(nums: <span class="kw">number</span>[], target: <span class="kw">number</span>): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">0</span>;
+    <span class="kw">let</span> r = nums.length - <span class="num">1</span>;
+    
+    <span class="kw">while</span> (l &lt;= r) {
+        const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+        <span class="kw">if</span> (nums[mid] === target) <span class="kw">return</span> mid;
+        
+        <span class="kw">if</span> (nums[l] &lt;= nums[mid]) {
+            <span class="cm">// Left half is sorted</span>
+            <span class="kw">if</span> (target &gt;= nums[l] &amp;&amp; target &lt; nums[mid]) {
+                r = mid - <span class="num">1</span>;
+            } <span class="kw">else</span> {
+                l = mid + <span class="num">1</span>;
+            }
+        } <span class="kw">else</span> {
+            <span class="cm">// Right half is sorted</span>
+            <span class="kw">if</span> (target &gt; nums[mid] &amp;&amp; target &lt;= nums[r]) {
+                l = mid + <span class="num">1</span>;
+            } <span class="kw">else</span> {
+                r = mid - <span class="num">1</span>;
+            }
+        }
+    }
+    <span class="kw">return</span> -<span class="num">1</span>;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(log N)</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #875 -->
+  <div class="problem-card" id="prob-875">
+    <div class="problem-title-bar">
+      <h3>#875 Koko Eating Bananas</h3>
+      <span class="tag tag-medium">Medium</span>
+    </div>
+
+    <div class="problem-description">
+      Koko loves to eat bananas. There are <code>n</code> piles of bananas, the <code>i<sup>th</sup></code> pile has <code>piles[i]</code> bananas. The guards have gone and will come back in <code>h</code> hours.<br/><br/>
+      Koko can decide her bananas-per-hour eating speed of <code>k</code>. Each hour, she chooses some pile of bananas and eats <code>k</code> bananas from that pile. If the pile has less than <code>k</code> bananas, she eats all of them instead and will not eat any more bananas during this hour.
+    </div>
+    
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="intuition">💡 Intuition</button>
+      <button class="tab-btn" data-tab="visual">🎨 Visual Trace</button>
+      <button class="tab-btn" data-tab="typescript">🟨 JS/TS</button>
+    </div>
+
+    <div class="tab-content active" data-content="intuition">
+      <div class="intuition-content">
+        <p>The speed `K` must lie in the range `1` to `max(piles)`. Since this search range is sorted, we can search it using Binary Search.</p>
+        <p>Check the hours taken to eat all piles at speed `mid`. If total hours <= `h`, Koko can eat all bananas at this speed. Record `mid` as a potential answer and narrow the range to the left (`R = mid - 1`) to search for a slower valid speed. Otherwise, search to the right (`L = mid + 1`).</p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="visual">
+      <div class="visual-explanation">Input: piles = [3, 6, 7, 11], h = 8
+Search range: L = 1, R = 11
+
+Step 1: L = 1, R = 11
+  - mid = floor((1 + 11) / 2) = 6
+  - Hours taken at speed 6: ceil(3/6) + ceil(6/6) + ceil(7/6) + ceil(11/6) = 1 + 1 + 2 + 2 = 6 hours
+  - 6 hours <= 8 -> Valid speed. Store res = 6. Set R = mid - 1 = 5.
+
+Step 2: L = 1, R = 5
+  - mid = floor((1 + 5) / 2) = 3
+  - Hours taken at speed 3: 1 + 2 + 3 + 4 = 10 hours
+  - 10 hours > 8 -> Speed 3 is too slow. Set L = mid + 1 = 4.
+
+Step 3: L = 4, R = 5
+  - mid = floor((4 + 5) / 2) = 4
+  - Hours taken at speed 4: 1 + 2 + 2 + 3 = 8 hours
+  - 8 hours <= 8 -> Valid speed. Store res = 4. Set R = mid - 1 = 3.
+
+Step 4: L = 4, R = 3
+  - L > R -> Loop terminates. Return res = 4.</div>
+    </div>
+
+    <div class="tab-content" data-content="typescript">
+      <div class="code-wrapper">
+        <span class="code-lang-label">TypeScript</span>
+        <pre><span class="kw">function</span> <span class="fn">minEatingSpeed</span>(piles: <span class="kw">number</span>[], h: <span class="kw">number</span>): <span class="kw">number</span> {
+    <span class="kw">let</span> l = <span class="num">1</span>;
+    <span class="kw">let</span> r = Math.<span class="fn">max</span>(...piles);
+    <span class="kw">let</span> res = r;
+    
+    const canEat = (speed: <span class="kw">number</span>): <span class="kw">boolean</span> =&gt; {
+        <span class="kw">let</span> hours = <span class="num">0</span>;
+        <span class="kw">for</span> (const pile of piles) {
+            hours += Math.<span class="fn">ceil</span>(pile / speed);
+        }
+        <span class="kw">return</span> hours &lt;= h;
+    };
+    
+    <span class="kw">while</span> (l &lt;= r) {
+        const mid = l + Math.<span class="fn">floor</span>((r - l) / <span class="num">2</span>);
+        <span class="kw">if</span> (<span class="fn">canEat</span>(mid)) {
+            res = mid;
+            r = mid - <span class="num">1</span>;
+        } <span class="kw">else</span> {
+            l = mid + <span class="num">1</span>;
+        }
+    }
+    <span class="kw">return</span> res;
+}</pre>
+      </div>
+      <div class="complexity-badges">
+        <div class="complexity-badge">Time Complexity: <span>O(N * log(Max))</span></div>
+        <div class="complexity-badge">Space Complexity: <span>O(1)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="index.html">← Back to Dashboard</a>
+  </footer>
+</div>
+
+<!-- ==================== INTERACTIVE SCRIPTS ==================== -->
+<script>
+  // Tab switcher
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.problem-card');
+      const tabName = btn.getAttribute('data-tab');
+      card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      card.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      card.querySelector(`.tab-content[data-content="${tabName}"]`).classList.add('active');
+    });
+  });
+
+  // Simulator logic
+  const selectProb = document.getElementById('sandbox-problem-select');
+  const inputSearch = document.getElementById('inputs-search');
+  const inputRotated = document.getElementById('inputs-rotated');
+
+  const btnInit = document.getElementById('btn-vis-start');
+  const btnStep = document.getElementById('btn-vis-step');
+  const btnReset = document.getElementById('btn-vis-reset');
+
+  const displayArea = document.getElementById('vis-display-area');
+  const textStatus = document.getElementById('vis-desc-status');
+
+  const searchArrVal = document.getElementById('search-arr');
+  const searchTargetVal = document.getElementById('search-target');
+  const rotatedArrVal = document.getElementById('rotated-arr');
+
+  let state = {
+    problem: 'binary-search',
+    data: null
+  };
+
+  selectProb.addEventListener('change', (e) => {
+    const val = e.target.value;
+    inputSearch.style.display = val === 'binary-search' ? 'flex' : 'none';
+    inputRotated.style.display = val === 'rotated-min' ? 'flex' : 'none';
+    resetSimulator();
+  });
+
+  btnInit.addEventListener('click', initializeSimulator);
+  btnStep.addEventListener('click', stepSimulator);
+  btnReset.addEventListener('click', resetSimulator);
+
+  function resetSimulator() {
+    displayArea.innerHTML = '';
+    textStatus.innerHTML = 'Select a problem, configure inputs, and click "Initialize" to watch how search boundaries contract.';
+    textStatus.className = 'sandbox-status';
+    btnInit.disabled = false;
+    btnStep.disabled = true;
+  }
+
+  function initializeSimulator() {
+    const prob = selectProb.value;
+    state.problem = prob;
+    displayArea.innerHTML = '';
+    btnInit.disabled = true;
+    btnStep.disabled = false;
+
+    if (prob === 'binary-search') {
+      const arr = searchArrVal.value.split(',').map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x));
+      const target = parseInt(searchTargetVal.value, 10);
+      state.data = { arr, target, l: 0, r: arr.length - 1, mid: -1 };
+
+      const row = document.createElement('div');
+      row.className = 'array-row';
+      arr.forEach((v, idx) => {
+        row.innerHTML += `<div class="cell" id="sb-win-${idx}">${v}<span class="cell-sub">${idx}</span></div>`;
+      });
+      displayArea.appendChild(row);
+
+      textStatus.innerHTML = `Initialized. L = 0, R = ${arr.length - 1}. Target = <strong>${target}</strong>. Click Step Forward to narrow the search interval.`;
+      updateBinarySearchPointersUI();
+
+    } else if (prob === 'rotated-min') {
+      const arr = rotatedArrVal.value.split(',').map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x));
+      state.data = { arr, l: 0, r: arr.length - 1, mid: -1 };
+
+      const row = document.createElement('div');
+      row.className = 'array-row';
+      arr.forEach((v, idx) => {
+        row.innerHTML += `<div class="cell" id="sb-win-${idx}">${v}<span class="cell-sub">${idx}</span></div>`;
+      });
+      displayArea.appendChild(row);
+
+      textStatus.innerHTML = `Initialized Rotated Array. Pointers L and R set to extremes. Click Step Forward.`;
+      updateBinarySearchPointersUI();
+    }
+  }
+
+  function stepSimulator() {
+    const d = state.data;
+    if (state.problem === 'binary-search') {
+      if (d.l > d.r) {
+        textStatus.innerHTML = `<span style="color:var(--danger)">Target not found!</span> Left pointer crossed right.`;
+        btnStep.disabled = true;
+        return;
+      }
+
+      const mid = Math.floor((d.l + d.r) / 2);
+      d.mid = mid;
+      const val = d.arr[mid];
+
+      updateBinarySearchPointersUI();
+
+      textStatus.innerHTML = `L = ${d.l}, R = ${d.r}. Mid calculated: <strong>${mid}</strong> (value = <strong>${val}</strong>).<br/>` +
+                             `Comparing nums[mid] (${val}) with target (${d.target}).`;
+
+      setTimeout(() => {
+        if (val === d.target) {
+          textStatus.innerHTML += `<br/>🎉 <strong>Success!</strong> nums[mid] (${val}) === target (${d.target}). Found at index <strong>${mid}</strong>.`;
+          textStatus.className = 'sandbox-status complete';
+          btnStep.disabled = true;
+          document.getElementById(`sb-win-${mid}`).className = 'cell match';
+        } else if (val < d.target) {
+          textStatus.innerHTML += `<br/>Since nums[mid] (${val}) &lt; target (${d.target}), search the right half. Setting L = mid + 1 = <strong>${mid + 1}</strong>.`;
+          d.l = mid + 1;
+        } else {
+          textStatus.innerHTML += `<br/>Since nums[mid] (${val}) &gt; target (${d.target}), search the left half. Setting R = mid - 1 = <strong>${mid - 1}</strong>.`;
+          d.r = mid - 1;
+        }
+      }, 500);
+
+    } else if (state.problem === 'rotated-min') {
+      if (d.l >= d.r) {
+        textStatus.innerHTML = `🎉 <strong>Success!</strong> L met R at index <strong>${d.l}</strong>. Minimum element is nums[L] = <strong>${d.arr[d.l]}</strong>.`;
+        textStatus.className = 'sandbox-status complete';
+        btnStep.disabled = true;
+        document.getElementById(`sb-win-${d.l}`).className = 'cell match';
+        return;
+      }
+
+      const mid = Math.floor((d.l + d.r) / 2);
+      d.mid = mid;
+      const val = d.arr[mid];
+      const valR = d.arr[d.r];
+
+      updateBinarySearchPointersUI();
+
+      textStatus.innerHTML = `L = ${d.l}, R = ${d.r}. Mid = <strong>${mid}</strong> (value = <strong>${val}</strong>).<br/>` +
+                             `Comparing nums[mid] (${val}) with nums[R] (${valR}).`;
+
+      setTimeout(() => {
+        if (val > valR) {
+          textStatus.innerHTML += `<br/>Since nums[mid] (${val}) &gt; nums[R] (${valR}), the minimum is in the right half. Setting L = mid + 1 = <strong>${mid + 1}</strong>.`;
+          d.l = mid + 1;
+        } else {
+          textStatus.innerHTML += `<br/>Since nums[mid] (${val}) &le; nums[R] (${valR}), the minimum is at mid or left half. Setting R = mid = <strong>${mid}</strong>.`;
+          d.r = mid;
+        }
+      }, 500);
+    }
+  }
+
+  function updateBinarySearchPointersUI() {
+    const d = state.data;
+    for (let i = 0; i < d.arr.length; i++) {
+      const cell = document.getElementById(`sb-win-${i}`);
+      cell.className = 'cell';
+      
+      // Gray out inactive parts of the search space
+      if (i < d.l || i > d.r) {
+        cell.classList.add('disabled');
+      } else {
+        cell.classList.add('in-range');
+      }
+    }
+
+    if (d.l <= d.r) {
+      const cellL = document.getElementById(`sb-win-${d.l}`);
+      const cellR = document.getElementById(`sb-win-${d.r}`);
+      if (cellL) cellL.classList.add('left-ptr');
+      if (cellR) cellR.classList.add('right-ptr');
+      
+      if (d.mid !== -1) {
+        const cellM = document.getElementById(`sb-win-${d.mid}`);
+        if (cellM) cellM.classList.add('mid-ptr');
+      }
+    }
+  }
+</script>
+</body>
+</html>
